@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { desktopIcons } from '../data/desktopIcons.js'
 import DesktopIcon from './DesktopIcon.jsx'
 import Window from './Window.jsx'
 import ResumeWindow from './ResumeWindow.jsx'
+import ThisPCWindow from './ThisPCWindow.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 
@@ -14,6 +15,18 @@ function Desktop() {
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
   const column2 = desktopIcons.filter((icon) => icon.column === 2)
   const openIcon = desktopIcons.find((icon) => icon.id === openAppId)
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && activeIconId) {
+        setOpenAppId(activeIconId)
+      } else if (e.key === 'Escape') {
+        setActiveIconId(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeIconId])
 
   return (
     <div
@@ -77,7 +90,10 @@ function Desktop() {
       {openAppId === 'resume' && (
         <ResumeWindow onClose={() => setOpenAppId(null)} />
       )}
-      {openAppId && openAppId !== 'resume' && (
+      {openAppId === 'this-pc' && (
+        <ThisPCWindow onClose={() => setOpenAppId(null)} />
+      )}
+      {openAppId && openAppId !== 'resume' && openAppId !== 'this-pc' && (
         <Window title={openIcon?.label} onClose={() => setOpenAppId(null)} />
       )}
       {iconMenu && (
@@ -87,7 +103,8 @@ function Desktop() {
           onClose={() => setIconMenu(null)}
           items={[
             { label: 'Open', onClick: () => setOpenAppId(iconMenu.id) },
-            { label: 'Pin to Taskbar', onClick: () => {} },
+            { label: 'Rename', onClick: () => {} },
+            { label: 'Delete', onClick: () => {} },
             { label: 'Properties', onClick: () => {} },
           ]}
         />
@@ -98,9 +115,14 @@ function Desktop() {
           y={desktopMenu.y}
           onClose={() => setDesktopMenu(null)}
           items={[
+            { label: 'View', onClick: () => {} },
+            { label: 'Sort by', onClick: () => {} },
             { label: 'Refresh', onClick: () => {} },
-            { label: 'Change Wallpaper', onClick: () => {} },
-            { label: 'Display Settings', onClick: () => {} },
+            { label: 'Next Desktop Wallpaper', onClick: () => {} },
+            { label: 'Paste', onClick: () => {} },
+            { label: 'New', onClick: () => {} },
+            { label: 'Personalize', onClick: () => {} },
+            { label: 'Open Terminal', onClick: () => {} },
           ]}
         />
       )}
