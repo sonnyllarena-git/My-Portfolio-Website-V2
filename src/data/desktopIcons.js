@@ -1,0 +1,15 @@
+export const desktopIcons = [
+  { id: 'this-pc', label: 'This PC', column: 1, icon: '💻' },
+  { id: 'recycle-bin', label: 'Recycle Bin', column: 1, icon: '🗑️' },
+  { id: 'music-lab', label: 'Music Lab', column: 1, icon: '🎵' },
+  { id: 'developer-lab', label: 'Developer Lab', column: 1, icon: '🛠️' },
+  { id: 'resume', label: 'Resume', column: 1, icon: 'pdf' },
+  { id: 'biography', label: 'Biography', column: 1, icon: '🧑' },
+  { id: 'contact-info', label: 'Contact Info', column: 1, icon: '📇' },
+  { id: 'blog', label: 'Blog', column: 2, icon: '📝' },
+  { id: 'games', label: 'Games', column: 2, icon: '🎮' },
+  { id: 'store', label: 'Store', column: 2, icon: '🛒' },
+  { id: 'memory-wall', label: 'Memory Wall', column: 2, icon: '🖼️' },
+  { id: 'paint', label: 'Paint', column: 2, icon: '🎨' },
+  { id: 'visitor-arts', label: 'Visitor Arts', column: 2, icon: '🖌️' },
+]
