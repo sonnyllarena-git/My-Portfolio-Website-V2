@@ -1,16 +1,23 @@
 import biography from './biography.png'
 import blog from './blog.png'
 import contactInfo from './contact-info.png'
+import desktop from './desktop.png'
 import developerLab from './developer-lab.png'
+import downloads from './downloads.png'
 import games from './games.png'
 import gmail from './gmail.png'
+import localDiskC from './local-disk-c.png'
+import localDiskD from './local-disk-d.png'
 import memoryWall from './memory-wall.png'
+import music from './music.png'
 import paint from './paint.png'
+import pictures from './pictures.png'
 import recycleBin from './recycle-bin.png'
 import search from './search.png'
 import start from './start.png'
 import store from './store.png'
 import thisPc from './this-pc.png'
+import videos from './videos.png'
 import visitorArts from './visitor-arts.png'
 
 export const iconImages = {
@@ -28,4 +35,11 @@ export const iconImages = {
   'visitor-arts': visitorArts,
   start,
   search,
+  desktop,
+  downloads,
+  pictures,
+  music,
+  videos,
+  'local-disk-c': localDiskC,
+  'local-disk-d': localDiskD,
 }

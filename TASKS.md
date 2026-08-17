@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 9 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 10 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-17 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -333,6 +333,25 @@ otherwise._
 
 - [x] **P64** — Wire `PaintApp`/`VisitorArtsApp` into `src/components/Desktop.jsx`: open them via the existing generic `Window` for the `paint`/`visitor-arts` icons (replacing the placeholder branch), passing `onOpenGallery`/`onOpenPaint` callbacks that call the existing `openApp`.
       **Pass condition:** double-clicking Paint and Visitor Arts each open their real app; saving art in Paint and switching to Visitor Arts (via its taskbar icon or the cross-launch button) shows it immediately; `verify` passes.
+
+---
+
+## PHASE 10 — WIRE IN THIS PC FOLDER/DRIVE ICONS
+
+_Sonny saved `desktop.png`, `downloads.png`, `pictures.png`, `music.png`, `videos.png`,
+`local-disk-c.png`, `local-disk-d.png` into `src/assets/icons/` and asked to wire them into
+`ThisPCWindow.jsx`'s Quick Access sidebar, Folders grid, and Devices and drives section,
+replacing the emoji placeholders wherever a real file exists. No file was provided for
+`Documents`, so it keeps its emoji._
+
+- [x] **P65** — Add the 7 new PNGs to `src/assets/icons/index.js`'s `iconImages` map (keyed
+      `desktop`/`downloads`/`pictures`/`music`/`videos`/`local-disk-c`/`local-disk-d`); update
+      `src/components/ThisPCWindow.jsx` to attach matching `id`s to its `quickAccess`,
+      `thisPcDrives`, and `drives` entries and render `iconImages[id]` as an `<img>` in place of
+      the emoji wherever present.
+      **Pass condition:** Desktop, Downloads, Pictures, Music, Videos, and both drive tiles show
+      their real icon images in This PC's sidebar, folder grid, and drives section; Documents
+      keeps its emoji; `verify` passes.
 
 ---
 

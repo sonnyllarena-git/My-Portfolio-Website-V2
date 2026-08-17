@@ -1,22 +1,37 @@
+import { iconImages } from '../assets/icons/index.js'
 import Window from './Window.jsx'
 
 const ribbonTabs = ['File', 'Home', 'Share', 'View']
 
 const quickAccess = [
-  { label: 'Desktop', icon: '🖥️' },
-  { label: 'Downloads', icon: '⬇️' },
+  { label: 'Desktop', icon: '🖥️', id: 'desktop' },
+  { label: 'Downloads', icon: '⬇️', id: 'downloads' },
   { label: 'Documents', icon: '📄' },
-  { label: 'Pictures', icon: '🖼️' },
-  { label: 'Music', icon: '🎵' },
-  { label: 'Videos', icon: '🎬' },
+  { label: 'Pictures', icon: '🖼️', id: 'pictures' },
+  { label: 'Music', icon: '🎵', id: 'music' },
+  { label: 'Videos', icon: '🎬', id: 'videos' },
 ]
 
-const thisPcDrives = [{ label: 'Local Disk (C:)', icon: '💽' }]
+const thisPcDrives = [
+  { label: 'Local Disk (C:)', icon: '💽', id: 'local-disk-c' },
+]
 
 const drives = [
-  { label: 'Local Disk (C:)', freeGb: 142, totalGb: 476 },
-  { label: 'System Reserved (D:)', freeGb: 2, totalGb: 15 },
+  { label: 'Local Disk (C:)', freeGb: 142, totalGb: 476, id: 'local-disk-c' },
+  { label: 'System Reserved (D:)', freeGb: 2, totalGb: 15, id: 'local-disk-d' },
 ]
+
+function ItemIcon({ id, icon, imgClassName, textClassName }) {
+  return iconImages[id] ? (
+    <img
+      src={iconImages[id]}
+      alt=""
+      className={`${imgClassName} object-contain`}
+    />
+  ) : (
+    <span className={textClassName}>{icon}</span>
+  )
+}
 
 function driveUsedPercent(drive) {
   return Math.round(((drive.totalGb - drive.freeGb) / drive.totalGb) * 100)
@@ -71,7 +86,7 @@ function ThisPCWindow({ onClose, isMinimized, onMinimizeToggle }) {
               key={item.label}
               className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-white/10"
             >
-              <span>{item.icon}</span>
+              <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
               <span>{item.label}</span>
             </div>
           ))}
@@ -81,7 +96,7 @@ function ThisPCWindow({ onClose, isMinimized, onMinimizeToggle }) {
               key={item.label}
               className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-white/10"
             >
-              <span>{item.icon}</span>
+              <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
               <span>{item.label}</span>
             </div>
           ))}
@@ -94,7 +109,12 @@ function ThisPCWindow({ onClose, isMinimized, onMinimizeToggle }) {
                 key={item.label}
                 className="flex cursor-pointer flex-col items-center gap-1 rounded p-2 hover:bg-white/10"
               >
-                <span className="text-xl">{item.icon}</span>
+                <ItemIcon
+                  id={item.id}
+                  icon={item.icon}
+                  imgClassName="h-6 w-6"
+                  textClassName="text-xl"
+                />
                 <span>{item.label}</span>
               </div>
             ))}
@@ -107,7 +127,12 @@ function ThisPCWindow({ onClose, isMinimized, onMinimizeToggle }) {
                 className="rounded-lg border border-white/10 p-3"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">💽</span>
+                  <ItemIcon
+                    id={drive.id}
+                    icon="💽"
+                    imgClassName="h-6 w-6"
+                    textClassName="text-lg"
+                  />
                   <span className="font-medium">{drive.label}</span>
                 </div>
                 <div className="mt-1 text-white/60">
