@@ -7,8 +7,11 @@ import ThisPCWindow from './ThisPCWindow.jsx'
 import ContactInfoApp from './ContactInfoApp.jsx'
 import GmailGuestGate from './GmailGuestGate.jsx'
 import GmailComposeApp from './GmailComposeApp.jsx'
+import PaintApp from './PaintApp.jsx'
+import VisitorArtsApp from './VisitorArtsApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
+import { rectsIntersect } from '../utils/geometry.js'
 
 function Desktop() {
   const [selectedIconIds, setSelectedIconIds] = useState([])
@@ -28,6 +31,15 @@ function Desktop() {
   function registerIconRef(id, node) {
     if (node) iconRefs.current.set(id, node)
     else iconRefs.current.delete(id)
+  }
+
+  function getOtherRects(excludeId) {
+    const rects = []
+    iconRefs.current.forEach((node, otherId) => {
+      if (otherId !== excludeId && node)
+        rects.push(node.getBoundingClientRect())
+    })
+    return rects
   }
 
   function handleDesktopMouseDown(e) {
@@ -56,15 +68,15 @@ function Desktop() {
       setIsSelecting(false)
       setMarqueeBox((box) => {
         if (box) {
+          const boxRect = {
+            left: box.left,
+            top: box.top,
+            right: box.left + box.width,
+            bottom: box.top + box.height,
+          }
           const hits = []
           iconRefs.current.forEach((node, id) => {
-            const r = node.getBoundingClientRect()
-            if (
-              r.left < box.left + box.width &&
-              r.right > box.left &&
-              r.top < box.top + box.height &&
-              r.bottom > box.top
-            ) {
+            if (rectsIntersect(node.getBoundingClientRect(), boxRect)) {
               hits.push(id)
             }
           })
@@ -155,7 +167,7 @@ function Desktop() {
             'radial-gradient(circle at 60% 40%, rgba(0, 240, 255, 0.08), transparent 70%), radial-gradient(circle at 20% 80%, rgba(0, 255, 102, 0.06), transparent 60%)',
         }}
       />
-      <span className="absolute right-4 bottom-4 text-sm text-white/40 select-none">
+      <span className="absolute right-4 bottom-4 text-sm text-white/40 select-none [text-shadow:0_0_3px_rgba(0,0,0,0.9),0_0_6px_rgba(0,0,0,0.7)]">
         SonnyOS Professional
       </span>
       <div className="absolute top-4 left-4 flex gap-2">
@@ -165,6 +177,7 @@ function Desktop() {
               key={icon.id}
               ref={(node) => registerIconRef(icon.id, node)}
               id={icon.id}
+              getOtherRects={getOtherRects}
               icon={icon.icon}
               label={icon.label}
               isSelected={selectedIconIds.includes(icon.id)}
@@ -180,6 +193,7 @@ function Desktop() {
               key={icon.id}
               ref={(node) => registerIconRef(icon.id, node)}
               id={icon.id}
+              getOtherRects={getOtherRects}
               icon={icon.icon}
               label={icon.label}
               isSelected={selectedIconIds.includes(icon.id)}
@@ -223,6 +237,34 @@ function Desktop() {
               defaultHeight={500}
             >
               <ContactInfoApp />
+            </Window>
+          )
+        }
+        if (w.id === 'paint') {
+          return (
+            <Window
+              key={w.id}
+              {...shared}
+              icon="🎨"
+              title="Paint"
+              defaultWidth={900}
+              defaultHeight={600}
+            >
+              <PaintApp onOpenGallery={() => handleIconOpen('visitor-arts')} />
+            </Window>
+          )
+        }
+        if (w.id === 'visitor-arts') {
+          return (
+            <Window
+              key={w.id}
+              {...shared}
+              icon="🖼️"
+              title="Visitor Arts"
+              defaultWidth={900}
+              defaultHeight={600}
+            >
+              <VisitorArtsApp onOpenPaint={() => handleIconOpen('paint')} />
             </Window>
           )
         }

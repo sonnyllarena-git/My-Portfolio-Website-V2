@@ -1,6 +1,7 @@
-import { forwardRef } from 'react'
-import { motion } from 'framer-motion'
+import { forwardRef, useRef } from 'react'
+import { motion, useMotionValue } from 'framer-motion'
 import { iconImages } from '../assets/icons/index.js'
+import { rectsIntersect } from '../utils/geometry.js'
 
 function PdfGlyph() {
   return (
@@ -26,14 +27,56 @@ function PdfGlyph() {
 }
 
 const DesktopIcon = forwardRef(function DesktopIcon(
-  { id, icon, label, isSelected, onSelect, onOpen, onContextMenu },
+  {
+    id,
+    icon,
+    label,
+    isSelected,
+    onSelect,
+    onOpen,
+    onContextMenu,
+    getOtherRects,
+  },
   ref,
 ) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const nodeRef = useRef(null)
+  const lastGoodPositionRef = useRef({ x: 0, y: 0 })
+
+  function setRefs(node) {
+    nodeRef.current = node
+    if (typeof ref === 'function') ref(node)
+    else if (ref) ref.current = node
+  }
+
+  function handleDragStart() {
+    lastGoodPositionRef.current = { x: x.get(), y: y.get() }
+  }
+
+  function handleDrag() {
+    const node = nodeRef.current
+    if (!node || !getOtherRects) return
+    const rect = node.getBoundingClientRect()
+    const overlaps = getOtherRects(id).some((other) =>
+      rectsIntersect(rect, other),
+    )
+    if (overlaps) {
+      x.set(lastGoodPositionRef.current.x)
+      y.set(lastGoodPositionRef.current.y)
+    } else {
+      lastGoodPositionRef.current = { x: x.get(), y: y.get() }
+    }
+  }
+
   return (
     <motion.div
-      ref={ref}
+      ref={setRefs}
+      style={{ x, y }}
       drag
       dragMomentum={false}
+      onDragStart={handleDragStart}
+      onDrag={handleDrag}
       onClick={(e) => {
         e.stopPropagation()
         onSelect()
@@ -62,7 +105,9 @@ const DesktopIcon = forwardRef(function DesktopIcon(
           icon
         )}
       </span>
-      <span className="text-xs leading-tight">{label}</span>
+      <span className="text-xs leading-tight [text-shadow:0_0_3px_rgba(0,0,0,0.9),0_0_6px_rgba(0,0,0,0.7)]">
+        {label}
+      </span>
     </motion.div>
   )
 })
