@@ -109,6 +109,12 @@ Prefer the boring, well-documented option over the clever one. You will be debug
 
 `src/hooks/` doesn't exist yet — it lands in Phase 1 once there is a real hook to put in it.
 
+Real icon image files (replacing the current emoji/inline-SVG placeholders) go in
+`src/assets/icons/`, one file per icon, named after that icon's `id` in
+`src/data/desktopIcons.js` (e.g. `this-pc.svg`, `gmail.svg`, `resume.svg`) — SVG preferred for
+crisp scaling across the icon grid, taskbar, and system tray; PNG at 128×128+ if SVG isn't
+available.
+
 - **File naming:** React components use `PascalCase.jsx` (e.g. `Desktop.jsx`); everything else
   (hooks, config, helpers) uses `camelCase.js` (e.g. `useClock.js`).
 - **Where each kind of code goes:** `src/components/` for presentation (Desktop, Taskbar, icons,

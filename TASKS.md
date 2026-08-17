@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 6 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 7 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-17 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -248,6 +248,23 @@ real sending is a future backend integration, not a v1 concern._
 
 - [x] **P47** — Wire it together in `src/components/Desktop.jsx`: opening the Gmail icon (double-click or the icon context menu's "Open") shows `GmailGuestGate` first; submitting it stores the guest's name/email for the session and opens `GmailComposeApp` inside the existing generic `Window` (title "New Message", default size 700×550) with that guest info — reopening later in the same session skips the gate.
       **Pass condition:** opening Gmail prompts for name/email once, then opens the compose window prefilled and taskbar-integrated; reopening afterward skips the gate; `verify` passes.
+
+---
+
+## PHASE 7 — WIRE IN REAL ICON IMAGES
+
+_Sonny saved real icon PNGs into `src/assets/icons/` (named after each icon's `id`, per the
+convention documented in CLAUDE.md §3) and asked to wire them into the desktop icon grid and the
+taskbar, replacing the emoji/inline-SVG placeholders wherever a real file exists. Renamed
+`Paint.png`→`paint.png`, `visitors-art.png`→`visitor-arts.png`, `windows.png`→`start.png` to
+match the convention. No file was provided for `music-lab` or `resume`, so those keep their
+current emoji/`PdfGlyph` placeholder._
+
+- [x] **P48** — Create `src/assets/icons/index.js` exporting an `iconImages` map keyed by icon `id` (importing every PNG currently in that folder); update `src/components/DesktopIcon.jsx` to accept an `id` prop and render `iconImages[id]` as an `<img>` when present (falling back to the existing `PdfGlyph`/emoji rendering otherwise, and dropping the now-redundant inline `GmailGlyph`); pass `id={icon.id}` from both icon columns in `src/components/Desktop.jsx`.
+      **Pass condition:** every desktop icon with a matching file in `src/assets/icons/` renders that real image instead of its emoji/glyph; Resume and Music Lab (no file provided) keep their current look; `verify` passes.
+
+- [x] **P49** — Update `src/components/Taskbar.jsx` so `TaskbarButton` and `RunningAppButton` accept an `id` and render `iconImages[id]` (from the same map) when present, falling back to the existing emoji otherwise; pass `id` through for the left launchers, pinned apps, and running-app buttons; update the `openWindows` prop built in `src/components/Desktop.jsx` to include each window's `id`.
+      **Pass condition:** the Start and Search taskbar buttons show their real icons; any open window with a matching icon file (e.g. Gmail) shows its real icon in its running-app taskbar button; everything without a file still shows its emoji; `verify` passes.
 
 ---
 

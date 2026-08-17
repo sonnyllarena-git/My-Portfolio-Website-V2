@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import { motion } from 'framer-motion'
+import { iconImages } from '../assets/icons/index.js'
 
 function PdfGlyph() {
   return (
@@ -24,29 +25,8 @@ function PdfGlyph() {
   )
 }
 
-function GmailGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
-      <rect
-        x="1"
-        y="4"
-        width="22"
-        height="16"
-        rx="2"
-        fill="#ffffff"
-        stroke="#dadce0"
-        strokeWidth="0.5"
-      />
-      <path d="M2 19 L7 7 L7 19 Z" fill="#ea4335" />
-      <path d="M7 19 L7 7 L12 19 Z" fill="#fbbc05" />
-      <path d="M12 19 L17 7 L17 19 Z" fill="#34a853" />
-      <path d="M17 19 L17 7 L22 19 Z" fill="#4285f4" />
-    </svg>
-  )
-}
-
 const DesktopIcon = forwardRef(function DesktopIcon(
-  { icon, label, isSelected, onSelect, onOpen, onContextMenu },
+  { id, icon, label, isSelected, onSelect, onOpen, onContextMenu },
   ref,
 ) {
   return (
@@ -74,10 +54,10 @@ const DesktopIcon = forwardRef(function DesktopIcon(
       }`}
     >
       <span className="flex h-8 w-8 items-center justify-center text-2xl">
-        {icon === 'pdf' ? (
+        {iconImages[id] ? (
+          <img src={iconImages[id]} alt="" className="h-8 w-8 object-contain" />
+        ) : icon === 'pdf' ? (
           <PdfGlyph />
-        ) : icon === 'gmail' ? (
-          <GmailGlyph />
         ) : (
           icon
         )}

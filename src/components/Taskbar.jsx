@@ -1,7 +1,16 @@
 import { useState } from 'react'
 import SystemTray from './SystemTray.jsx'
+import { iconImages } from '../assets/icons/index.js'
 
-function TaskbarButton({ icon, label }) {
+function IconGlyph({ id, icon }) {
+  return iconImages[id] ? (
+    <img src={iconImages[id]} alt="" className="h-5 w-5 object-contain" />
+  ) : (
+    icon
+  )
+}
+
+function TaskbarButton({ id, icon, label }) {
   const [isActive, setIsActive] = useState(false)
   return (
     <button
@@ -11,12 +20,12 @@ function TaskbarButton({ icon, label }) {
         isActive ? 'bg-white/20' : 'hover:bg-white/10'
       }`}
     >
-      {icon}
+      <IconGlyph id={id} icon={icon} />
     </button>
   )
 }
 
-function RunningAppButton({ icon, label, isMinimized, onClick }) {
+function RunningAppButton({ id, icon, label, isMinimized, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -28,7 +37,7 @@ function RunningAppButton({ icon, label, isMinimized, onClick }) {
           : 'bg-white/20 hover:bg-white/30'
       }`}
     >
-      {icon}
+      <IconGlyph id={id} icon={icon} />
     </button>
   )
 }
@@ -50,11 +59,21 @@ function Taskbar({ openWindows = [], onWindowClick }) {
   return (
     <div className="absolute inset-x-0 bottom-0 flex h-12 items-center gap-1 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
       {leftLaunchers.map((item) => (
-        <TaskbarButton key={item.id} icon={item.icon} label={item.label} />
+        <TaskbarButton
+          key={item.id}
+          id={item.id}
+          icon={item.icon}
+          label={item.label}
+        />
       ))}
       <div className="ml-4 flex items-center gap-1">
         {pinnedApps.map((item) => (
-          <TaskbarButton key={item.id} icon={item.icon} label={item.label} />
+          <TaskbarButton
+            key={item.id}
+            id={item.id}
+            icon={item.icon}
+            label={item.label}
+          />
         ))}
       </div>
       {openWindows.length > 0 && (
@@ -62,6 +81,7 @@ function Taskbar({ openWindows = [], onWindowClick }) {
           {openWindows.map((w) => (
             <RunningAppButton
               key={w.id}
+              id={w.id}
               icon={w.icon}
               label={w.label}
               isMinimized={w.isMinimized}

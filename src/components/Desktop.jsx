@@ -164,6 +164,7 @@ function Desktop() {
             <DesktopIcon
               key={icon.id}
               ref={(node) => registerIconRef(icon.id, node)}
+              id={icon.id}
               icon={icon.icon}
               label={icon.label}
               isSelected={selectedIconIds.includes(icon.id)}
@@ -178,6 +179,7 @@ function Desktop() {
             <DesktopIcon
               key={icon.id}
               ref={(node) => registerIconRef(icon.id, node)}
+              id={icon.id}
               icon={icon.icon}
               label={icon.label}
               isSelected={selectedIconIds.includes(icon.id)}
@@ -263,12 +265,7 @@ function Desktop() {
           return {
             id: w.id,
             label: icon?.label,
-            icon:
-              icon?.icon === 'pdf'
-                ? '📄'
-                : icon?.icon === 'gmail'
-                  ? '✉️'
-                  : icon?.icon,
+            icon: icon?.icon === 'pdf' ? '📄' : icon?.icon,
             isMinimized: w.isMinimized,
           }
         })}
