@@ -46,7 +46,7 @@ package-manager quirks. Phase 0 lives here._
 
 _Build tool, bundler, dev server, lint, format, test runner, env vars, scripts._
 
-- _(none yet)_
+- [2026-08-17] `vitest run` intermittently failed with `TypeError: Cannot read properties of undefined (reading 'config')` when run immediately after `vite build` in the same `verify` chain, with no code change involved → treat a lone post-build `vitest` failure as a possible transient race and re-run once before assuming a real regression.
 
 ---
 
@@ -64,6 +64,7 @@ _Framework-specific behaviour that bit us: lifecycle, state, rendering, routing,
 
 - [2026-08-17] `react-rnd`'s 8 resize handles hang half-outside the component's box by design (e.g. `bottom: -10px`); putting `overflow-hidden` on the `<Rnd>` container itself (for rounded corners) silently clipped that half away and made resizing un-grabbable → apply `overflow-hidden`/rounded corners to an inner wrapper div, never to the `<Rnd>` element itself.
 - [2026-08-17] The Desktop root's `onContextMenu` (for the wallpaper menu) was catching right-clicks that bubbled up from inside open windows too, hijacking the browser's native context menu (breaking right-click copy on selectable text) → any window content that needs native browser interactions (text selection copy, etc.) must `stopPropagation()` on its own `onContextMenu`.
+- [2026-08-17] Building a shared per-window props object (`{key, isMinimized, onClose, ...}`) and spreading it with `{...shared}` onto each open-window component put `key` inside the spread, which React silently accepts at runtime but warns about in the console (keys must be passed directly, not via spread) → pass `key={w.id}` directly on the JSX element and keep it out of any spread props object.
 
 ---
 

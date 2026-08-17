@@ -10,17 +10,36 @@ import Taskbar from './Taskbar.jsx'
 
 function Desktop() {
   const [activeIconId, setActiveIconId] = useState(null)
-  const [openAppId, setOpenAppId] = useState(null)
+  const [openWindows, setOpenWindows] = useState([])
   const [iconMenu, setIconMenu] = useState(null)
   const [desktopMenu, setDesktopMenu] = useState(null)
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
   const column2 = desktopIcons.filter((icon) => icon.column === 2)
-  const openIcon = desktopIcons.find((icon) => icon.id === openAppId)
+
+  function openApp(id) {
+    setOpenWindows((prev) =>
+      prev.some((w) => w.id === id)
+        ? prev.map((w) => (w.id === id ? { ...w, isMinimized: false } : w))
+        : [...prev, { id, isMinimized: false }],
+    )
+  }
+
+  function closeApp(id) {
+    setOpenWindows((prev) => prev.filter((w) => w.id !== id))
+  }
+
+  function toggleMinimize(id) {
+    setOpenWindows((prev) =>
+      prev.map((w) =>
+        w.id === id ? { ...w, isMinimized: !w.isMinimized } : w,
+      ),
+    )
+  }
 
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Enter' && activeIconId) {
-        setOpenAppId(activeIconId)
+        openApp(activeIconId)
       } else if (e.key === 'Escape') {
         setActiveIconId(null)
       }
@@ -69,7 +88,7 @@ function Desktop() {
               label={icon.label}
               isActive={icon.id === activeIconId}
               onSelect={() => setActiveIconId(icon.id)}
-              onOpen={() => setOpenAppId(icon.id)}
+              onOpen={() => openApp(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
             />
           ))}
@@ -82,40 +101,44 @@ function Desktop() {
               label={icon.label}
               isActive={icon.id === activeIconId}
               onSelect={() => setActiveIconId(icon.id)}
-              onOpen={() => setOpenAppId(icon.id)}
+              onOpen={() => openApp(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
             />
           ))}
         </div>
       </div>
-      {openAppId === 'resume' && (
-        <ResumeWindow onClose={() => setOpenAppId(null)} />
-      )}
-      {openAppId === 'this-pc' && (
-        <ThisPCWindow onClose={() => setOpenAppId(null)} />
-      )}
-      {openAppId === 'contact-info' && (
-        <Window
-          icon="📇"
-          title="Contact Info.txt"
-          onClose={() => setOpenAppId(null)}
-          defaultWidth={650}
-          defaultHeight={500}
-        >
-          <ContactInfoApp />
-        </Window>
-      )}
-      {openAppId &&
-        !['resume', 'this-pc', 'contact-info'].includes(openAppId) && (
-          <Window title={openIcon?.label} onClose={() => setOpenAppId(null)} />
-        )}
+      {openWindows.map((w) => {
+        const shared = {
+          isMinimized: w.isMinimized,
+          onMinimizeToggle: () => toggleMinimize(w.id),
+          onClose: () => closeApp(w.id),
+        }
+        if (w.id === 'resume') return <ResumeWindow key={w.id} {...shared} />
+        if (w.id === 'this-pc') return <ThisPCWindow key={w.id} {...shared} />
+        if (w.id === 'contact-info') {
+          return (
+            <Window
+              key={w.id}
+              {...shared}
+              icon="📇"
+              title="Contact Info.txt"
+              defaultWidth={650}
+              defaultHeight={500}
+            >
+              <ContactInfoApp />
+            </Window>
+          )
+        }
+        const icon = desktopIcons.find((i) => i.id === w.id)
+        return <Window key={w.id} {...shared} title={icon?.label} />
+      })}
       {iconMenu && (
         <ContextMenu
           x={iconMenu.x}
           y={iconMenu.y}
           onClose={() => setIconMenu(null)}
           items={[
-            { label: 'Open', onClick: () => setOpenAppId(iconMenu.id) },
+            { label: 'Open', onClick: () => openApp(iconMenu.id) },
             { label: 'Rename', onClick: () => {} },
             { label: 'Delete', onClick: () => {} },
             { label: 'Properties', onClick: () => {} },
@@ -139,7 +162,18 @@ function Desktop() {
           ]}
         />
       )}
-      <Taskbar />
+      <Taskbar
+        openWindows={openWindows.map((w) => {
+          const icon = desktopIcons.find((i) => i.id === w.id)
+          return {
+            id: w.id,
+            label: icon?.label,
+            icon: icon?.icon === 'pdf' ? '📄' : icon?.icon,
+            isMinimized: w.isMinimized,
+          }
+        })}
+        onWindowClick={toggleMinimize}
+      />
     </div>
   )
 }

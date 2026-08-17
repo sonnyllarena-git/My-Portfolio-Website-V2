@@ -22,12 +22,14 @@ function driveUsedPercent(drive) {
   return Math.round(((drive.totalGb - drive.freeGb) / drive.totalGb) * 100)
 }
 
-function ThisPCWindow({ onClose }) {
+function ThisPCWindow({ onClose, isMinimized, onMinimizeToggle }) {
   return (
     <Window
       icon="💻"
       title="This PC"
       onClose={onClose}
+      isMinimized={isMinimized}
+      onMinimizeToggle={onMinimizeToggle}
       defaultWidth={700}
       defaultHeight={520}
     >

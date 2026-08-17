@@ -16,6 +16,21 @@ function TaskbarButton({ icon, label }) {
   )
 }
 
+function RunningAppButton({ icon, label, isMinimized, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={`flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
+        isMinimized ? 'bg-white/5 hover:bg-white/10' : 'bg-white/20'
+      }`}
+    >
+      {icon}
+    </button>
+  )
+}
+
 const leftLaunchers = [
   { id: 'start', label: 'Start', icon: '⊞' },
   { id: 'widgets', label: 'Widgets', icon: '▤' },
@@ -29,7 +44,7 @@ const pinnedApps = [
   { id: 'messaging', label: 'Messaging', icon: '💬' },
 ]
 
-function Taskbar() {
+function Taskbar({ openWindows = [], onWindowClick }) {
   return (
     <div className="absolute inset-x-0 bottom-0 flex h-12 items-center gap-1 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
       {leftLaunchers.map((item) => (
@@ -40,6 +55,19 @@ function Taskbar() {
           <TaskbarButton key={item.id} icon={item.icon} label={item.label} />
         ))}
       </div>
+      {openWindows.length > 0 && (
+        <div className="ml-4 flex items-center gap-1 border-l border-white/10 pl-4">
+          {openWindows.map((w) => (
+            <RunningAppButton
+              key={w.id}
+              icon={w.icon}
+              label={w.label}
+              isMinimized={w.isMinimized}
+              onClick={() => onWindowClick(w.id)}
+            />
+          ))}
+        </div>
+      )}
       <SystemTray />
     </div>
   )

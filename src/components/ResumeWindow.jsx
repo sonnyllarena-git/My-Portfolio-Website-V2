@@ -1,4 +1,6 @@
-function ResumeWindow({ onClose }) {
+function ResumeWindow({ onClose, isMinimized = false, onMinimizeToggle }) {
+  if (isMinimized) return null
+
   return (
     <div
       onContextMenu={(e) => e.stopPropagation()}
@@ -6,13 +8,22 @@ function ResumeWindow({ onClose }) {
     >
       <div className="flex items-center justify-between bg-[#b30b00] px-3 py-2 text-white">
         <span className="text-sm font-medium">Resume.pdf</span>
-        <button
-          onClick={onClose}
-          className="flex h-5 w-5 items-center justify-center rounded hover:bg-black/30"
-          aria-label="Close"
-        >
-          ×
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onMinimizeToggle}
+            className="flex h-5 w-5 items-center justify-center rounded hover:bg-black/30"
+            aria-label="Minimize"
+          >
+            _
+          </button>
+          <button
+            onClick={onClose}
+            className="flex h-5 w-5 items-center justify-center rounded hover:bg-black/30"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
       </div>
       <div className="flex items-center justify-between bg-[#3c3c3c] px-3 py-1 text-xs text-white/70">
         <span>Page 1 of 1</span>
