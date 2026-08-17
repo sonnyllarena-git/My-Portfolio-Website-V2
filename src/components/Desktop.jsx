@@ -5,6 +5,8 @@ import Window from './Window.jsx'
 import ResumeWindow from './ResumeWindow.jsx'
 import ThisPCWindow from './ThisPCWindow.jsx'
 import ContactInfoApp from './ContactInfoApp.jsx'
+import GmailGuestGate from './GmailGuestGate.jsx'
+import GmailComposeApp from './GmailComposeApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 
@@ -13,6 +15,8 @@ function Desktop() {
   const [openWindows, setOpenWindows] = useState([])
   const [iconMenu, setIconMenu] = useState(null)
   const [desktopMenu, setDesktopMenu] = useState(null)
+  const [gmailGateOpen, setGmailGateOpen] = useState(false)
+  const [gmailGuest, setGmailGuest] = useState(null)
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
   const column2 = desktopIcons.filter((icon) => icon.column === 2)
   const iconRefs = useRef(new Map())
@@ -86,6 +90,14 @@ function Desktop() {
     )
   }
 
+  function handleIconOpen(id) {
+    if (id === 'gmail' && !gmailGuest) {
+      setGmailGateOpen(true)
+      return
+    }
+    openApp(id)
+  }
+
   function closeApp(id) {
     setOpenWindows((prev) => prev.filter((w) => w.id !== id))
   }
@@ -156,7 +168,7 @@ function Desktop() {
               label={icon.label}
               isSelected={selectedIconIds.includes(icon.id)}
               onSelect={() => setSelectedIconIds([icon.id])}
-              onOpen={() => openApp(icon.id)}
+              onOpen={() => handleIconOpen(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
             />
           ))}
@@ -170,7 +182,7 @@ function Desktop() {
               label={icon.label}
               isSelected={selectedIconIds.includes(icon.id)}
               onSelect={() => setSelectedIconIds([icon.id])}
-              onOpen={() => openApp(icon.id)}
+              onOpen={() => handleIconOpen(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
             />
           ))}
@@ -184,6 +196,20 @@ function Desktop() {
         }
         if (w.id === 'resume') return <ResumeWindow key={w.id} {...shared} />
         if (w.id === 'this-pc') return <ThisPCWindow key={w.id} {...shared} />
+        if (w.id === 'gmail') {
+          return (
+            <Window
+              key={w.id}
+              {...shared}
+              icon="✉️"
+              title="New Message"
+              defaultWidth={700}
+              defaultHeight={550}
+            >
+              <GmailComposeApp guest={gmailGuest} />
+            </Window>
+          )
+        }
         if (w.id === 'contact-info') {
           return (
             <Window
@@ -207,7 +233,7 @@ function Desktop() {
           y={iconMenu.y}
           onClose={() => setIconMenu(null)}
           items={[
-            { label: 'Open', onClick: () => openApp(iconMenu.id) },
+            { label: 'Open', onClick: () => handleIconOpen(iconMenu.id) },
             { label: 'Rename', onClick: () => {} },
             { label: 'Delete', onClick: () => {} },
             { label: 'Properties', onClick: () => {} },
@@ -237,12 +263,27 @@ function Desktop() {
           return {
             id: w.id,
             label: icon?.label,
-            icon: icon?.icon === 'pdf' ? '📄' : icon?.icon,
+            icon:
+              icon?.icon === 'pdf'
+                ? '📄'
+                : icon?.icon === 'gmail'
+                  ? '✉️'
+                  : icon?.icon,
             isMinimized: w.isMinimized,
           }
         })}
         onWindowClick={toggleMinimize}
       />
+      {gmailGateOpen && (
+        <GmailGuestGate
+          onSubmit={(guest) => {
+            setGmailGuest(guest)
+            setGmailGateOpen(false)
+            openApp('gmail')
+          }}
+          onCancel={() => setGmailGateOpen(false)}
+        />
+      )}
       {marqueeBox && (
         <div
           className="pointer-events-none fixed border border-cyan-400 bg-cyan-400/10"

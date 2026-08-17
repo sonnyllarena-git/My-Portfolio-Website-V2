@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 5 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 6 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-17 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -217,6 +217,37 @@ click-and-drag rectangle to multi-select desktop icons like a normal OS desktop.
 
 - [x] **P41** — In `src/components/Desktop.jsx` and `src/components/DesktopIcon.jsx` (forwarding a ref for hit-testing), add left-click-drag rubber-band selection on the empty desktop background: dragging draws a translucent rectangle, and releasing selects every icon whose bounds intersect it (replacing the prior selection); a completed drag-select must not also trigger the desktop's existing click-to-deselect handler.
       **Pass condition:** dragging a rectangle over two or more icons selects exactly those icons; a plain click with no movement still clears the selection as before; `verify` passes.
+
+---
+
+## PHASE 6 — GMAIL-STYLE COMPOSE APP
+
+_Requested by Sonny on 2026-08-17, from a screenshot of Gmail's "New Message" compose window:
+a Gmail icon opens a custom-built recreation of that screen. To is locked to
+`llarenasonny@yahoo.com` (copyable, not removable by guest), the subject line gets a
+category dropdown (Pricing/Product Inquiry/Software Development/Web Development/Other), the
+body gets real text-styling controls, and — per Sonny's answer when asked about Send — a
+guest must give their name + email in a gate dialog before the compose window opens, and Send
+itself stays a visual-only placeholder (like the rest of v1's deferred send/booking logic) since
+real sending is a future backend integration, not a v1 concern._
+
+- [x] **P42** — Add a `GmailGlyph` inline SVG (Gmail's colored-envelope icon) to `src/components/DesktopIcon.jsx`, triggered by icon token `'gmail'`; add a matching `gmail` entry to `src/data/desktopIcons.js`.
+      **Pass condition:** a recognizable multi-color Gmail envelope icon renders on the desktop; `verify` passes.
+
+- [x] **P43** — Create `src/components/GmailGuestGate.jsx`: a modal asking for the guest's Name and Email (both required) with Continue/Cancel actions, meant to gate opening the compose window.
+      **Pass condition:** standalone render shows Name/Email inputs and a Continue button disabled until both are filled; `verify` passes.
+
+- [x] **P44** — Create `src/components/GmailComposeApp.jsx` skeleton: a `To` field locked to `llarenasonny@yahoo.com` with a copy-to-clipboard button, a `Subject` input paired with a category dropdown (Pricing/Product Inquiry/Software Development/Web Development/Other) that prefixes the subject text, and a body area pre-filled with a signature line from a `guest` prop (`{ name, email }`).
+      **Pass condition:** standalone render shows the locked/copyable To field, the category dropdown updating the subject prefix, and the body pre-filled with the guest's name/email; `verify` passes.
+
+- [x] **P45** — Add a real text-styling toolbar to `GmailComposeApp.jsx`'s body: make the body a `contentEditable` area and wire Bold/Italic/Underline/Strikethrough/ordered-list/unordered-list/indent/outdent/blockquote/clear-formatting buttons to `document.execCommand`.
+      **Pass condition:** clicking Bold with body text selected toggles bold formatting; `verify` passes.
+
+- [x] **P46** — Add the Send action to `GmailComposeApp.jsx`: clicking Send shows a "Message sent (demo)" confirmation toast, matching the placeholder pattern already used for other v1 send/booking actions; no real email is transmitted.
+      **Pass condition:** clicking Send shows the confirmation toast; `verify` passes.
+
+- [x] **P47** — Wire it together in `src/components/Desktop.jsx`: opening the Gmail icon (double-click or the icon context menu's "Open") shows `GmailGuestGate` first; submitting it stores the guest's name/email for the session and opens `GmailComposeApp` inside the existing generic `Window` (title "New Message", default size 700×550) with that guest info — reopening later in the same session skips the gate.
+      **Pass condition:** opening Gmail prompts for name/email once, then opens the compose window prefilled and taskbar-integrated; reopening afterward skips the gate; `verify` passes.
 
 ---
 

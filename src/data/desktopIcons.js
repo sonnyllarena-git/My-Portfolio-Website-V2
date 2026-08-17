@@ -6,6 +6,7 @@ export const desktopIcons = [
   { id: 'resume', label: 'Resume', column: 1, icon: 'pdf' },
   { id: 'biography', label: 'Biography', column: 1, icon: '🧑' },
   { id: 'contact-info', label: 'Contact Info', column: 1, icon: '📇' },
+  { id: 'gmail', label: 'Gmail', column: 1, icon: 'gmail' },
   { id: 'blog', label: 'Blog', column: 2, icon: '📝' },
   { id: 'games', label: 'Games', column: 2, icon: '🎮' },
   { id: 'store', label: 'Store', column: 2, icon: '🛒' },
