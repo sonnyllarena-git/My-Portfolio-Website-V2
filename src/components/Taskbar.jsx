@@ -23,7 +23,9 @@ function RunningAppButton({ icon, label, isMinimized, onClick }) {
       aria-label={label}
       title={label}
       className={`flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
-        isMinimized ? 'bg-white/5 hover:bg-white/10' : 'bg-white/20'
+        isMinimized
+          ? 'bg-white/5 hover:bg-white/10'
+          : 'bg-white/20 hover:bg-white/30'
       }`}
     >
       {icon}

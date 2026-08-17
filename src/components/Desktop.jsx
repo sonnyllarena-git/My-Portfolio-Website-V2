@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { desktopIcons } from '../data/desktopIcons.js'
 import DesktopIcon from './DesktopIcon.jsx'
 import Window from './Window.jsx'
@@ -9,12 +9,74 @@ import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 
 function Desktop() {
-  const [activeIconId, setActiveIconId] = useState(null)
+  const [selectedIconIds, setSelectedIconIds] = useState([])
   const [openWindows, setOpenWindows] = useState([])
   const [iconMenu, setIconMenu] = useState(null)
   const [desktopMenu, setDesktopMenu] = useState(null)
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
   const column2 = desktopIcons.filter((icon) => icon.column === 2)
+  const iconRefs = useRef(new Map())
+  const marqueeStart = useRef({ x: 0, y: 0 })
+  const draggedDuringSelect = useRef(false)
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [marqueeBox, setMarqueeBox] = useState(null)
+
+  function registerIconRef(id, node) {
+    if (node) iconRefs.current.set(id, node)
+    else iconRefs.current.delete(id)
+  }
+
+  function handleDesktopMouseDown(e) {
+    if (e.target !== e.currentTarget) return
+    marqueeStart.current = { x: e.clientX, y: e.clientY }
+    draggedDuringSelect.current = false
+    setIsSelecting(true)
+    setMarqueeBox({ left: e.clientX, top: e.clientY, width: 0, height: 0 })
+  }
+
+  useEffect(() => {
+    if (!isSelecting) return
+
+    function handleMouseMove(e) {
+      draggedDuringSelect.current = true
+      const { x: startX, y: startY } = marqueeStart.current
+      setMarqueeBox({
+        left: Math.min(startX, e.clientX),
+        top: Math.min(startY, e.clientY),
+        width: Math.abs(e.clientX - startX),
+        height: Math.abs(e.clientY - startY),
+      })
+    }
+
+    function handleMouseUp() {
+      setIsSelecting(false)
+      setMarqueeBox((box) => {
+        if (box) {
+          const hits = []
+          iconRefs.current.forEach((node, id) => {
+            const r = node.getBoundingClientRect()
+            if (
+              r.left < box.left + box.width &&
+              r.right > box.left &&
+              r.top < box.top + box.height &&
+              r.bottom > box.top
+            ) {
+              hits.push(id)
+            }
+          })
+          setSelectedIconIds(hits)
+        }
+        return null
+      })
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isSelecting])
 
   function openApp(id) {
     setOpenWindows((prev) =>
@@ -38,23 +100,28 @@ function Desktop() {
 
   useEffect(() => {
     function handleKeyDown(e) {
-      if (e.key === 'Enter' && activeIconId) {
-        openApp(activeIconId)
+      if (e.key === 'Enter' && selectedIconIds.length === 1) {
+        openApp(selectedIconIds[0])
       } else if (e.key === 'Escape') {
-        setActiveIconId(null)
+        setSelectedIconIds([])
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeIconId])
+  }, [selectedIconIds])
 
   return (
     <div
       onClick={() => {
-        setActiveIconId(null)
+        if (draggedDuringSelect.current) {
+          draggedDuringSelect.current = false
+          return
+        }
+        setSelectedIconIds([])
         setIconMenu(null)
         setDesktopMenu(null)
       }}
+      onMouseDown={handleDesktopMouseDown}
       onContextMenu={(e) => {
         e.preventDefault()
         setDesktopMenu({ x: e.clientX, y: e.clientY })
@@ -84,10 +151,11 @@ function Desktop() {
           {column1.map((icon) => (
             <DesktopIcon
               key={icon.id}
+              ref={(node) => registerIconRef(icon.id, node)}
               icon={icon.icon}
               label={icon.label}
-              isActive={icon.id === activeIconId}
-              onSelect={() => setActiveIconId(icon.id)}
+              isSelected={selectedIconIds.includes(icon.id)}
+              onSelect={() => setSelectedIconIds([icon.id])}
               onOpen={() => openApp(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
             />
@@ -97,10 +165,11 @@ function Desktop() {
           {column2.map((icon) => (
             <DesktopIcon
               key={icon.id}
+              ref={(node) => registerIconRef(icon.id, node)}
               icon={icon.icon}
               label={icon.label}
-              isActive={icon.id === activeIconId}
-              onSelect={() => setActiveIconId(icon.id)}
+              isSelected={selectedIconIds.includes(icon.id)}
+              onSelect={() => setSelectedIconIds([icon.id])}
               onOpen={() => openApp(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
             />
@@ -174,6 +243,17 @@ function Desktop() {
         })}
         onWindowClick={toggleMinimize}
       />
+      {marqueeBox && (
+        <div
+          className="pointer-events-none fixed border border-cyan-400 bg-cyan-400/10"
+          style={{
+            left: marqueeBox.left,
+            top: marqueeBox.top,
+            width: marqueeBox.width,
+            height: marqueeBox.height,
+          }}
+        />
+      )}
     </div>
   )
 }

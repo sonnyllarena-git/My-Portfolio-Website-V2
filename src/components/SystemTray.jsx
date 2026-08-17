@@ -8,6 +8,17 @@ function formatDate(date) {
   return date.toLocaleDateString()
 }
 
+function TrayButton({ label, children }) {
+  return (
+    <button
+      aria-label={label}
+      className="flex h-7 w-7 items-center justify-center rounded hover:bg-white/10"
+    >
+      {children}
+    </button>
+  )
+}
+
 function SystemTray() {
   const [now, setNow] = useState(() => new Date())
 
@@ -17,11 +28,11 @@ function SystemTray() {
   }, [])
 
   return (
-    <div className="ml-auto flex items-center gap-2 pr-2 text-sm text-white">
-      <span aria-label="Show hidden icons">^</span>
-      <span aria-label="Wi-Fi">📶</span>
-      <span aria-label="Volume">🔊</span>
-      <span aria-label="Battery">🔋</span>
+    <div className="ml-auto flex items-center gap-1 pr-2 text-sm text-white">
+      <TrayButton label="Show hidden icons">^</TrayButton>
+      <TrayButton label="Wi-Fi">📶</TrayButton>
+      <TrayButton label="Volume">🔊</TrayButton>
+      <TrayButton label="Battery">🔋</TrayButton>
       <div className="ml-2 text-right leading-tight">
         <div>{formatTime(now)}</div>
         <div className="text-xs text-white/70">{formatDate(now)}</div>

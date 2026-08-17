@@ -1,3 +1,4 @@
+import { forwardRef } from 'react'
 import { motion } from 'framer-motion'
 
 function PdfGlyph() {
@@ -23,16 +24,13 @@ function PdfGlyph() {
   )
 }
 
-function DesktopIcon({
-  icon,
-  label,
-  isActive,
-  onSelect,
-  onOpen,
-  onContextMenu,
-}) {
+const DesktopIcon = forwardRef(function DesktopIcon(
+  { icon, label, isSelected, onSelect, onOpen, onContextMenu },
+  ref,
+) {
   return (
     <motion.div
+      ref={ref}
       drag
       dragMomentum={false}
       onClick={(e) => {
@@ -48,8 +46,10 @@ function DesktopIcon({
         e.stopPropagation()
         onContextMenu(e.clientX, e.clientY)
       }}
-      className={`flex w-20 cursor-grab flex-col items-center gap-1 rounded border p-2 text-center text-white active:cursor-grabbing ${
-        isActive ? 'border-cyan-400 bg-white/10' : 'border-transparent'
+      className={`flex w-20 cursor-grab flex-col items-center gap-1 rounded border p-2 text-center text-white transition-colors active:cursor-grabbing ${
+        isSelected
+          ? 'border-cyan-400 bg-white/10'
+          : 'border-transparent hover:bg-white/5'
       }`}
     >
       <span className="flex h-8 w-8 items-center justify-center text-2xl">
@@ -58,6 +58,6 @@ function DesktopIcon({
       <span className="text-xs leading-tight">{label}</span>
     </motion.div>
   )
-}
+})
 
 export default DesktopIcon
