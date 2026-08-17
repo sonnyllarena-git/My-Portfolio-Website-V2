@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 2 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 3 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-17 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -149,6 +149,35 @@ _Requested by Sonny on 2026-08-17. Builds on the Phase 1 desktop shell._
 
 - [x] **P26** — Wire the "This PC" icon in `Desktop.jsx` to open `ThisPCWindow` instead of the generic `Window` (same pattern as Resume's `ResumeWindow`).
       **Pass condition:** double-clicking "This PC" opens `ThisPCWindow`; every other non-Resume icon still opens the generic `Window`; `verify` passes.
+
+---
+
+## PHASE 3 — RESIZABLE WINDOWS + CONTACT INFO APP
+
+_Requested by Sonny on 2026-08-17. `react-rnd` approved by Sonny (named explicitly in his
+request) — added to CLAUDE.md §2. Contact content uses placeholders per Sonny's choice; swap
+`src/data/contactInfo.js` for his real details whenever he provides them._
+
+- [x] **P27** — Install `react-rnd`, record the version in CLAUDE.md §2, and rewrite `Window.jsx` to use it for 8-direction resize (min 480×320) and title-bar-only dragging, with a configurable default size (650×500), keeping Minimize/Maximize-Restore/Close working (maximize fills the desktop bounds and remembers the prior size/position to restore to).
+      **Pass condition:** dragging the title bar moves the window; resizing from an edge/corner works down to the 480×320 floor; minimize/maximize/restore/close all still work; `verify` passes.
+
+- [x] **P28** — Create `src/data/contactInfo.js`: placeholder contact fields (name, location, phone/WhatsApp, website) and a social profiles list (Twitter/X, Facebook, Instagram, LinkedIn, Spotify), using generic placeholder values, not the reference screenshot's real third-party info.
+      **Pass condition:** file exports a well-formed contact object; `verify` passes.
+
+- [x] **P29** — Create `src/components/ContactInfoApp.jsx` skeleton: a menu bar (File/Edit/Format/View/Help) plus Read/Edit toggle buttons, and a "Find in document" search input, meant to render inside `Window`.
+      **Pass condition:** rendering it standalone inside `Window` shows the menu bar, Read/Edit toggle, and search input; `verify` passes.
+
+- [x] **P30** — Add the formatted contact content area to `ContactInfoApp.jsx`: dark notepad-style key/value rows (Name, Based In, Phone/WhatsApp, Website, Official Profiles) driven by `contactInfo.js`, with clickable links.
+      **Pass condition:** all contact fields and links render correctly from the data file; `verify` passes.
+
+- [x] **P31** — Add the status bar to `ContactInfoApp.jsx`: line count, word count, character count, and read time computed from the contact content, plus a static "sync status" label.
+      **Pass condition:** status bar shows real computed counts matching the rendered content; `verify` passes.
+
+- [x] **P32** — Add a "Copy All Details" button to `ContactInfoApp.jsx` that copies the formatted contact text via `navigator.clipboard.writeText`, with a toast/tooltip confirmation ("Copied to clipboard!").
+      **Pass condition:** clicking the button copies the expected text and shows the confirmation; `verify` passes.
+
+- [x] **P33** — Wire the "Contact Info" icon in `Desktop.jsx` to open `ContactInfoApp` (via `Window`, default size 650×500) instead of the generic `Window`.
+      **Pass condition:** double-clicking "Contact Info" opens `ContactInfoApp` at the right default size; every other non-special icon still opens the generic `Window`; `verify` passes.
 
 ---
 

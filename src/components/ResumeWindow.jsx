@@ -1,6 +1,9 @@
 function ResumeWindow({ onClose }) {
   return (
-    <div className="absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-white/10 bg-[#2b2b2b] shadow-2xl">
+    <div
+      onContextMenu={(e) => e.stopPropagation()}
+      className="absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-white/10 bg-[#2b2b2b] shadow-2xl"
+    >
       <div className="flex items-center justify-between bg-[#b30b00] px-3 py-2 text-white">
         <span className="text-sm font-medium">Resume.pdf</span>
         <button

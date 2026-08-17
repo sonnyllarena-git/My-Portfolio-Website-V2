@@ -4,6 +4,7 @@ import DesktopIcon from './DesktopIcon.jsx'
 import Window from './Window.jsx'
 import ResumeWindow from './ResumeWindow.jsx'
 import ThisPCWindow from './ThisPCWindow.jsx'
+import ContactInfoApp from './ContactInfoApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 
@@ -93,9 +94,21 @@ function Desktop() {
       {openAppId === 'this-pc' && (
         <ThisPCWindow onClose={() => setOpenAppId(null)} />
       )}
-      {openAppId && openAppId !== 'resume' && openAppId !== 'this-pc' && (
-        <Window title={openIcon?.label} onClose={() => setOpenAppId(null)} />
+      {openAppId === 'contact-info' && (
+        <Window
+          icon="📇"
+          title="Contact Info.txt"
+          onClose={() => setOpenAppId(null)}
+          defaultWidth={650}
+          defaultHeight={500}
+        >
+          <ContactInfoApp />
+        </Window>
       )}
+      {openAppId &&
+        !['resume', 'this-pc', 'contact-info'].includes(openAppId) && (
+          <Window title={openIcon?.label} onClose={() => setOpenAppId(null)} />
+        )}
       {iconMenu && (
         <ContextMenu
           x={iconMenu.x}

@@ -62,7 +62,8 @@ _Recurring compile, type, import, or module-resolution traps._
 
 _Framework-specific behaviour that bit us: lifecycle, state, rendering, routing, request handling._
 
-- _(none yet)_
+- [2026-08-17] `react-rnd`'s 8 resize handles hang half-outside the component's box by design (e.g. `bottom: -10px`); putting `overflow-hidden` on the `<Rnd>` container itself (for rounded corners) silently clipped that half away and made resizing un-grabbable → apply `overflow-hidden`/rounded corners to an inner wrapper div, never to the `<Rnd>` element itself.
+- [2026-08-17] The Desktop root's `onContextMenu` (for the wallpaper menu) was catching right-clicks that bubbled up from inside open windows too, hijacking the browser's native context menu (breaking right-click copy on selectable text) → any window content that needs native browser interactions (text selection copy, etc.) must `stopPropagation()` on its own `onContextMenu`.
 
 ---
 

@@ -24,7 +24,13 @@ function driveUsedPercent(drive) {
 
 function ThisPCWindow({ onClose }) {
   return (
-    <Window icon="💻" title="This PC" onClose={onClose} width="w-[700px]">
+    <Window
+      icon="💻"
+      title="This PC"
+      onClose={onClose}
+      defaultWidth={700}
+      defaultHeight={520}
+    >
       <div className="flex items-center gap-2 border-b border-white/10 bg-[#202225] px-2 py-1.5 text-white/80">
         <button aria-label="Back" className="rounded px-1 hover:bg-white/10">
           ←

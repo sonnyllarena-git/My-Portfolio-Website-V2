@@ -56,6 +56,7 @@ command you actually ran.
 | Build tool         | Vite (+ @vitejs/plugin-react)      | 8.2.1 / 6.0.5               | Boring, well-documented standard for React SPAs.                                                              |
 | Styling            | Tailwind CSS (+ @tailwindcss/vite) | 4.3.3 / 4.3.3               | Explicitly required in Sonny's spec. v4 uses a native Vite plugin, not PostCSS/autoprefixer — see LESSONS.md. |
 | Animation          | Framer Motion                      | 13.1.0                      | Explicitly required for drag/drop and icon animation.                                                         |
+| Window drag/resize | react-rnd                          | 10.5.3                      | Explicitly named by Sonny for 8-direction window resize + title-bar drag.                                     |
 | State / data       | React local state + Context API    | n/a                         | Explicitly requested; no external state library needed for a desktop-shell UI.                                |
 | Backend            | none                               | n/a                         | Static/client-only for v1; Contact app's backend need is deferred to Phase 1.                                 |
 | Database           | none                               | n/a                         | No persistent data needed for the v1 shell.                                                                   |
