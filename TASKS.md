@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 13 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 14 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -539,6 +539,104 @@ folder._
 
 ---
 
+## PHASE 14 — SETTINGS APP
+
+_Requested by Sonny on 2026-08-18, from screenshots of a reference Settings app (System,
+Personalization, Contact, Privacy & security, plus his own "Get Support" in place of the
+reference's Time & Date/About OS). Confirmed with Sonny: Dark/Light mode and accent color in
+Personalization are a **selection UI only for now** — they remember/highlight a choice but do not
+re-theme the rest of the already-built desktop shell (real re-theming is tracked in the Backlog
+below, not done here); wallpaper selection uses a few CSS-gradient backgrounds Claude builds
+(no real photo assets exist in this project yet) instead of the reference's photos; Brightness and
+Volume get **real effect** (brightness dims the whole desktop via an overlay, Volume drives the
+existing System Tray volume icon) via shared state, since Sonny plans to hook real audio/video into
+it later; the Settings button is taskbar-only (no desktop icon), pinned alongside Music/Terminal/
+Messaging using the `settings.jpg` asset he already dropped into `src/assets/icons/`. Contact reuses
+`src/data/contactInfo.js` (one source of truth with the existing Contact Info app) rather than a
+second parallel dataset; Privacy & security and Get Support use generic Sonny-branded text/wiring,
+not the reference screenshot's real third-party info._
+
+- [x] **P82** — Create `src/context/SystemSettingsContext.jsx` exporting `SystemSettingsProvider`
+      and a `useSystemSettings()` hook (`brightness`, `volume`, `wallpaperId`, `themeMode`,
+      `accentColor` + their setters, sensible defaults matching the current look); wrap
+      `<Desktop />` with it in `src/App.jsx` alongside the existing providers. Create
+      `src/data/wallpapers.js`: a few CSS-gradient wallpaper definitions
+      (id/label/swatch/layers/baseColor), including a
+      `cyber` entry that reproduces the desktop's current grid+glow look as the default.
+      **Pass condition:** a component under the provider can read and set all five values; verify
+      passes.
+
+- [x] **P83** — Wire `src/components/Desktop.jsx` to `useSystemSettings()`: replace the hardcoded
+      grid/glow background divs with the selected wallpaper's layers from `wallpapers.js`, and add a
+      full-screen `pointer-events-none` dimming overlay driven by `brightness` (0% brightness = a
+      fully opaque black overlay).
+      **Pass condition:** temporarily setting `wallpaperId`/`brightness` (e.g. via a quick manual
+      state change) visibly swaps the background and dims the desktop; every window still renders
+      normally; `verify` passes.
+
+- [x] **P84** — Wire `src/components/SystemTray.jsx` to `useSystemSettings()`'s `volume`: swap the
+      static 🔊 for 🔇 at 0, 🔈 below 50, 🔊 otherwise.
+      **Pass condition:** temporarily setting `volume` to 0/30/70 shows the expected icon; `verify`
+      passes.
+
+- [x] **P85** — Create `src/components/settings/SystemPage.jsx` (Brightness + Volume sliders bound
+      to `useSystemSettings()`, each showing a live percentage) and
+      `src/components/settings/PersonalizationPage.jsx` (a wallpaper grid from `wallpapers.js` with a
+      checkmark on the selected tile calling `setWallpaperId`, a Dark/Light mode card selector, and
+      accent-color swatches — both selection-only, calling `setThemeMode`/`setAccentColor` without
+      re-theming anything else); create `src/components/SettingsApp.jsx`: a left sidebar
+      (System/Personalization/Contact/Privacy & security/Get Support) plus a content area defaulting
+      to System, rendering `SystemPage`/`PersonalizationPage` for those two tabs.
+      **Pass condition:** standalone render shows the sidebar and System page by default; dragging
+      Brightness dims the desktop and dragging Volume updates the tray icon once mounted under
+      `Desktop`; switching to Personalization shows the wallpaper grid (clicking one changes the live
+      background) and the mode/accent selectors (clicking highlights the pick); `verify` passes.
+
+- [x] **P86** — Add a `role` field to `src/data/contactInfo.js` (e.g. a one-line title to pair with
+      the existing generic name/location); create `src/components/settings/ContactPage.jsx` (an
+      avatar-initial card with name/role/location + phone, plus the existing social-profiles grid,
+      all sourced from `contactInfo.js`) and `src/components/settings/PrivacySecurityPage.jsx`
+      (generic Privacy & Security / Terms of Use / Copyright / Data Collection blocks, rebranded for
+      Sonny/SonnyOS — Data Collection should honestly describe what this app actually stores: Memory
+      Wall notes and Visitor Arts submissions, session-only); wire both into `SettingsApp.jsx`.
+      **Pass condition:** Contact shows the real (generic) contact fields/social links; Privacy &
+      security shows the four text blocks; `verify` passes.
+
+- [x] **P87** — Create `src/components/settings/GetSupportPage.jsx` (a short description + a
+      "Contact Support via Email" button) accepting an `onOpenGmail` prop; wire it into
+      `SettingsApp.jsx` and thread `onOpenGmail` from `src/components/Desktop.jsx`'s existing
+      `handleIconOpen('gmail')` (same guest-gate → compose flow as the Gmail desktop icon).
+      **Pass condition:** clicking the button opens the Gmail guest gate (or compose window directly
+      if already gated this session), identical to opening Gmail from its desktop icon; `verify`
+      passes.
+
+- [x] **P88** — Add `settings` to `src/assets/icons/index.js`'s `iconImages` map (the `settings.jpg`
+      Sonny already dropped in); add a real, wired Settings button to `Taskbar.jsx`'s pinned-apps
+      group (distinct from the decorative Music/Terminal/Messaging buttons, which stay inert) via a
+      new `onOpenSettings` prop; wire it in `Desktop.jsx` to open `SettingsApp` through the generic
+      `Window` (icon ⚙️, no desktop icon — taskbar-only).
+      **Pass condition:** clicking the taskbar's Settings button opens the real Settings app at a
+      comfortable size; every other taskbar button and desktop icon is unaffected; `verify` passes.
+
+---
+
+## PHASE 14 ADDENDUM — SETTINGS ICONS
+
+_Requested by Sonny on 2026-08-18, from screenshots of the reference Settings sidebar and its
+Brightness/Volume rows: swap the emoji icons for clean line-art SVGs matching that style. No new
+icon-library dependency (would violate CLAUDE.md §2) — hand-built inline SVGs, same pattern as the
+existing `PdfGlyph.jsx`._
+
+- [x] **P89** — Create `src/components/icons/{MonitorIcon,PaletteIcon,UserIcon,ShieldIcon,
+SupportIcon,SunIcon,SpeakerIcon}.jsx` (stroke-based 24x24 SVGs, `className` prop); wire
+      System/Personalization/Contact/Privacy & security/Get Support in `SettingsApp.jsx`'s `TABS`
+      to their matching icon component, and Brightness/Volume in `SystemPage.jsx`'s `SliderRow` to
+      `SunIcon`/`SpeakerIcon`, replacing the emoji.
+      **Pass condition:** the Settings sidebar and System page show the new line icons in place of
+      the old emoji, with no visual regression elsewhere; `verify` passes.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.
@@ -548,6 +646,10 @@ Anything here is out of scope until Sonny moves it up.
 - Performance optimisation — until something measurably needs it
 - Auth, payments, or any third-party integration not in the §2 stack
 - Additional dependencies, frameworks, or architectural layers
+- **Full live re-theming from Settings > Personalization** — Dark/Light mode and accent color
+  currently only update selection state (Phase 14, P85); actually re-skinning every existing
+  window/taskbar/icon component to respect them is real follow-up work Sonny confirmed he wants
+  done later, not now.
 
 ---
 

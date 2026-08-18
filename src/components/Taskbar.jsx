@@ -10,11 +10,14 @@ function IconGlyph({ id, icon }) {
   )
 }
 
-function TaskbarButton({ id, icon, label }) {
+function TaskbarButton({ id, icon, label, onClick }) {
   const [isActive, setIsActive] = useState(false)
   return (
     <button
-      onClick={() => setIsActive((prev) => !prev)}
+      onClick={() => {
+        setIsActive((prev) => !prev)
+        onClick?.()
+      }}
       aria-label={label}
       className={`flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
         isActive ? 'bg-white/20' : 'hover:bg-white/10'
@@ -55,7 +58,7 @@ const pinnedApps = [
   { id: 'messaging', label: 'Messaging', icon: '💬' },
 ]
 
-function Taskbar({ openWindows = [], onWindowClick }) {
+function Taskbar({ openWindows = [], onWindowClick, onOpenSettings }) {
   return (
     <div className="absolute inset-x-0 bottom-0 flex h-12 items-center gap-1 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
       {leftLaunchers.map((item) => (
@@ -75,6 +78,12 @@ function Taskbar({ openWindows = [], onWindowClick }) {
             label={item.label}
           />
         ))}
+        <TaskbarButton
+          id="settings"
+          icon="⚙️"
+          label="Settings"
+          onClick={onOpenSettings}
+        />
       </div>
       {openWindows.length > 0 && (
         <div className="ml-4 flex items-center gap-1 border-l border-white/10 pl-4">

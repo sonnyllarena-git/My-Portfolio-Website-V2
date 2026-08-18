@@ -2,6 +2,7 @@ export const contactInfo = {
   headline: 'YOUR NAME - OFFICIAL CONTACT',
   fields: [
     { label: 'Name', value: 'Your Name' },
+    { label: 'Role', value: 'Your Role / Title' },
     { label: 'Based In', value: 'Your City, Country' },
     { label: 'Phone and WhatsApp', value: '+1 000 000 0000' },
     { label: 'Website', value: 'https://your-website.example', isLink: true },

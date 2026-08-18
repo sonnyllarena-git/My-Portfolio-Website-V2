@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
+
+function volumeIcon(volume) {
+  if (volume === 0) return '🔇'
+  if (volume < 50) return '🔈'
+  return '🔊'
+}
 
 function formatTime(date) {
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
@@ -20,6 +27,7 @@ function TrayButton({ label, children }) {
 }
 
 function SystemTray() {
+  const { volume } = useSystemSettings()
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -31,7 +39,7 @@ function SystemTray() {
     <div className="ml-auto flex items-center gap-1 pr-2 text-sm text-white">
       <TrayButton label="Show hidden icons">^</TrayButton>
       <TrayButton label="Wi-Fi">📶</TrayButton>
-      <TrayButton label="Volume">🔊</TrayButton>
+      <TrayButton label="Volume">{volumeIcon(volume)}</TrayButton>
       <TrayButton label="Battery">🔋</TrayButton>
       <div className="ml-2 text-right leading-tight">
         <div>{formatTime(now)}</div>

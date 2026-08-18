@@ -14,6 +14,7 @@ import paint from './paint.png'
 import pictures from './pictures.png'
 import recycleBin from './recycle-bin.png'
 import search from './search.png'
+import settings from './settings.jpg'
 import start from './start.png'
 import store from './store.png'
 import thisPc from './this-pc.png'
@@ -35,6 +36,7 @@ export const iconImages = {
   'visitor-arts': visitorArts,
   start,
   search,
+  settings,
   desktop,
   downloads,
   pictures,

@@ -11,11 +11,17 @@ import GmailComposeApp from './GmailComposeApp.jsx'
 import PaintApp from './PaintApp.jsx'
 import VisitorArtsApp from './VisitorArtsApp.jsx'
 import MemoryWallApp from './MemoryWallApp.jsx'
+import SettingsApp from './SettingsApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
+import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
+import { wallpapers } from '../data/wallpapers.js'
 
 function Desktop() {
+  const { brightness, wallpaperId } = useSystemSettings()
+  const wallpaper =
+    wallpapers.find((w) => w.id === wallpaperId) ?? wallpapers[0]
   const [selectedIconIds, setSelectedIconIds] = useState([])
   const [openWindows, setOpenWindows] = useState([])
   const [iconMenu, setIconMenu] = useState(null)
@@ -165,23 +171,20 @@ function Desktop() {
         e.preventDefault()
         setDesktopMenu({ x: e.clientX, y: e.clientY })
       }}
-      className="relative h-screen w-screen overflow-hidden bg-[#08090c] text-white"
+      className="relative h-screen w-screen overflow-hidden text-white"
+      style={{ backgroundColor: wallpaper.baseColor }}
     >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-20"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(0, 240, 255, 0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.6) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at 60% 40%, rgba(0, 240, 255, 0.08), transparent 70%), radial-gradient(circle at 20% 80%, rgba(0, 255, 102, 0.06), transparent 60%)',
-        }}
-      />
+      {wallpaper.layers.map((layer, index) => (
+        <div
+          key={index}
+          className="pointer-events-none absolute inset-0"
+          style={{
+            opacity: layer.opacity ?? 1,
+            backgroundImage: layer.backgroundImage,
+            backgroundSize: layer.backgroundSize,
+          }}
+        />
+      ))}
       <span className="absolute right-4 bottom-4 text-sm text-white/40 select-none [text-shadow:0_0_3px_rgba(0,0,0,0.9),0_0_6px_rgba(0,0,0,0.7)]">
         SonnyOS Professional
       </span>
@@ -317,6 +320,20 @@ function Desktop() {
             </Window>
           )
         }
+        if (w.id === 'settings') {
+          return (
+            <Window
+              key={w.instanceId}
+              {...shared}
+              icon="⚙️"
+              title="Settings"
+              defaultWidth={800}
+              defaultHeight={600}
+            >
+              <SettingsApp onOpenGmail={() => handleIconOpen('gmail')} />
+            </Window>
+          )
+        }
         const icon = desktopIcons.find((i) => i.id === w.id)
         return <Window key={w.instanceId} {...shared} title={icon?.label} />
       })}
@@ -356,12 +373,13 @@ function Desktop() {
           return {
             id: w.id,
             instanceId: w.instanceId,
-            label: icon?.label,
+            label: icon?.label ?? (w.id === 'settings' ? 'Settings' : w.id),
             icon: icon?.icon === 'pdf' ? '📄' : icon?.icon,
             isMinimized: w.isMinimized,
           }
         })}
         onWindowClick={toggleMinimize}
+        onOpenSettings={() => handleIconOpen('settings')}
       />
       {gmailGateOpen && (
         <GmailGuestGate
@@ -384,6 +402,10 @@ function Desktop() {
           }}
         />
       )}
+      <div
+        className="pointer-events-none absolute inset-0 z-[100] bg-black"
+        style={{ opacity: (100 - brightness) / 100 }}
+      />
     </div>
   )
 }
