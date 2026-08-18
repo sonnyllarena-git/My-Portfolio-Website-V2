@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 11 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 12 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -428,6 +428,55 @@ them for that reason alone._
       already-computed `documentText` and download it as `Contact-Info.txt`.
       **Pass condition:** Print opens the print dialog; Save As/Download downloads a real
       `Contact-Info.txt` containing the contact text; `verify` passes.
+
+---
+
+## PHASE 12 — MEMORY WALL APP
+
+_Requested by Sonny on 2026-08-18, from a screenshot of a "Memory Wall" reference: a shared note
+wall with a name/message/star-rating form on the left and a searchable, sortable, filterable card
+grid on the right. `desktopIcons.js` already has a `memory-wall` entry (currently opening the
+generic placeholder `Window`); this phase replaces that placeholder. Confirmed with Sonny: header
+copy is rebranded for Sonny (not the reference screenshot's "Pouya"), storage is session-only
+in-memory like `GalleryContext` (no backend, per CLAUDE.md §2 — resets on reload, not shared
+between real visitors), seeded with a handful of generic placeholder notes (not the reference
+screenshot's names/messages), and the ratings filter is exact-match (e.g. "4 stars" shows only
+notes rated exactly 4; "0 stars" shows notes posted with no rating selected)._
+
+- [x] **P74** — Create `src/data/memoryWallNotes.js` (a small seed list of generic placeholder
+      notes — id/name/message/rating/timestamp, ratings 0-5) and `src/context/MemoryWallContext.jsx`
+      exporting `MemoryWallProvider` and a `useMemoryWall()` hook (`notes`, `addNote`), mirroring
+      `GalleryContext.jsx`'s shape; wrap `<Desktop />` with it in `src/App.jsx` alongside the
+      existing `GalleryProvider`.
+      **Pass condition:** a component under `MemoryWallProvider` calling `useMemoryWall()` sees the
+      seeded notes array; `verify` passes.
+
+- [x] **P75** — Create `src/components/MemoryWallApp.jsx`: the header (badge + "Leave a mark on
+      Sonny's Portfolio" title + description + a live "N / Notes on the wall" count from
+      `useMemoryWall()`) and the left "Add your note" form (Your name input, Your message textarea
+      with a live 0/420 character counter, a 5-star clickable experience-rating control defaulting
+      to unrated) with a "Post to the wall" button that calls `addNote` (built id/timestamp) and
+      clears the form.
+      **Pass condition:** standalone render shows the header with the real seeded count; filling the
+      form and clicking Post adds a new note to `useMemoryWall()`'s `notes` and resets the form;
+      `verify` passes.
+
+- [x] **P76** — Add the right-side note-card grid to `MemoryWallApp.jsx`, driven by
+      `useMemoryWall()`'s `notes`: each card shows name, star rating, timestamp, and message with a
+      color cycled from a small pastel palette (stable per note, not reshuffling on sort/filter);
+      above the grid, add a search input (filters by name/message substring), a sort dropdown
+      (Newest first / Oldest first), and a ratings-filter dropdown (All ratings / 5..0 stars, exact
+      match).
+      **Pass condition:** typing in search narrows the cards by name/message; switching sort order
+      reorders the cards by timestamp; picking a star count in the ratings filter shows only exact
+      matches; posting a new note (from P75) appears in the grid immediately; `verify` passes.
+
+- [x] **P77** — Wire the "Memory Wall" icon in `src/components/Desktop.jsx` to open `MemoryWallApp`
+      (via the existing generic `Window`, matching the `visitor-arts` branch's pattern) instead of
+      the placeholder `Window`.
+      **Pass condition:** double-clicking "Memory Wall" opens the real app at a comfortable default
+      size; every other non-special icon still opens the generic placeholder `Window`; `verify`
+      passes.
 
 ---
 

@@ -9,6 +9,7 @@ import GmailGuestGate from './GmailGuestGate.jsx'
 import GmailComposeApp from './GmailComposeApp.jsx'
 import PaintApp from './PaintApp.jsx'
 import VisitorArtsApp from './VisitorArtsApp.jsx'
+import MemoryWallApp from './MemoryWallApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
@@ -289,6 +290,20 @@ function Desktop() {
               defaultHeight={600}
             >
               <VisitorArtsApp onOpenPaint={() => handleIconOpen('paint')} />
+            </Window>
+          )
+        }
+        if (w.id === 'memory-wall') {
+          return (
+            <Window
+              key={w.instanceId}
+              {...shared}
+              icon="🖼️"
+              title="Memory Wall"
+              defaultWidth={950}
+              defaultHeight={650}
+            >
+              <MemoryWallApp />
             </Window>
           )
         }
