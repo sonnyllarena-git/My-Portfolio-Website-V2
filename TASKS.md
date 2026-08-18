@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 12 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 13 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -477,6 +477,65 @@ notes rated exactly 4; "0 stars" shows notes posted with no rating selected)._
       **Pass condition:** double-clicking "Memory Wall" opens the real app at a comfortable default
       size; every other non-special icon still opens the generic placeholder `Window`; `verify`
       passes.
+
+---
+
+## PHASE 13 — DEVELOPER LAB (SHARED EXPLORER ENGINE)
+
+_Requested by Sonny on 2026-08-18, from a screenshot of a "Developer Lab" reference: it's the same
+file-explorer shell as `ThisPCWindow.jsx` (nav history, sidebar Quick access + This PC drives,
+Folders grid, search, ribbon), just rooted at "Developer Lab" instead of "This PC", with a
+different sidebar Quick access list, a "This PC" sidebar section showing only C/D Drive (not the
+existing This PC sidebar's own single-drive list — left unchanged), no "Devices and drives"
+section in its main pane (it's a subfolder, not a drives root), and a Folders grid of
+Projects/Tech Stack/Resume (Resume styled as a PDF file, matching the existing Resume desktop
+icon's PDF glyph). Rather than duplicate `ThisPCWindow.jsx`'s ~230 lines wholesale (CLAUDE.md §5:
+"Duplicated shapes that can disagree are bugs waiting"), this phase first generalizes the existing
+`thispc/*` components into a shared, prop-driven explorer engine, then builds Developer Lab as a
+thin config on top of it. Sonny asked to make Projects/Tech Stack/Resume empty for now — they
+already get the existing "This folder is empty" placeholder for free, same as every This PC
+folder._
+
+- [x] **P78** — Extract the `PdfGlyph` inline SVG out of `src/components/DesktopIcon.jsx` into
+      `src/components/icons/PdfGlyph.jsx` (accepting a `className` prop, default `h-8 w-8`); update
+      `DesktopIcon.jsx` to import it; update `src/components/thispc/ItemIcon.jsx` to render it when
+      `icon === 'pdf'` (mirroring `DesktopIcon.jsx`'s existing token), so any explorer tile can be
+      styled as a PDF file.
+      **Pass condition:** the Resume desktop icon still renders the PDF glyph via the shared
+      component with no visual change; `verify` passes.
+
+- [x] **P79** — Generalize `src/components/thispc/RootView.jsx` to accept `folders` and an optional
+      `devices` prop instead of importing `quickAccess`/`drives` from `thisPcLocations.js` directly
+      (when `devices` is omitted, the "Devices and drives" section doesn't render at all); update
+      `src/components/ThisPCWindow.jsx` to pass `folders={quickAccess}` and `devices={drives}`
+      explicitly.
+      **Pass condition:** This PC's root view renders identically to before (Folders + Devices
+      sections, search filtering both); `verify` passes.
+
+- [x] **P80** — Rename `src/components/thispc/` to `src/components/explorer/`; extract the shared
+      explorer engine (navigation history, ribbon config, sidebar, tile/context-menu wiring,
+      search, empty-folder view) out of `ThisPCWindow.jsx` into
+      `src/components/explorer/ExplorerWindow.jsx`, parameterized by `icon`/`title`/
+      `defaultWidth`/`defaultHeight`/`rootLabel`/`quickAccess`/`pcDrives`/`folders`/`devices` (plus
+      the existing `onClose`/`isMinimized`/`onMinimizeToggle`/`cascadeOffset`/`onOpenNewWindow`
+      instance props); rewrite `ThisPCWindow.jsx` as a thin wrapper passing This PC's existing data
+      into `ExplorerWindow`.
+      **Pass condition:** This PC's full existing behavior (navigation, tile select/open/context
+      menu, ribbon, search, multi-instance) is unchanged when driven through the new shared
+      component; `verify` passes.
+
+- [x] **P81** — Create `src/data/developerLabLocations.js` (`quickAccess`: Desktop/Downloads/
+      Visitor Arts/Pictures; `pcDrives`: "C Drive"/"D Drive" reusing the existing drive icons;
+      `folders`: Projects/Tech Stack/Resume with `icon: 'pdf'` on Resume; no `devices` list) and
+      `src/components/DeveloperLabWindow.jsx` as a thin wrapper around `ExplorerWindow` (icon 🛠️,
+      title "Developer Lab", `rootLabel: 'Developer Lab'`, no `devices` prop); wire the
+      `developer-lab` icon in `src/components/Desktop.jsx` to open it (matching the `this-pc`
+      branch's pattern, including `cascadeOffset`/`onOpenNewWindow`).
+      **Pass condition:** double-clicking "Developer Lab" opens a real explorer window with Quick
+      access (Desktop/Downloads/Visitor Arts/Pictures) and This PC (C Drive/D Drive) in the
+      sidebar, a Folders grid (Projects/Tech Stack/Resume-as-PDF) with no Devices section;
+      navigating into any tile shows the empty-folder placeholder; every other non-special icon
+      still opens the generic placeholder `Window`; `verify` passes.
 
 ---
 

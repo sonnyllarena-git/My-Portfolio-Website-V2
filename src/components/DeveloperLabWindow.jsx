@@ -1,7 +1,11 @@
-import { quickAccess, thisPcDrives, drives } from '../data/thisPcLocations.js'
+import {
+  quickAccess,
+  pcDrives,
+  folders,
+} from '../data/developerLabLocations.js'
 import ExplorerWindow from './explorer/ExplorerWindow.jsx'
 
-function ThisPCWindow({
+function DeveloperLabWindow({
   onClose,
   isMinimized,
   onMinimizeToggle,
@@ -10,15 +14,14 @@ function ThisPCWindow({
 }) {
   return (
     <ExplorerWindow
-      icon="💻"
-      title="This PC"
+      icon="🛠️"
+      title="Developer Lab"
       defaultWidth={700}
       defaultHeight={520}
-      rootLabel="This PC"
+      rootLabel="Developer Lab"
       quickAccess={quickAccess}
-      pcDrives={thisPcDrives}
-      folders={quickAccess}
-      devices={drives}
+      pcDrives={pcDrives}
+      folders={folders}
       onClose={onClose}
       isMinimized={isMinimized}
       onMinimizeToggle={onMinimizeToggle}
@@ -28,4 +31,4 @@ function ThisPCWindow({
   )
 }
 
-export default ThisPCWindow
+export default DeveloperLabWindow

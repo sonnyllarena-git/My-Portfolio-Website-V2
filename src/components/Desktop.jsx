@@ -4,6 +4,7 @@ import DesktopIcon from './DesktopIcon.jsx'
 import Window from './Window.jsx'
 import ResumeWindow from './ResumeWindow.jsx'
 import ThisPCWindow from './ThisPCWindow.jsx'
+import DeveloperLabWindow from './DeveloperLabWindow.jsx'
 import ContactInfoApp from './ContactInfoApp.jsx'
 import GmailGuestGate from './GmailGuestGate.jsx'
 import GmailComposeApp from './GmailComposeApp.jsx'
@@ -235,6 +236,15 @@ function Desktop() {
               {...shared}
               cascadeOffset={cascadeOffset}
               onOpenNewWindow={() => openNewInstance('this-pc')}
+            />
+          )
+        if (w.id === 'developer-lab')
+          return (
+            <DeveloperLabWindow
+              key={w.instanceId}
+              {...shared}
+              cascadeOffset={cascadeOffset}
+              onOpenNewWindow={() => openNewInstance('developer-lab')}
             />
           )
         if (w.id === 'gmail') {
