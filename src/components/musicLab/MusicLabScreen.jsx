@@ -12,6 +12,10 @@ function MusicLabScreen({
   onVideoTimeUpdate,
   onVideoLoadedMetadata,
   onVideoEnded,
+  audioRef,
+  onAudioTimeUpdate,
+  onAudioLoadedMetadata,
+  onAudioEnded,
 }) {
   return (
     <section className="flex flex-col border-b border-white/10">
@@ -19,7 +23,8 @@ function MusicLabScreen({
         {activeType === 'video' && activeItem && (
           <video
             ref={videoRef}
-            src={activeItem.src}
+            src={activeItem.mediaSrc}
+            poster={activeItem.thumbnailSrc ?? undefined}
             controls
             className="h-full w-full bg-black object-contain"
             onTimeUpdate={onVideoTimeUpdate}
@@ -28,7 +33,19 @@ function MusicLabScreen({
           />
         )}
         {activeType === 'music' && activeItem && (
-          <MusicWave isPlaying={isPlaying} />
+          <>
+            <MusicWave isPlaying={isPlaying} />
+            {activeItem.mediaSrc && (
+              <audio
+                ref={audioRef}
+                src={activeItem.mediaSrc}
+                className="hidden"
+                onTimeUpdate={onAudioTimeUpdate}
+                onLoadedMetadata={onAudioLoadedMetadata}
+                onEnded={onAudioEnded}
+              />
+            )}
+          </>
         )}
         {!activeItem && (
           <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-4xl font-bold text-white">
@@ -50,7 +67,7 @@ function MusicLabScreen({
           </h2>
           <div className="truncate text-sm text-white/50">
             {activeItem
-              ? (activeItem.subtitle ?? activeItem.artist)
+              ? activeItem.album
               : 'Select something from Your Library to get started'}
           </div>
         </div>

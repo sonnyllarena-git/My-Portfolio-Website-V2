@@ -1,34 +1,4 @@
-import sonnyDriveIncubus from '../assets/music-lab/sonny-drive-incubus.mp4'
-
-export const videos = [
-  {
-    id: 'sonny-drive-incubus',
-    title: 'Late Night Drive',
-    subtitle: 'Incubus — personal footage',
-    src: sonnyDriveIncubus,
-  },
-]
-
-export const tracks = [
-  {
-    id: 'focus-mode',
-    title: 'Focus Mode',
-    artist: 'Sonny’s Playlist',
-    duration: 214,
-  },
-  {
-    id: 'late-night-code',
-    title: 'Late Night Code',
-    artist: 'Sonny’s Playlist',
-    duration: 187,
-  },
-  {
-    id: 'coffee-and-commits',
-    title: 'Coffee and Commits',
-    artist: 'Sonny’s Playlist',
-    duration: 241,
-  },
-]
+export { videos, tracks } from '../utils/loadMusicLabLibrary.js'
 
 export const aboutArticle = [
   'Music runs in the background of pretty much everything I build. Most of my longest coding sessions start with picking a playlist before I even open the editor — the right track seems to unlock focus the way a good cup of coffee does.',

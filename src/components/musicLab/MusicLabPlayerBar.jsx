@@ -36,15 +36,23 @@ function MusicLabPlayerBar({
   return (
     <div className="flex items-center gap-4 border-t border-white/10 bg-[#0d0e11] px-4 py-3 text-white">
       <div className="flex w-56 shrink-0 items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded bg-white/10 text-lg">
-          {activeType === 'video' ? '🎬' : '🎵'}
-        </div>
+        {activeItem?.thumbnailSrc ? (
+          <img
+            src={activeItem.thumbnailSrc}
+            alt=""
+            className="h-10 w-10 rounded object-cover"
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded bg-white/10 text-lg">
+            {activeType === 'video' ? '🎬' : '🎵'}
+          </div>
+        )}
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">
             {activeItem?.title ?? 'Nothing playing'}
           </div>
           <div className="truncate text-xs text-white/50">
-            {activeItem ? (activeItem.subtitle ?? activeItem.artist) : '—'}
+            {activeItem ? activeItem.album : '—'}
           </div>
         </div>
       </div>

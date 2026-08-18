@@ -53,14 +53,20 @@ function MusicLabSidebar({
               selectedItemId === item.id ? 'bg-white/10' : 'hover:bg-white/5'
             }`}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-white/10 text-lg">
-              {activeType === 'video' ? '🎬' : '🎵'}
-            </div>
+            {item.thumbnailSrc ? (
+              <img
+                src={item.thumbnailSrc}
+                alt=""
+                className="h-10 w-10 shrink-0 rounded object-cover"
+              />
+            ) : (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-white/10 text-lg">
+                {activeType === 'video' ? '🎬' : '🎵'}
+              </div>
+            )}
             <div className="min-w-0">
               <div className="truncate text-sm font-medium">{item.title}</div>
-              <div className="truncate text-xs text-white/50">
-                {item.subtitle ?? item.artist}
-              </div>
+              <div className="truncate text-xs text-white/50">{item.album}</div>
             </div>
           </button>
         ))}

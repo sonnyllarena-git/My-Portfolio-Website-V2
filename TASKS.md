@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 24 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 25 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -947,6 +947,62 @@ PlayIcon,PauseIcon,PreviousIcon,NextIcon,CastIcon,CloseIcon}.jsx` (24x24, `class
       **Pass condition:** Music Lab's hero Play button and transport bar show clean vector icons
       matching the reference screenshots, with all existing click behavior unchanged; `verify`
       passes.
+
+---
+
+## PHASE 25 — MUSIC LAB PER-ITEM CONTENT FOLDERS
+
+_Requested by Sonny on 2026-08-18: instead of hardcoding library entries in
+`musicLabLibrary.js`, give each video/track its own folder he can drop files into — the media
+file, an optional thumbnail, and a plain-text "notepad" for Title/Album. No backend exists (CLAUDE.md
+§2), so this is resolved entirely at build time via Vite's `import.meta.glob`, not a runtime file
+read. Convention: `src/assets/music-lab/videos/<slug>/` and `.../tracks/<slug>/`, each holding
+`media.<ext>` (required for videos, optional for tracks — a track with no media yet keeps the
+existing cosmetic waveform-only playback), `thumbnail.<ext>` (optional, falls back to the existing
+emoji tile), and `notes.txt` (`Title: ...` / `Album: ...` lines, plus `Duration: m:ss` for a
+track with no media yet, since the cosmetic simulation needs an end point). A track that gets a
+real `media.*` file automatically switches to real `<audio>` playback, the same way video already
+works — no code change needed at that point._
+
+- [x] **P114** — Migrate existing content into the new folder convention: move
+      `src/assets/music-lab/sonny-drive-incubus.mp4` to
+      `src/assets/music-lab/videos/late-night-drive/media.mp4` with a `notes.txt` (Title: Late
+      Night Drive / Album: Incubus); convert the 3 placeholder tracks into
+      `src/assets/music-lab/tracks/{focus-mode,late-night-code,coffee-and-commits}/notes.txt`
+      (Title/Album/Duration, no media file yet).
+      **Pass condition:** the folder tree matches the convention above with real file content;
+      `verify` passes (no code references the old flat path yet, so build still succeeds).
+
+- [x] **P115** — Create `src/utils/loadMusicLabLibrary.js`: use `import.meta.glob` (eager, `?url`
+      for media/thumbnail, `?raw` for notes.txt) over `../assets/music-lab/videos/*/*` and
+      `.../tracks/*/*`, parse each folder's `notes.txt` into `{title, album, duration}`, and export
+      `videos`/`tracks` arrays of `{id (folder slug), title, album, duration, mediaSrc,
+thumbnailSrc}`, sorted by slug.
+      **Pass condition:** importing the file exposes `videos`/`tracks` built from the real folders
+      created in P114, with correct titles/albums parsed from their `notes.txt`; `verify` passes.
+
+- [x] **P116** — Update `src/data/musicLabLibrary.js` to re-export `videos`/`tracks` from
+      `loadMusicLabLibrary.js` (removing the old hardcoded arrays and the direct video import),
+      keeping `aboutArticle` as-is.
+      **Pass condition:** `musicLabLibrary.js` no longer hardcodes library entries; `verify`
+      passes.
+
+- [x] **P117** — Update `MusicLabSidebar.jsx` and `MusicLabPlayerBar.jsx` to show `item.thumbnailSrc`
+      as an `<img>` when present (falling back to the existing emoji tile otherwise), and switch
+      every `item.subtitle ?? item.artist` reference to the new unified `item.album` field
+      (`MusicLabScreen.jsx` too).
+      **Pass condition:** an item with a `thumbnail.*` file shows the real image in the sidebar and
+      the now-playing bar; one without still shows the emoji tile; album text displays correctly;
+      `verify` passes.
+
+- [x] **P118** — Extend `MusicLabApp.jsx`/`MusicLabScreen.jsx`: when the active music item has a
+      real `mediaSrc`, play it through a real (visually hidden) `<audio>` element using the same
+      play/pause/seek/volume/time-update wiring already used for video, instead of the cosmetic
+      timer; tracks with no `mediaSrc` keep the existing cosmetic simulation, seeded from the
+      `notes.txt`-provided `duration`.
+      **Pass condition:** a track folder with a real `media.*` file plays real audio via the
+      transport bar exactly like video does; a track with no media file still uses the cosmetic
+      waveform simulation; `verify` passes.
 
 ---
 

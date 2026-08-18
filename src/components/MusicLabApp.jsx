@@ -15,29 +15,37 @@ function MusicLabApp() {
   const [isShuffleOn, setIsShuffleOn] = useState(false)
   const [isRepeatOn, setIsRepeatOn] = useState(false)
   const videoRef = useRef(null)
+  const audioRef = useRef(null)
 
   const items = activeType === 'video' ? videos : tracks
 
   useEffect(() => {
-    if (activeType !== 'video' || !videoRef.current) return
-    if (isPlaying) videoRef.current.play()
-    else videoRef.current.pause()
+    const el =
+      activeType === 'video'
+        ? videoRef.current
+        : activeItem?.mediaSrc
+          ? audioRef.current
+          : null
+    if (!el) return
+    if (isPlaying) el.play()
+    else el.pause()
   }, [isPlaying, activeType, activeItem])
 
   useEffect(() => {
     if (videoRef.current) videoRef.current.volume = volume / 100
+    if (audioRef.current) audioRef.current.volume = volume / 100
   }, [volume])
 
   useEffect(() => {
-    if (activeType !== 'music' || !isPlaying) return
+    if (activeType !== 'music' || !isPlaying || activeItem?.mediaSrc) return
     const interval = setInterval(() => {
       setCurrentTime((prev) => prev + 1)
     }, 1000)
     return () => clearInterval(interval)
-  }, [activeType, isPlaying])
+  }, [activeType, isPlaying, activeItem])
 
   useEffect(() => {
-    if (activeType !== 'music' || !activeItem) return
+    if (activeType !== 'music' || !activeItem || activeItem.mediaSrc) return
     if (currentTime < activeItem.duration) return
     const timeout = setTimeout(() => {
       setCurrentTime(activeItem.duration)
@@ -61,7 +69,7 @@ function MusicLabApp() {
   function handleSelectItem(item) {
     setActiveItem(item)
     resetPlayback()
-    setDuration(item.duration ?? 0)
+    setDuration(item.mediaSrc ? 0 : (item.duration ?? 0))
   }
 
   function stepItem(offset) {
@@ -85,6 +93,12 @@ function MusicLabApp() {
     setCurrentTime(newTime)
     if (activeType === 'video' && videoRef.current) {
       videoRef.current.currentTime = newTime
+    } else if (
+      activeType === 'music' &&
+      activeItem?.mediaSrc &&
+      audioRef.current
+    ) {
+      audioRef.current.currentTime = newTime
     }
   }
 
@@ -115,6 +129,10 @@ function MusicLabApp() {
             onVideoTimeUpdate={(e) => setCurrentTime(e.target.currentTime)}
             onVideoLoadedMetadata={(e) => setDuration(e.target.duration)}
             onVideoEnded={() => setIsPlaying(false)}
+            audioRef={audioRef}
+            onAudioTimeUpdate={(e) => setCurrentTime(e.target.currentTime)}
+            onAudioLoadedMetadata={(e) => setDuration(e.target.duration)}
+            onAudioEnded={() => setIsPlaying(false)}
           />
           <MusicLabAbout />
         </div>
