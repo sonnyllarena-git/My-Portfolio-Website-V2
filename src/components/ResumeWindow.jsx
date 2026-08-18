@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { accentColors } from '../data/accentColors.js'
+import ResumePage from './ResumePage.jsx'
 
 const RESUME_FILE_PATH = '/resume.pdf'
+const FADE_DURATION = 0.18
 
 function downloadResume() {
   const link = document.createElement('a')
@@ -14,23 +17,37 @@ function downloadResume() {
 function ResumeWindow({
   onClose,
   isMinimized = false,
+  isClosing = false,
   onMinimizeToggle,
   zIndex,
   onFocus,
 }) {
   const { accentColor } = useSystemSettings()
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
+  const isHidden = isMinimized || isClosing
+  const [shouldRender, setShouldRender] = useState(!isHidden)
   const [showFileMenu, setShowFileMenu] = useState(false)
 
-  if (isMinimized) return null
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setShouldRender(!isHidden),
+      isHidden ? FADE_DURATION * 1000 : 0,
+    )
+    return () => clearTimeout(timer)
+  }, [isHidden])
+
+  if (!shouldRender) return null
 
   return (
-    <div
+    <motion.div
       onClick={() => setShowFileMenu(false)}
       onContextMenu={(e) => e.stopPropagation()}
       onMouseDownCapture={onFocus}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isHidden ? 0 : 1 }}
+      transition={{ duration: FADE_DURATION }}
       style={{ borderColor: accentHex, zIndex }}
-      className="absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border-2 bg-[#2b2b2b] shadow-2xl"
+      className="pointer-events-auto absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border-2 bg-[#2b2b2b] shadow-2xl"
     >
       <div className="flex items-center justify-between bg-[#b30b00] px-3 py-2 text-white">
         <span className="text-sm font-medium">Resume.pdf</span>
@@ -98,16 +115,8 @@ function ResumeWindow({
           </div>
         )}
       </div>
-      <div className="flex justify-center bg-[#525659] p-6">
-        <div className="h-80 w-64 space-y-3 rounded-sm bg-white p-4 shadow-lg">
-          <div className="h-4 w-3/4 rounded bg-gray-300" />
-          <div className="h-3 w-1/2 rounded bg-gray-200" />
-          <div className="mt-4 h-2 w-full rounded bg-gray-200" />
-          <div className="h-2 w-full rounded bg-gray-200" />
-          <div className="h-2 w-5/6 rounded bg-gray-200" />
-        </div>
-      </div>
-    </div>
+      <ResumePage />
+    </motion.div>
   )
 }
 

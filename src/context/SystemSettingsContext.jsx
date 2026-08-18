@@ -1,13 +1,20 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 
 const SystemSettingsContext = createContext(null)
+const WALLPAPER_STORAGE_KEY = 'wallpaperId'
 
 export function SystemSettingsProvider({ children }) {
   const [brightness, setBrightness] = useState(100)
   const [volume, setVolume] = useState(70)
-  const [wallpaperId, setWallpaperId] = useState('cyber')
+  const [wallpaperId, setWallpaperId] = useState(
+    () => localStorage.getItem(WALLPAPER_STORAGE_KEY) || 'cyber',
+  )
   const [themeMode, setThemeMode] = useState('dark')
   const [accentColor, setAccentColor] = useState('blue')
+
+  useEffect(() => {
+    localStorage.setItem(WALLPAPER_STORAGE_KEY, wallpaperId)
+  }, [wallpaperId])
 
   return (
     <SystemSettingsContext.Provider

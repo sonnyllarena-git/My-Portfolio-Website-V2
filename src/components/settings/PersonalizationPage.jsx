@@ -26,7 +26,7 @@ function PersonalizationPage() {
               type="button"
               onClick={() => setWallpaperId(wallpaper.id)}
               aria-label={wallpaper.label}
-              className={`relative h-20 rounded-md border-2 ${
+              className={`relative h-20 rounded-md border-2 bg-cover bg-center ${
                 wallpaperId === wallpaper.id
                   ? 'border-blue-500'
                   : 'border-transparent'

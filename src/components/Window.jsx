@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Rnd } from 'react-rnd'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { accentColors } from '../data/accentColors.js'
@@ -6,12 +7,14 @@ import { accentColors } from '../data/accentColors.js'
 const MIN_WIDTH = 480
 const MIN_HEIGHT = 320
 const TASKBAR_HEIGHT = 48
+const FADE_DURATION = 0.18
 
 function Window({
   icon,
   title,
   onClose,
   isMinimized = false,
+  isClosing = false,
   onMinimizeToggle,
   defaultWidth = MIN_WIDTH,
   defaultHeight = MIN_HEIGHT,
@@ -22,8 +25,18 @@ function Window({
 }) {
   const { accentColor } = useSystemSettings()
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
+  const isHidden = isMinimized || isClosing
+  const [shouldRender, setShouldRender] = useState(!isHidden)
   const [isMaximized, setIsMaximized] = useState(false)
   const previousLayout = useRef(null)
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setShouldRender(!isHidden),
+      isHidden ? FADE_DURATION * 1000 : 0,
+    )
+    return () => clearTimeout(timer)
+  }, [isHidden])
   const [layout, setLayout] = useState(() => {
     const width = Math.max(defaultWidth, MIN_WIDTH)
     const height = Math.max(defaultHeight, MIN_HEIGHT)
@@ -54,7 +67,7 @@ function Window({
     }
   }
 
-  if (isMinimized) return null
+  if (!shouldRender) return null
 
   return (
     <Rnd
@@ -74,11 +87,15 @@ function Window({
       dragHandleClassName="window-title-bar"
       disableDragging={isMaximized}
       enableResizing={!isMaximized}
+      className="pointer-events-auto"
       style={{ zIndex }}
     >
-      <div
+      <motion.div
         onContextMenu={(e) => e.stopPropagation()}
         onMouseDownCapture={onFocus}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isHidden ? 0 : 1 }}
+        transition={{ duration: FADE_DURATION }}
         style={{ borderColor: accentHex }}
         className="flex h-full w-full flex-col overflow-hidden rounded-lg border-2 bg-[#1a1c22] text-white shadow-2xl"
       >
@@ -121,7 +138,7 @@ function Window({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </Rnd>
   )
 }

@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 18 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 22 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -734,6 +734,107 @@ This PC/Developer Lab stay as-is._
       `src/components/explorer/ExplorerWindow.jsx` untouched.
       **Pass condition:** This PC/Developer Lab's Folders and Devices tiles show visibly bigger
       icons matching desktop-icon scale; the sidebar's Quick access/This PC icons are unchanged;
+      `verify` passes.
+
+---
+
+## PHASE 19 — ICON FIX, TASKBAR OVERLAP GUARD, TASKBAR PREVIEW UPGRADE
+
+_Reported by Sonny on 2026-08-18. He dropped a replacement `settings.png` into
+`src/assets/icons/` but `src/assets/icons/index.js` still imported the old `settings.jpg`
+(deleted), so the icon broke. He also wants windows unable to resize/drag over the taskbar, and
+wants to revisit P95's taskbar hover treatment with something closer to a real live thumbnail —
+pending his answer on approach (P99)._
+
+- [x] **P97** — Fix `src/assets/icons/index.js`'s settings import to point at the actual
+      `settings.png` file (was still importing the deleted `settings.jpg`).
+      **Pass condition:** the Settings taskbar button and any open Settings window show the new
+      icon instead of a broken image; `verify` passes.
+
+- [x] **P98** — Constrain window drag/resize in `src/components/Desktop.jsx`: wrap the
+      `openWindows` render in a `pointer-events-none` container sized to exclude the taskbar's 48px
+      strip (`bottom-12`), re-enabling `pointer-events-auto` on the actual window elements in
+      `src/components/Window.jsx` and `src/components/ResumeWindow.jsx`, so `react-rnd`'s
+      `bounds="parent"` now excludes the taskbar for both dragging and resizing.
+      **Pass condition:** dragging or resizing any window toward the bottom of the screen stops at
+      the taskbar's top edge instead of covering it; clicking/selecting on the empty desktop still
+      works exactly as before; `verify` passes.
+
+- [x] **P99** — Sonny chose the live-mounted miniature preview. Extracted
+      `src/components/explorer/ExplorerBody.jsx` out of `ExplorerWindow.jsx` and
+      `src/components/ResumePage.jsx` out of `ResumeWindow.jsx` (pure refactors, so the real
+      content is reusable standalone); added `src/components/TaskbarPreview.jsx` (a small clipped,
+      scaled, non-interactive box); wired `src/components/Desktop.jsx` to compute a live preview
+      node per open window (reusing the same content components — ContactInfoApp, GmailComposeApp,
+      PaintApp, VisitorArtsApp, MemoryWallApp, SettingsApp, ExplorerBody, ResumePage) and pass it
+      through to `src/components/Taskbar.jsx`'s `RunningAppButton`, which now mounts the preview
+      only while actually hovered (not eagerly for every open window). Fixed two bugs caught by
+      actually running the app: the preview's real buttons/inputs were nesting inside the
+      taskbar's own `<button>` (invalid HTML) — restructured `RunningAppButton` to wrap the button
+      and popup in a plain hover-tracking `<div>` instead; and the popup rendered behind open
+      windows because `Taskbar` had no explicit `z-index` while windows now do (P94's 20+index) —
+      gave the taskbar `z-40`, safely above any realistic open-window count and still below the
+      z-50 modals/context-menu layer.
+      **Pass condition:** hovering a running app's taskbar icon shows a small live-scaled preview
+      of that app's actual current content, rendered in front of every open window, with no
+      console errors; blog/music-lab/games/etc. (no standalone content component) fall back to the
+      label-only bubble; `verify` passes.
+
+---
+
+## PHASE 20 — REAL WALLPAPER PHOTOS
+
+_Requested by Sonny on 2026-08-18: he dropped real wallpaper photos into
+`src/assets/wallpaper/` and asked to wire them into Settings > Personalization's Background
+picker, superseding P82's note that "no real photo assets exist in this project yet". Independent
+of the still-blocked P99._
+
+- [x] **P100** — Add the 4 photos in `src/assets/wallpaper/` as new entries in
+      `src/data/wallpapers.js` (image-backed `layers` using `background-size: cover`/
+      `background-position: center`/`no-repeat`); update `src/components/Desktop.jsx`'s wallpaper
+      layer rendering to apply `backgroundPosition`/`backgroundRepeat` from each layer (gradient
+      layers are unaffected since they don't set those fields); update the swatch thumbnail button
+      in `src/components/settings/PersonalizationPage.jsx` to size/center image swatches the same
+      way.
+      **Pass condition:** Settings > Personalization's Background grid shows 4 new real-photo
+      tiles alongside the existing gradients; clicking one sets it as the live desktop background,
+      correctly cropped/centered; `verify` passes.
+
+---
+
+## PHASE 21 — PERSIST SELECTED WALLPAPER
+
+_Requested by Sonny on 2026-08-18: the selected background should survive a page reload instead
+of resetting to the default every time._
+
+- [x] **P101** — In `src/context/SystemSettingsContext.jsx`, initialize `wallpaperId` from
+      `localStorage` (fallback to `'cyber'` if unset) and add a `useEffect` that writes it back to
+      `localStorage` on every change.
+      **Pass condition:** picking a wallpaper in Settings > Personalization, then reloading the
+      page, shows the same wallpaper still applied; `verify` passes.
+
+---
+
+## PHASE 22 — WINDOW OPEN/CLOSE FADE + HOVER PREVIEW FADE
+
+_Requested by Sonny on 2026-08-18: opening/closing/minimizing/restoring any window (from a desktop
+icon or the taskbar) should fade instead of popping instantly, and the P99 taskbar hover preview
+should fade in/out too instead of appearing/disappearing abruptly._
+
+- [x] **P102** — In `src/components/Desktop.jsx`, `closeApp` now marks the window `isClosing`
+      before actually removing it from `openWindows` after a 180ms delay (`CLOSE_ANIMATION_MS`),
+      threaded into the existing `shared` window-prop bundle. In `src/components/Window.jsx` and
+      `src/components/ResumeWindow.jsx`, the outer frame becomes a `framer-motion` `motion.div`
+      (opacity 0→1 on mount/restore, animated to 0 while `isMinimized || isClosing`) driven by a
+      single effect that always defers its `setShouldRender` call inside a `setTimeout` (0ms to
+      show immediately, the fade duration to hide) — needed to satisfy this project's stricter
+      `react-hooks` lint rules against synchronous `setState` calls in an effect body and against
+      reading/writing `ref.current` during render. In `src/components/TaskbarPreview.jsx`, the
+      popup becomes a `motion.div` with `initial`/`animate`/`exit` opacity, wrapped in
+      `AnimatePresence` in `src/components/Taskbar.jsx` so the exit transition actually plays
+      before the popup unmounts.
+      **Pass condition:** opening, closing, minimizing, and restoring any window visibly fades
+      instead of popping; hovering on/off a taskbar running-app icon fades its preview in and out;
       `verify` passes.
 
 ---

@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import SystemTray from './SystemTray.jsx'
+import TaskbarPreview from './TaskbarPreview.jsx'
 import { iconImages } from '../assets/icons/index.js'
 
 function IconGlyph({ id, icon }) {
@@ -28,22 +30,45 @@ function TaskbarButton({ id, icon, label, onClick }) {
   )
 }
 
-function RunningAppButton({ id, icon, label, isMinimized, onClick }) {
+function RunningAppButton({
+  id,
+  icon,
+  label,
+  isMinimized,
+  onClick,
+  preview,
+  naturalWidth,
+  naturalHeight,
+}) {
+  const [isHovered, setIsHovered] = useState(false)
   return (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      className={`group relative flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
-        isMinimized
-          ? 'bg-white/5 hover:bg-white/10'
-          : 'bg-white/20 hover:bg-white/30'
-      }`}
+    <div
+      className="relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <IconGlyph id={id} icon={icon} />
-      <span className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 rounded-md border border-white/10 bg-[#1f2126] px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
-        {label}
-      </span>
-    </button>
+      <button
+        onClick={onClick}
+        aria-label={label}
+        className={`flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
+          isMinimized
+            ? 'bg-white/5 hover:bg-white/10'
+            : 'bg-white/20 hover:bg-white/30'
+        }`}
+      >
+        <IconGlyph id={id} icon={icon} />
+      </button>
+      <AnimatePresence>
+        {isHovered && (
+          <TaskbarPreview
+            label={label}
+            content={preview}
+            naturalWidth={naturalWidth}
+            naturalHeight={naturalHeight}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -62,7 +87,7 @@ const pinnedApps = [
 
 function Taskbar({ openWindows = [], onWindowClick, onOpenSettings }) {
   return (
-    <div className="absolute inset-x-0 bottom-0 flex h-12 items-center gap-1 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
+    <div className="absolute inset-x-0 bottom-0 z-40 flex h-12 items-center gap-1 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
       {leftLaunchers.map((item) => (
         <TaskbarButton
           key={item.id}
@@ -97,6 +122,9 @@ function Taskbar({ openWindows = [], onWindowClick, onOpenSettings }) {
               label={w.label}
               isMinimized={w.isMinimized}
               onClick={() => onWindowClick(w.instanceId)}
+              preview={w.preview}
+              naturalWidth={w.naturalWidth}
+              naturalHeight={w.naturalHeight}
             />
           ))}
         </div>

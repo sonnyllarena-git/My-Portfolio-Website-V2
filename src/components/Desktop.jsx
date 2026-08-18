@@ -14,9 +14,69 @@ import MemoryWallApp from './MemoryWallApp.jsx'
 import SettingsApp from './SettingsApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
+import ExplorerBody from './explorer/ExplorerBody.jsx'
+import ResumePage from './ResumePage.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { wallpapers } from '../data/wallpapers.js'
+import {
+  quickAccess as thisPcQuickAccess,
+  thisPcDrives,
+  drives as thisPcDeviceDrives,
+} from '../data/thisPcLocations.js'
+import {
+  quickAccess as devQuickAccess,
+  pcDrives as devPcDrives,
+  folders as devFolders,
+} from '../data/developerLabLocations.js'
+
+const CLOSE_ANIMATION_MS = 180
+
+const WINDOW_PREVIEW_SIZES = {
+  gmail: [700, 550],
+  'contact-info': [650, 500],
+  paint: [1200, 800],
+  'visitor-arts': [1200, 800],
+  'memory-wall': [950, 650],
+  settings: [1200, 800],
+  'this-pc': [1200, 800],
+  'developer-lab': [1200, 800],
+  resume: [420, 560],
+}
+
+function renderPreviewBody(w, gmailGuest) {
+  if (w.id === 'resume') return <ResumePage />
+  if (w.id === 'this-pc')
+    return (
+      <ExplorerBody
+        rootLabel="This PC"
+        quickAccess={thisPcQuickAccess}
+        pcDrives={thisPcDrives}
+        folders={thisPcQuickAccess}
+        devices={thisPcDeviceDrives}
+        onOpenNewWindow={() => {}}
+        onClose={() => {}}
+      />
+    )
+  if (w.id === 'developer-lab')
+    return (
+      <ExplorerBody
+        rootLabel="Developer Lab"
+        quickAccess={devQuickAccess}
+        pcDrives={devPcDrives}
+        folders={devFolders}
+        onOpenNewWindow={() => {}}
+        onClose={() => {}}
+      />
+    )
+  if (w.id === 'gmail') return <GmailComposeApp guest={gmailGuest} />
+  if (w.id === 'contact-info') return <ContactInfoApp />
+  if (w.id === 'paint') return <PaintApp onOpenGallery={() => {}} />
+  if (w.id === 'visitor-arts') return <VisitorArtsApp onOpenPaint={() => {}} />
+  if (w.id === 'memory-wall') return <MemoryWallApp />
+  if (w.id === 'settings') return <SettingsApp onOpenGmail={() => {}} />
+  return null
+}
 
 function Desktop() {
   const { brightness, wallpaperId } = useSystemSettings()
@@ -133,7 +193,14 @@ function Desktop() {
   }
 
   function closeApp(instanceId) {
-    setOpenWindows((prev) => prev.filter((w) => w.instanceId !== instanceId))
+    setOpenWindows((prev) =>
+      prev.map((w) =>
+        w.instanceId === instanceId ? { ...w, isClosing: true } : w,
+      ),
+    )
+    setTimeout(() => {
+      setOpenWindows((prev) => prev.filter((w) => w.instanceId !== instanceId))
+    }, CLOSE_ANIMATION_MS)
   }
 
   function bringToFront(instanceId) {
@@ -208,6 +275,8 @@ function Desktop() {
             opacity: layer.opacity ?? 1,
             backgroundImage: layer.backgroundImage,
             backgroundSize: layer.backgroundSize,
+            backgroundPosition: layer.backgroundPosition,
+            backgroundRepeat: layer.backgroundRepeat,
           }}
         />
       ))}
@@ -252,132 +321,137 @@ function Desktop() {
           ))}
         </div>
       </div>
-      {openWindows.map((w, index) => {
-        const shared = {
-          isMinimized: w.isMinimized,
-          onMinimizeToggle: () => toggleMinimize(w.instanceId),
-          onClose: () => closeApp(w.instanceId),
-          zIndex: 20 + index,
-          onFocus: () => bringToFront(w.instanceId),
-        }
-        const cascadeOffset =
-          openWindows.slice(0, index).filter((o) => o.id === w.id).length * 28
-        if (w.id === 'resume')
-          return <ResumeWindow key={w.instanceId} {...shared} />
-        if (w.id === 'this-pc')
+      <div className="pointer-events-none absolute inset-0 bottom-12">
+        {openWindows.map((w, index) => {
+          const shared = {
+            isMinimized: w.isMinimized,
+            isClosing: w.isClosing,
+            onMinimizeToggle: () => toggleMinimize(w.instanceId),
+            onClose: () => closeApp(w.instanceId),
+            zIndex: 20 + index,
+            onFocus: () => bringToFront(w.instanceId),
+          }
+          const cascadeOffset =
+            openWindows.slice(0, index).filter((o) => o.id === w.id).length * 28
+          if (w.id === 'resume')
+            return <ResumeWindow key={w.instanceId} {...shared} />
+          if (w.id === 'this-pc')
+            return (
+              <ThisPCWindow
+                key={w.instanceId}
+                {...shared}
+                cascadeOffset={cascadeOffset}
+                onOpenNewWindow={() => openNewInstance('this-pc')}
+              />
+            )
+          if (w.id === 'developer-lab')
+            return (
+              <DeveloperLabWindow
+                key={w.instanceId}
+                {...shared}
+                cascadeOffset={cascadeOffset}
+                onOpenNewWindow={() => openNewInstance('developer-lab')}
+              />
+            )
+          if (w.id === 'gmail') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="✉️"
+                title="New Message"
+                defaultWidth={700}
+                defaultHeight={550}
+              >
+                <GmailComposeApp guest={gmailGuest} />
+              </Window>
+            )
+          }
+          if (w.id === 'contact-info') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="📇"
+                title="Contact Info.txt"
+                defaultWidth={650}
+                defaultHeight={500}
+              >
+                <ContactInfoApp />
+              </Window>
+            )
+          }
+          if (w.id === 'paint') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🎨"
+                title="Paint"
+                defaultWidth={900}
+                defaultHeight={600}
+              >
+                <PaintApp
+                  onOpenGallery={() => handleIconOpen('visitor-arts')}
+                />
+              </Window>
+            )
+          }
+          if (w.id === 'visitor-arts') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🖼️"
+                title="Visitor Arts"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <VisitorArtsApp onOpenPaint={() => handleIconOpen('paint')} />
+              </Window>
+            )
+          }
+          if (w.id === 'memory-wall') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🖼️"
+                title="Memory Wall"
+                defaultWidth={950}
+                defaultHeight={650}
+              >
+                <MemoryWallApp />
+              </Window>
+            )
+          }
+          if (w.id === 'settings') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="⚙️"
+                title="Settings"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <SettingsApp onOpenGmail={() => handleIconOpen('gmail')} />
+              </Window>
+            )
+          }
+          const icon = desktopIcons.find((i) => i.id === w.id)
+          const isLargePlaceholder = w.id === 'blog' || w.id === 'music-lab'
           return (
-            <ThisPCWindow
+            <Window
               key={w.instanceId}
               {...shared}
-              cascadeOffset={cascadeOffset}
-              onOpenNewWindow={() => openNewInstance('this-pc')}
+              title={icon?.label}
+              defaultWidth={isLargePlaceholder ? 1200 : undefined}
+              defaultHeight={isLargePlaceholder ? 800 : undefined}
             />
           )
-        if (w.id === 'developer-lab')
-          return (
-            <DeveloperLabWindow
-              key={w.instanceId}
-              {...shared}
-              cascadeOffset={cascadeOffset}
-              onOpenNewWindow={() => openNewInstance('developer-lab')}
-            />
-          )
-        if (w.id === 'gmail') {
-          return (
-            <Window
-              key={w.instanceId}
-              {...shared}
-              icon="✉️"
-              title="New Message"
-              defaultWidth={700}
-              defaultHeight={550}
-            >
-              <GmailComposeApp guest={gmailGuest} />
-            </Window>
-          )
-        }
-        if (w.id === 'contact-info') {
-          return (
-            <Window
-              key={w.instanceId}
-              {...shared}
-              icon="📇"
-              title="Contact Info.txt"
-              defaultWidth={650}
-              defaultHeight={500}
-            >
-              <ContactInfoApp />
-            </Window>
-          )
-        }
-        if (w.id === 'paint') {
-          return (
-            <Window
-              key={w.instanceId}
-              {...shared}
-              icon="🎨"
-              title="Paint"
-              defaultWidth={900}
-              defaultHeight={600}
-            >
-              <PaintApp onOpenGallery={() => handleIconOpen('visitor-arts')} />
-            </Window>
-          )
-        }
-        if (w.id === 'visitor-arts') {
-          return (
-            <Window
-              key={w.instanceId}
-              {...shared}
-              icon="🖼️"
-              title="Visitor Arts"
-              defaultWidth={1200}
-              defaultHeight={800}
-            >
-              <VisitorArtsApp onOpenPaint={() => handleIconOpen('paint')} />
-            </Window>
-          )
-        }
-        if (w.id === 'memory-wall') {
-          return (
-            <Window
-              key={w.instanceId}
-              {...shared}
-              icon="🖼️"
-              title="Memory Wall"
-              defaultWidth={950}
-              defaultHeight={650}
-            >
-              <MemoryWallApp />
-            </Window>
-          )
-        }
-        if (w.id === 'settings') {
-          return (
-            <Window
-              key={w.instanceId}
-              {...shared}
-              icon="⚙️"
-              title="Settings"
-              defaultWidth={1200}
-              defaultHeight={800}
-            >
-              <SettingsApp onOpenGmail={() => handleIconOpen('gmail')} />
-            </Window>
-          )
-        }
-        const icon = desktopIcons.find((i) => i.id === w.id)
-        const isLargePlaceholder = w.id === 'blog' || w.id === 'music-lab'
-        return (
-          <Window
-            key={w.instanceId}
-            {...shared}
-            title={icon?.label}
-            defaultWidth={isLargePlaceholder ? 1200 : undefined}
-            defaultHeight={isLargePlaceholder ? 800 : undefined}
-          />
-        )
-      })}
+        })}
+      </div>
       {iconMenu && (
         <ContextMenu
           x={iconMenu.x}
@@ -411,12 +485,18 @@ function Desktop() {
       <Taskbar
         openWindows={openWindows.map((w) => {
           const icon = desktopIcons.find((i) => i.id === w.id)
+          const [naturalWidth, naturalHeight] = WINDOW_PREVIEW_SIZES[w.id] ?? [
+            480, 320,
+          ]
           return {
             id: w.id,
             instanceId: w.instanceId,
             label: icon?.label ?? (w.id === 'settings' ? 'Settings' : w.id),
             icon: icon?.icon === 'pdf' ? '📄' : icon?.icon,
             isMinimized: w.isMinimized,
+            preview: renderPreviewBody(w, gmailGuest),
+            naturalWidth,
+            naturalHeight,
           }
         })}
         onWindowClick={handleTaskbarClick}
