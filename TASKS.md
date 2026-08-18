@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 26 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 28 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -1025,6 +1025,107 @@ image-backed tiles, not actually a stale P96 size value._
       **Pass condition:** a new "Tech Stack" desktop icon shows the real logo and opens the generic
       empty placeholder `Window`; Developer Lab's Tech Stack folder tile shows the same logo at the
       same visual size as Projects/Resume and the This PC/Desktop icons; `verify` passes.
+
+---
+
+## PHASE 27 — ZOOM CHAT ICON
+
+_Requested by Sonny on 2026-08-18: add a new empty "Zoom Chat" desktop icon using the Zoom logo he
+dropped into `src/assets/icons/` (renamed from `Zoom Chat.png` to `zoom-chat.png` to match this
+project's kebab-case icon-file convention)._
+
+- [x] **P120** — Add `zoom-chat` to `src/assets/icons/index.js`'s `iconImages` map; add a new
+      `{ id: 'zoom-chat', label: 'Zoom Chat', column: 2, icon: '📹' }` entry to
+      `src/data/desktopIcons.js`.
+      **Pass condition:** a new "Zoom Chat" desktop icon shows the real Zoom logo and opens the
+      generic empty placeholder `Window`; `verify` passes.
+
+---
+
+## PHASE 28 — ZOOM CHAT VIRTUAL AGENT
+
+_Requested by Sonny on 2026-08-18, from a screenshot of a Zoom "Virtual Agent" chat widget: the
+`zoom-chat` desktop icon (added Phase 27) becomes a real FAQ chat assistant. Confirmed with Sonny:
+the bot avatar uses `zoom-avatar.png` (a robot-in-a-speech-bubble graphic, not a real person photo,
+matching this project's existing no-real-photo convention), while the desktop icon/window chrome
+keeps the plain `zoom-chat.png` camera logo; the conversation logic is a full port of the FAQ
+system Sonny already built for another project (`D:\Projects\Website Portfolio\src\utils\
+chat*.js`) — keyword-matched FAQ replies, small-talk auto-replies, and a multiple-choice follow-up
+question after each FAQ match — adapted to be pure client-side data/logic with no backend (that
+source project's Firebase transcript-saving/speech-recognition/3D-robot-mascot pieces are out of
+scope, since this project has no backend and no approved icon-library/3D dependency); "Join a
+meeting" is the entry gate into the chat, not a real video call (no meeting backend in v1); no
+name/email = no chat, with an explicit restriction message; a 2-second loading screen (matching
+the chat header's blue-purple-pink gradient) plays before the chat window appears. The footer
+disclaimer is reworded from Zoom's real "may retain transcripts" legal text to something honest
+about this being a demo with no real storage, matching the project's established
+say-what-actually-happens convention (already used for the Settings Privacy page's Data
+Collection text)._
+
+- [x] **P121** — Create `src/data/zoomChatKnowledgeBase.js`: port the 8 FAQ categories (pricing,
+      timeline, tech, services, process, availability, contact, portfolio — keywords + response
+      text) from the source project's `chatKnowledgeBase.js`, adapted for this portfolio's tone;
+      plus `FALLBACK_RESPONSE`, `SUGGESTED_QUESTIONS`, `NAME_PROMPT`, `getEmailPrompt()`,
+      `FOLLOW_UPS` (per-category multiple-choice follow-up question + options), and
+      `AUTO_REPLY_PATTERNS` (thanks/affirmation/farewell small talk). One cohesive knowledge-base
+      data file, not split — same "don't fragment one cohesive unit" call already logged in
+      LESSONS.md for `PaintToolbar.jsx`.
+      **Pass condition:** importing the file exposes all of the above, well-formed; `verify`
+      passes.
+
+- [x] **P122** — Create `src/utils/zoomChatBot.js`: `matchQuestion`/`getBotReply` (keyword-scoring
+      FAQ match against `zoomChatKnowledgeBase.js`, ported from the source project's `chatBot.js`),
+      `getAutoReply` (small-talk keyword match), `getFollowUp` (category → follow-up question/
+      options lookup), and `getTimeBasedGreeting` (random per-time-of-day greeting); add
+      `zoomChatBot.test.js` covering one FAQ-match case and one no-match/fallback case.
+      **Pass condition:** `npm run test` shows the new cases passing; `verify` passes.
+
+- [x] **P123** — Create `src/components/zoomChat/ZoomChatMessage.jsx`: one message bubble (bot
+      avatar uses `zoom-avatar.png`, guest bubble right-aligned), a timestamp, a suggestions row
+      (pill buttons), a CTA pill button, a multiple-choice options row, and a special "Join a
+      meeting" pill button variant for the initial gate message.
+      **Pass condition:** standalone render of each message variant (bot/guest/suggestions/CTA/
+      multiple-choice/join-meeting) shows the right content and fires its callback; `verify`
+      passes.
+
+- [x] **P124** — Create `src/components/zoomChat/ZoomChatHeader.jsx`: the blue-purple-pink gradient
+      header bar with the `zoom-avatar.png` avatar in a circular slot, bold "SONNY" + "Virtual Agent"
+      title text, a decorative "..." menu button, and a working close (X) button.
+      **Pass condition:** standalone render shows the gradient header with avatar/title/buttons;
+      clicking close fires its callback; `verify` passes.
+
+- [x] **P125** — Create `src/components/zoomChat/ZoomChatLoading.jsx`: a full-bleed loading screen
+      using the same gradient as the header, with a simple spinner.
+      **Pass condition:** standalone render shows the gradient background and a spinning loader;
+      `verify` passes.
+
+- [x] **P126** — Create `src/components/ZoomChatApp.jsx` (part 1 — gate/name/email phases): a
+      `phase` state machine (`loading` → 2s timeout → `gate` → `name` → `email` → `active`);
+      renders `ZoomChatLoading` during `loading`, then `ZoomChatHeader` + a scrollable message list + an input bar; the `gate` phase shows the Join-a-meeting message and advances to `name` on
+      click; `name`/`email` phases append the guest's message, validate (non-empty name; non-empty + regex-valid email) with a restriction message on failure, and advance the phase on success.
+      **Pass condition:** opening the app shows the 2s loading screen then the gate message;
+      clicking Join asks for a name; submitting an empty name shows a restriction message and stays
+      on the name phase; a valid name then a valid email reaches the `active` phase; `verify`
+      passes.
+
+- [x] **P127** — Extend `ZoomChatApp.jsx` (part 2 — active FAQ phase): on reaching `active`, append
+      a time-based greeting with `SUGGESTED_QUESTIONS`; wire free-text input through
+      `getAutoReply` → pending multiple-choice follow-up → `getBotReply` (FAQ match, appending its
+      category's follow-up question from `getFollowUp` after a short typing-indicator delay) →
+      fallback (with a "contact Sonny directly" CTA after 2 consecutive unmatched questions); CTA
+      clicks call a new `onOpenGmail` prop.
+      **Pass condition:** asking a pricing-style question returns the pricing FAQ answer plus its
+      follow-up multiple-choice question; two unmatched questions in a row show the "contact Sonny
+      directly" CTA; clicking a CTA calls `onOpenGmail`; `verify` passes.
+
+- [x] **P128** — Wire the `zoom-chat` icon in `src/components/Desktop.jsx` to open `ZoomChatApp`
+      (via the existing generic `Window`, sized ~400×600 to match the reference widget's
+      proportions) instead of the placeholder branch, passing
+      `onOpenGmail={() => handleIconOpen('gmail')}`; add it to `WINDOW_PREVIEW_SIZES`/
+      `renderPreviewBody` for a live taskbar preview, matching every other real app.
+      **Pass condition:** double-clicking "Zoom Chat" plays the loading screen then opens the real
+      chat widget; every other non-special icon still opens the generic placeholder `Window`;
+      `verify` passes.
 
 ---
 

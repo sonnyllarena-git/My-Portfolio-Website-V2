@@ -21,6 +21,7 @@ import techStack from './tech-stack.png'
 import thisPc from './this-pc.png'
 import videos from './videos.png'
 import visitorArts from './visitor-arts.png'
+import zoomChat from './zoom-chat.png'
 
 export const iconImages = {
   'this-pc': thisPc,
@@ -46,4 +47,5 @@ export const iconImages = {
   'local-disk-c': localDiskC,
   'local-disk-d': localDiskD,
   'tech-stack': techStack,
+  'zoom-chat': zoomChat,
 }

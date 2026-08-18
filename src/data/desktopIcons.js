@@ -14,4 +14,5 @@ export const desktopIcons = [
   { id: 'paint', label: 'Paint', column: 2, icon: '🎨' },
   { id: 'visitor-arts', label: 'Visitor Arts', column: 2, icon: '🖌️' },
   { id: 'tech-stack', label: 'Tech Stack', column: 2, icon: '🧰' },
+  { id: 'zoom-chat', label: 'Zoom Chat', column: 2, icon: '📹' },
 ]
