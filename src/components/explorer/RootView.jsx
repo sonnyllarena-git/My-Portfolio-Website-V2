@@ -49,8 +49,8 @@ function RootView({
             <ItemIcon
               id={item.id}
               icon={item.icon}
-              imgClassName="h-6 w-6"
-              textClassName="text-xl"
+              imgClassName="h-8 w-8"
+              textClassName="text-2xl"
             />
             <span>{item.label}</span>
           </Tile>
@@ -73,8 +73,8 @@ function RootView({
                   <ItemIcon
                     id={drive.id}
                     icon="💽"
-                    imgClassName="h-6 w-6"
-                    textClassName="text-lg"
+                    imgClassName="h-8 w-8"
+                    textClassName="text-2xl"
                   />
                   <span className="font-medium">{drive.label}</span>
                 </div>

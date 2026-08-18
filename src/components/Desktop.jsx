@@ -26,6 +26,7 @@ function Desktop() {
   const [openWindows, setOpenWindows] = useState([])
   const [iconMenu, setIconMenu] = useState(null)
   const [desktopMenu, setDesktopMenu] = useState(null)
+  const [refreshToken, setRefreshToken] = useState(0)
   const [gmailGateOpen, setGmailGateOpen] = useState(false)
   const [gmailGuest, setGmailGuest] = useState(null)
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
@@ -135,6 +136,31 @@ function Desktop() {
     setOpenWindows((prev) => prev.filter((w) => w.instanceId !== instanceId))
   }
 
+  function bringToFront(instanceId) {
+    setOpenWindows((prev) => {
+      const index = prev.findIndex((w) => w.instanceId === instanceId)
+      if (index === -1 || index === prev.length - 1) return prev
+      const win = prev[index]
+      return [...prev.slice(0, index), ...prev.slice(index + 1), win]
+    })
+  }
+
+  function handleTaskbarClick(instanceId) {
+    setOpenWindows((prev) => {
+      const index = prev.findIndex((w) => w.instanceId === instanceId)
+      if (index === -1) return prev
+      const win = prev[index]
+      const isTopmost = !win.isMinimized && index === prev.length - 1
+      if (isTopmost) {
+        return prev.map((w) =>
+          w.instanceId === instanceId ? { ...w, isMinimized: true } : w,
+        )
+      }
+      const restored = { ...win, isMinimized: false }
+      return [...prev.slice(0, index), ...prev.slice(index + 1), restored]
+    })
+  }
+
   function toggleMinimize(instanceId) {
     setOpenWindows((prev) =>
       prev.map((w) =>
@@ -190,7 +216,7 @@ function Desktop() {
       </span>
       <div className="absolute top-4 left-4 flex gap-2">
         <div className="flex flex-col gap-2">
-          {column1.map((icon) => (
+          {column1.map((icon, index) => (
             <DesktopIcon
               key={icon.id}
               ref={(node) => registerIconRef(icon.id, node)}
@@ -202,11 +228,13 @@ function Desktop() {
               onSelect={() => setSelectedIconIds([icon.id])}
               onOpen={() => handleIconOpen(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
+              refreshToken={refreshToken}
+              staggerIndex={index}
             />
           ))}
         </div>
         <div className="flex flex-col gap-2">
-          {column2.map((icon) => (
+          {column2.map((icon, index) => (
             <DesktopIcon
               key={icon.id}
               ref={(node) => registerIconRef(icon.id, node)}
@@ -218,6 +246,8 @@ function Desktop() {
               onSelect={() => setSelectedIconIds([icon.id])}
               onOpen={() => handleIconOpen(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
+              refreshToken={refreshToken}
+              staggerIndex={column1.length + index}
             />
           ))}
         </div>
@@ -227,6 +257,8 @@ function Desktop() {
           isMinimized: w.isMinimized,
           onMinimizeToggle: () => toggleMinimize(w.instanceId),
           onClose: () => closeApp(w.instanceId),
+          zIndex: 20 + index,
+          onFocus: () => bringToFront(w.instanceId),
         }
         const cascadeOffset =
           openWindows.slice(0, index).filter((o) => o.id === w.id).length * 28
@@ -299,8 +331,8 @@ function Desktop() {
               {...shared}
               icon="🖼️"
               title="Visitor Arts"
-              defaultWidth={900}
-              defaultHeight={600}
+              defaultWidth={1200}
+              defaultHeight={800}
             >
               <VisitorArtsApp onOpenPaint={() => handleIconOpen('paint')} />
             </Window>
@@ -327,15 +359,24 @@ function Desktop() {
               {...shared}
               icon="⚙️"
               title="Settings"
-              defaultWidth={800}
-              defaultHeight={600}
+              defaultWidth={1200}
+              defaultHeight={800}
             >
               <SettingsApp onOpenGmail={() => handleIconOpen('gmail')} />
             </Window>
           )
         }
         const icon = desktopIcons.find((i) => i.id === w.id)
-        return <Window key={w.instanceId} {...shared} title={icon?.label} />
+        const isLargePlaceholder = w.id === 'blog' || w.id === 'music-lab'
+        return (
+          <Window
+            key={w.instanceId}
+            {...shared}
+            title={icon?.label}
+            defaultWidth={isLargePlaceholder ? 1200 : undefined}
+            defaultHeight={isLargePlaceholder ? 800 : undefined}
+          />
+        )
       })}
       {iconMenu && (
         <ContextMenu
@@ -358,7 +399,7 @@ function Desktop() {
           items={[
             { label: 'View', onClick: () => {} },
             { label: 'Sort by', onClick: () => {} },
-            { label: 'Refresh', onClick: () => {} },
+            { label: 'Refresh', onClick: () => setRefreshToken((t) => t + 1) },
             { label: 'Next Desktop Wallpaper', onClick: () => {} },
             { label: 'Paste', onClick: () => {} },
             { label: 'New', onClick: () => {} },
@@ -378,7 +419,7 @@ function Desktop() {
             isMinimized: w.isMinimized,
           }
         })}
-        onWindowClick={toggleMinimize}
+        onWindowClick={handleTaskbarClick}
         onOpenSettings={() => handleIconOpen('settings')}
       />
       {gmailGateOpen && (

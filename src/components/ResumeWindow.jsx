@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
+import { accentColors } from '../data/accentColors.js'
 
 const RESUME_FILE_PATH = '/resume.pdf'
 
@@ -9,7 +11,15 @@ function downloadResume() {
   link.click()
 }
 
-function ResumeWindow({ onClose, isMinimized = false, onMinimizeToggle }) {
+function ResumeWindow({
+  onClose,
+  isMinimized = false,
+  onMinimizeToggle,
+  zIndex,
+  onFocus,
+}) {
+  const { accentColor } = useSystemSettings()
+  const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
   const [showFileMenu, setShowFileMenu] = useState(false)
 
   if (isMinimized) return null
@@ -18,7 +28,9 @@ function ResumeWindow({ onClose, isMinimized = false, onMinimizeToggle }) {
     <div
       onClick={() => setShowFileMenu(false)}
       onContextMenu={(e) => e.stopPropagation()}
-      className="absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-white/10 bg-[#2b2b2b] shadow-2xl"
+      onMouseDownCapture={onFocus}
+      style={{ borderColor: accentHex, zIndex }}
+      className="absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border-2 bg-[#2b2b2b] shadow-2xl"
     >
       <div className="flex items-center justify-between bg-[#b30b00] px-3 py-2 text-white">
         <span className="text-sm font-medium">Resume.pdf</span>

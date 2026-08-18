@@ -33,14 +33,16 @@ function RunningAppButton({ id, icon, label, isMinimized, onClick }) {
     <button
       onClick={onClick}
       aria-label={label}
-      title={label}
-      className={`flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
+      className={`group relative flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
         isMinimized
           ? 'bg-white/5 hover:bg-white/10'
           : 'bg-white/20 hover:bg-white/30'
       }`}
     >
       <IconGlyph id={id} icon={icon} />
+      <span className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 rounded-md border border-white/10 bg-[#1f2126] px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
+        {label}
+      </span>
     </button>
   )
 }

@@ -1,5 +1,5 @@
-import { forwardRef, useRef } from 'react'
-import { motion, useMotionValue } from 'framer-motion'
+import { forwardRef, useEffect, useRef } from 'react'
+import { animate, motion, useMotionValue } from 'framer-motion'
 import { iconImages } from '../assets/icons/index.js'
 import { rectsIntersect } from '../utils/geometry.js'
 import PdfGlyph from './icons/PdfGlyph.jsx'
@@ -14,13 +14,27 @@ const DesktopIcon = forwardRef(function DesktopIcon(
     onOpen,
     onContextMenu,
     getOtherRects,
+    refreshToken,
+    staggerIndex,
   },
   ref,
 ) {
   const x = useMotionValue(0)
   const y = useMotionValue(0)
+  const opacity = useMotionValue(1)
   const nodeRef = useRef(null)
   const lastGoodPositionRef = useRef({ x: 0, y: 0 })
+
+  useEffect(() => {
+    if (!refreshToken) return
+    opacity.set(0)
+    const controls = animate(opacity, 1, {
+      duration: 0.35,
+      delay: (staggerIndex ?? 0) * 0.04,
+      ease: 'easeOut',
+    })
+    return () => controls.stop()
+  }, [refreshToken, opacity, staggerIndex])
 
   function setRefs(node) {
     nodeRef.current = node
@@ -50,7 +64,7 @@ const DesktopIcon = forwardRef(function DesktopIcon(
   return (
     <motion.div
       ref={setRefs}
-      style={{ x, y }}
+      style={{ x, y, opacity }}
       drag
       dragMomentum={false}
       onDragStart={handleDragStart}

@@ -7,13 +7,15 @@ function ThisPCWindow({
   onMinimizeToggle,
   onOpenNewWindow,
   cascadeOffset,
+  zIndex,
+  onFocus,
 }) {
   return (
     <ExplorerWindow
       icon="💻"
       title="This PC"
-      defaultWidth={700}
-      defaultHeight={520}
+      defaultWidth={1200}
+      defaultHeight={800}
       rootLabel="This PC"
       quickAccess={quickAccess}
       pcDrives={thisPcDrives}
@@ -24,6 +26,8 @@ function ThisPCWindow({
       onMinimizeToggle={onMinimizeToggle}
       onOpenNewWindow={onOpenNewWindow}
       cascadeOffset={cascadeOffset}
+      zIndex={zIndex}
+      onFocus={onFocus}
     />
   )
 }

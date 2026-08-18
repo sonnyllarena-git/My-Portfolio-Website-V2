@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 import { Rnd } from 'react-rnd'
+import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
+import { accentColors } from '../data/accentColors.js'
 
 const MIN_WIDTH = 480
 const MIN_HEIGHT = 320
@@ -14,8 +16,12 @@ function Window({
   defaultWidth = MIN_WIDTH,
   defaultHeight = MIN_HEIGHT,
   cascadeOffset = 0,
+  zIndex,
+  onFocus,
   children,
 }) {
+  const { accentColor } = useSystemSettings()
+  const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
   const [isMaximized, setIsMaximized] = useState(false)
   const previousLayout = useRef(null)
   const [layout, setLayout] = useState(() => {
@@ -68,11 +74,13 @@ function Window({
       dragHandleClassName="window-title-bar"
       disableDragging={isMaximized}
       enableResizing={!isMaximized}
-      className="z-20"
+      style={{ zIndex }}
     >
       <div
         onContextMenu={(e) => e.stopPropagation()}
-        className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-white/10 bg-[#1a1c22] text-white shadow-2xl"
+        onMouseDownCapture={onFocus}
+        style={{ borderColor: accentHex }}
+        className="flex h-full w-full flex-col overflow-hidden rounded-lg border-2 bg-[#1a1c22] text-white shadow-2xl"
       >
         <div className="window-title-bar flex h-10 shrink-0 cursor-move items-center justify-between bg-[#25272e] px-3 py-2">
           <span className="flex items-center gap-2 text-sm font-medium">

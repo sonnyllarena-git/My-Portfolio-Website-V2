@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 function ContextMenu({ x, y, items, onClose }) {
   const menuRef = useRef(null)
@@ -16,7 +17,15 @@ function ContextMenu({ x, y, items, onClose }) {
     })
   }, [x, y])
 
-  return (
+  useEffect(() => {
+    function handleOutsideMouseDown(e) {
+      if (!menuRef.current?.contains(e.target)) onClose()
+    }
+    window.addEventListener('mousedown', handleOutsideMouseDown)
+    return () => window.removeEventListener('mousedown', handleOutsideMouseDown)
+  }, [onClose])
+
+  return createPortal(
     <div
       ref={menuRef}
       style={{ top: position.top, left: position.left }}
@@ -35,7 +44,8 @@ function ContextMenu({ x, y, items, onClose }) {
           {item.label}
         </button>
       ))}
-    </div>
+    </div>,
+    document.body,
   )
 }
 

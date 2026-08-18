@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 14 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 18 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -637,6 +637,107 @@ SupportIcon,SunIcon,SpeakerIcon}.jsx` (stroke-based 24x24 SVGs, `className` prop
 
 ---
 
+## PHASE 15 — DESKTOP REFRESH EFFECT
+
+_Requested by Sonny on 2026-08-18: right-clicking the desktop and choosing "Refresh" (already an
+inert item from P20) should visibly refresh the icons, matching a real Windows desktop._
+
+- [x] **P90** — Wire the desktop context menu's "Refresh" item in `src/components/Desktop.jsx` to a
+      `refreshToken` counter passed to every `DesktopIcon`; in `src/components/DesktopIcon.jsx`, add
+      an opacity motion value that fades each icon out and back in (staggered by grid position) via
+      `framer-motion`'s `animate()` whenever `refreshToken` changes.
+      **Pass condition:** right-clicking the desktop and clicking Refresh visibly fades all icons out
+      and back in with a slight stagger, without moving any dragged icon's position; `verify` passes.
+
+---
+
+## PHASE 16 — CONTEXT MENU POSITIONING BUG FIX
+
+_Reported by Sonny on 2026-08-18: right-clicking a tile inside "This PC" showed the menu offset
+outside the folder window, and dragging the window dragged the menu along with it. Root cause:
+`Window.jsx` positions windows via `react-rnd`'s CSS `transform`, and any transformed ancestor
+becomes the containing block for `position: fixed` descendants — so `ContextMenu.jsx`, rendered as
+a child of `Window` (via `ExplorerWindow.jsx`'s tile menu), was positioned relative to the window
+instead of the viewport. Confirmed `ContextMenu` is only nested inside a `Window` there (Desktop's
+own icon/desktop menus aren't inside any transformed ancestor, so they were unaffected)._
+
+- [x] **P91** — In `src/components/ContextMenu.jsx`, render the menu through a `createPortal` to
+      `document.body` (escaping any transformed ancestor so `position: fixed` is viewport-relative
+      again), and add a `window` `mousedown` listener that closes the menu when the mousedown
+      target is outside the menu's own DOM node (so starting a window drag, which begins with a
+      title-bar mousedown, dismisses any open menu instead of leaving it stranded).
+      **Pass condition:** right-clicking a tile inside This PC/Developer Lab shows the menu right
+      beside the clicked icon, inside the window's bounds; dragging the window's title bar while a
+      menu is open closes it immediately instead of dragging it along; `verify` passes.
+
+---
+
+## PHASE 17 — LARGER DEFAULT WINDOW SIZES + ACCENT-COLORED WINDOW BORDERS
+
+_Requested by Sonny on 2026-08-18. Moves the "Full live re-theming from Settings >
+Personalization" backlog item partially up: only the window frame border now follows the selected
+accent color (not the taskbar/icons/etc — those stay backlog per Sonny's original scope)._
+
+- [x] **P92** — Set default window size to 1200×800 for Settings, This PC, Blog, Music Lab,
+      Developer Lab, and Visitor Arts in `src/components/Desktop.jsx` (Settings/Visitor
+      Arts/Blog/Music Lab branches), `src/components/ThisPCWindow.jsx`, and
+      `src/components/DeveloperLabWindow.jsx`.
+      **Pass condition:** opening each of those six apps shows a 1200×800 window; every other
+      icon's window size is unchanged; `verify` passes.
+
+- [x] **P93** — Extract `ACCENT_COLORS` out of `src/components/settings/PersonalizationPage.jsx`
+      into `src/data/accentColors.js` (single source of truth); wire
+      `src/components/Window.jsx` and `src/components/ResumeWindow.jsx` to read the selected
+      `accentColor` from `useSystemSettings()` and use its hex as the window frame's border color,
+      at the same 2px (`border-2`) thickness already used for the selected state in
+      Personalization.
+      **Pass condition:** every window opened from a desktop icon shows a 2px border in the
+      currently selected accent color; picking a different accent color in Settings updates all
+      open and newly opened windows; `verify` passes.
+
+---
+
+## PHASE 18 — WINDOW FOCUS ORDER, TASKBAR HOVER LABEL, BIGGER FOLDER ICONS
+
+_Reported/requested by Sonny on 2026-08-18. Confirmed with Sonny: (1) clicking anywhere inside a
+window (not just its title bar) raises it to front, and a taskbar click on an open-but-behind
+window also raises it instead of minimizing it; (2) the taskbar hover "preview" is a small styled
+tooltip bubble (icon + name), not a live or mock screenshot; (3) folder-content icons (Folders +
+Devices and drives tiles) grow to match the existing desktop icon size — sidebar icons in
+This PC/Developer Lab stay as-is._
+
+- [x] **P94** — Give every open window a stacking order driven by its position in
+      `src/components/Desktop.jsx`'s `openWindows` array (`zIndex: 20 + index`, so it's always
+      bounded by the number of open windows, never able to grow past other overlays' z-index) plus
+      a `bringToFront(instanceId)` helper that moves that entry to the end of the array; wire a new
+      `onFocus` into the existing `shared` window-prop bundle, and replace the taskbar's
+      `onWindowClick={toggleMinimize}` with a handler that raises an open-but-not-topmost window
+      instead of minimizing it. Thread `zIndex`/`onFocus` through `src/components/Window.jsx`
+      (inline `style` zIndex + `onMouseDownCapture` for focus-on-click-anywhere),
+      `src/components/ResumeWindow.jsx` (same, since it has its own frame instead of using
+      `Window`), and `src/components/explorer/ExplorerWindow.jsx` /
+      `src/components/ThisPCWindow.jsx` / `src/components/DeveloperLabWindow.jsx` (pass-through).
+      **Pass condition:** opening Developer Lab then This PC puts This PC on top (as today);
+      clicking anywhere on the Developer Lab window (title bar or its content) brings it in front
+      of This PC; clicking a behind-but-open window's taskbar icon raises it instead of minimizing
+      it; `verify` passes.
+
+- [x] **P95** — Replace the native `title` tooltip on `RunningAppButton` in
+      `src/components/Taskbar.jsx` with a small CSS `group`-hover styled bubble (icon's label,
+      dark bg, border, positioned above the icon).
+      **Pass condition:** hovering a running app's taskbar icon shows the styled label bubble
+      instead of the plain browser tooltip; `verify` passes.
+
+- [x] **P96** — Increase the Folders and Devices-and-drives tile icon size in
+      `src/components/explorer/RootView.jsx` from `h-6 w-6`/`text-xl`/`text-lg` to `h-8 w-8`/
+      `text-2xl` (matching the existing desktop icon glyph size); leave the sidebar `Tile` icons in
+      `src/components/explorer/ExplorerWindow.jsx` untouched.
+      **Pass condition:** This PC/Developer Lab's Folders and Devices tiles show visibly bigger
+      icons matching desktop-icon scale; the sidebar's Quick access/This PC icons are unchanged;
+      `verify` passes.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.
@@ -646,10 +747,10 @@ Anything here is out of scope until Sonny moves it up.
 - Performance optimisation — until something measurably needs it
 - Auth, payments, or any third-party integration not in the §2 stack
 - Additional dependencies, frameworks, or architectural layers
-- **Full live re-theming from Settings > Personalization** — Dark/Light mode and accent color
-  currently only update selection state (Phase 14, P85); actually re-skinning every existing
-  window/taskbar/icon component to respect them is real follow-up work Sonny confirmed he wants
-  done later, not now.
+- **Full live re-theming from Settings > Personalization** — Dark/Light mode still only updates
+  selection state (Phase 14, P85); accent color now drives the window frame border (Phase 17,
+  P93), but re-skinning the taskbar/icons/everything else to respect accent color or theme mode is
+  real follow-up work Sonny confirmed he wants done later, not now.
 
 ---
 

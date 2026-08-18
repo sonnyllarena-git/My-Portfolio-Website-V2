@@ -11,13 +11,15 @@ function DeveloperLabWindow({
   onMinimizeToggle,
   onOpenNewWindow,
   cascadeOffset,
+  zIndex,
+  onFocus,
 }) {
   return (
     <ExplorerWindow
       icon="🛠️"
       title="Developer Lab"
-      defaultWidth={700}
-      defaultHeight={520}
+      defaultWidth={1200}
+      defaultHeight={800}
       rootLabel="Developer Lab"
       quickAccess={quickAccess}
       pcDrives={pcDrives}
@@ -27,6 +29,8 @@ function DeveloperLabWindow({
       onMinimizeToggle={onMinimizeToggle}
       onOpenNewWindow={onOpenNewWindow}
       cascadeOffset={cascadeOffset}
+      zIndex={zIndex}
+      onFocus={onFocus}
     />
   )
 }

@@ -22,6 +22,8 @@ function ExplorerWindow({
   onMinimizeToggle,
   onOpenNewWindow,
   cascadeOffset,
+  zIndex,
+  onFocus,
 }) {
   const rootLocation = { type: 'root', label: rootLabel }
   const [history, setHistory] = useState([rootLocation])
@@ -114,6 +116,8 @@ function ExplorerWindow({
       defaultWidth={defaultWidth}
       defaultHeight={defaultHeight}
       cascadeOffset={cascadeOffset}
+      zIndex={zIndex}
+      onFocus={onFocus}
     >
       <div className="contents" onClick={clearOverlays}>
         <div className="flex items-center gap-2 border-b border-white/10 bg-[#202225] px-2 py-1.5 text-white/80">
