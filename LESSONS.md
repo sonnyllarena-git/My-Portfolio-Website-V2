@@ -49,6 +49,7 @@ _Build tool, bundler, dev server, lint, format, test runner, env vars, scripts._
 - [2026-08-17] `vitest run` intermittently failed with `TypeError: Cannot read properties of undefined (reading 'config')` when run immediately after `vite build` in the same `verify` chain, with no code change involved → treat a lone post-build `vitest` failure as a possible transient race and re-run once before assuming a real regression.
 - [2026-08-18] The `reading 'config'` `vitest` failure above can also be a stale `node_modules/.vite` cache, not just a transient race — confirmed by reproducing it on `git stash`ed (pre-change) code too, then fixing it with `rm -rf node_modules/.vite` → if re-running `vitest` once doesn't clear it, delete `node_modules/.vite` before assuming a real regression.
 - [2026-08-18] `git stash`/`git stash pop` on this Windows checkout (`core.autocrlf=true`) round-tripped several unrelated files through CRLF, making `prettier --check` fail on files no one touched → after any `git stash`/`pop`, run `npx prettier --write <affected files>` to renormalize line endings before trusting `format:check`; avoid `git stash` for read-only diagnostics on this repo if avoidable.
+- [2026-08-18] After several sequential Edit-tool calls added ~110 lines to `TASKS.md` on this CRLF checkout, one `prettier --write TASKS.md` reported success but `prettier --check` still failed right after → run `prettier --write` a second time (or re-run `--check`) after a batch of edits to a long markdown file before trusting `format:check` green.
 
 ---
 

@@ -12,6 +12,7 @@ import PaintApp from './PaintApp.jsx'
 import VisitorArtsApp from './VisitorArtsApp.jsx'
 import MemoryWallApp from './MemoryWallApp.jsx'
 import SettingsApp from './SettingsApp.jsx'
+import MusicLabApp from './MusicLabApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
@@ -39,6 +40,7 @@ const WINDOW_PREVIEW_SIZES = {
   'visitor-arts': [1200, 800],
   'memory-wall': [950, 650],
   settings: [1200, 800],
+  'music-lab': [1200, 800],
   'this-pc': [1200, 800],
   'developer-lab': [1200, 800],
   resume: [420, 560],
@@ -75,6 +77,7 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'visitor-arts') return <VisitorArtsApp onOpenPaint={() => {}} />
   if (w.id === 'memory-wall') return <MemoryWallApp />
   if (w.id === 'settings') return <SettingsApp onOpenGmail={() => {}} />
+  if (w.id === 'music-lab') return <MusicLabApp />
   return null
 }
 
@@ -439,8 +442,22 @@ function Desktop() {
               </Window>
             )
           }
+          if (w.id === 'music-lab') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🎵"
+                title="Music Lab"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <MusicLabApp />
+              </Window>
+            )
+          }
           const icon = desktopIcons.find((i) => i.id === w.id)
-          const isLargePlaceholder = w.id === 'blog' || w.id === 'music-lab'
+          const isLargePlaceholder = w.id === 'blog'
           return (
             <Window
               key={w.instanceId}

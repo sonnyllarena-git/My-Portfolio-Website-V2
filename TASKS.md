@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 22 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 24 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -836,6 +836,117 @@ should fade in/out too instead of appearing/disappearing abruptly._
       **Pass condition:** opening, closing, minimizing, and restoring any window visibly fades
       instead of popping; hovering on/off a taskbar running-app icon fades its preview in and out;
       `verify` passes.
+
+---
+
+## PHASE 23 — MUSIC LAB APP (VIDEO/MUSIC PLAYER)
+
+_Requested by Sonny on 2026-08-18, from a Spotify-style reference screenshot: Music Lab becomes a
+real player instead of the generic placeholder `Window`. Confirmed with Sonny: the real video file
+he dropped in at `src/assets/music-lab/sonny-drive-incubus.mp4` is the one real Video library
+entry; Music entries stay visual-only placeholders (waveform + cosmetic transport controls, no
+real audio) until he provides an actual audio file — same "placeholder until asset provided"
+pattern already used for Resume/wallpaper. The sidebar's "Your Library" gets a Music/Video toggle
+that swaps which list renders below it (not a single mixed list). The screenshot's artist-bio hero
+("Pouya Shahri", photo, Follow, About) is replaced: no real photo of Sonny (matching the existing
+initials-avatar convention from `ContactPage.jsx`), and the About card holds a short original
+article about an interest in music instead of an artist bio — generic placeholder-style copy Sonny
+can swap for his own words later, same as `contactInfo.js`. Selecting the Video entry plays it
+inline (native `<video>`, real audio via the video's own track); selecting a Music entry drives the
+same bottom transport bar and an animated waveform, but only cosmetically (a timer advances the
+seek position, no sound)._
+
+- [x] **P103** — Create `src/data/musicLabLibrary.js`: import the real video asset and export
+      `videos` (one entry: id/title/subtitle/src), `tracks` (3–4 placeholder music entries:
+      id/title/artist/duration in seconds), and `aboutArticle` (an array of short original
+      paragraph strings about an interest in music, generic placeholder copy).
+      **Pass condition:** importing the file exposes well-formed `videos`/`tracks`/`aboutArticle`;
+      `verify` passes.
+
+- [x] **P104** — Create `src/components/musicLab/MusicLabSidebar.jsx`: a Home nav row, "Your
+      Library" heading, a Music/Video toggle button pair, and a list of entries for whichever type
+      is toggled active (title + subtitle), highlighting the currently selected item; calls
+      `onSelectType(type)`/`onSelectItem(item)` props.
+      **Pass condition:** standalone render shows Home + toggle + list; clicking the toggle swaps
+      which list renders; clicking an item highlights it and fires the callback; `verify` passes.
+
+- [x] **P105** — Create `src/components/musicLab/MusicWave.jsx`: a small row of CSS bars animated
+      via framer-motion when an `isPlaying` prop is true (flat/still when false).
+      **Pass condition:** standalone render with `isPlaying={true}` shows animating bars,
+      `isPlaying={false}` shows static bars; `verify` passes.
+
+- [x] **P106** — Create `src/components/musicLab/MusicLabScreen.jsx`: the hero area — a real
+      `<video>` element (native controls) when `activeType === 'video'`, `MusicWave` when
+      `activeType === 'music'`, and an initials-avatar idle state (matching `ContactPage.jsx`'s
+      gradient-circle pattern) when nothing is selected; a title/subtitle line for the active item;
+      a circular Play/Pause button and a Shuffle button.
+      **Pass condition:** standalone render with a video item active shows a working `<video>`;
+      with a music item active shows the waveform; with nothing active shows the idle avatar state;
+      `verify` passes.
+
+- [x] **P107** — Create `src/components/musicLab/MusicLabAbout.jsx`: an "About" card rendering the
+      `aboutArticle` paragraphs from `musicLabLibrary.js`.
+      **Pass condition:** standalone render shows the About heading and article paragraphs;
+      `verify` passes.
+
+- [x] **P108** — Create `src/components/musicLab/MusicLabPlayerBar.jsx`: the bottom persistent
+      transport bar — now-playing thumbnail/title, shuffle/prev/play-pause/next/repeat buttons, a
+      seek range input with elapsed/total time labels, a volume slider, and a close button — fully
+      controlled via props, no local state.
+      **Pass condition:** standalone render shows all controls and each fires its corresponding
+      `on*` prop with the right value when used; `verify` passes.
+
+- [x] **P109** — Create `src/components/MusicLabApp.jsx`: composes `MusicLabSidebar` +
+      `MusicLabScreen` + `MusicLabAbout` + `MusicLabPlayerBar`; owns `activeType`/`activeItem`/
+      `isPlaying` state and a real `<video>` ref wired to the player bar's transport controls
+      (play/pause/seek/volume/time updates via `onTimeUpdate`/`onLoadedMetadata`) when a video item
+      is active.
+      **Pass condition:** standalone render lets you pick the video entry from the sidebar and
+      play/pause/seek it via the bottom bar; `verify` passes.
+
+- [x] **P110** — Extend `MusicLabApp.jsx`: when a music entry is active, simulate cosmetic playback
+      (an interval advances `currentTime` up to the track's fixed `duration` while `isPlaying`, no
+      real audio, cleared on unmount/pause/track change) so the same player bar and waveform
+      respond identically to music selections.
+      **Pass condition:** selecting a music entry and pressing Play animates the waveform and
+      advances the seek bar/time display with no real audio; pausing stops the advance; `verify`
+      passes.
+
+- [x] **P111** — Wire the `music-lab` icon in `src/components/Desktop.jsx` to open `MusicLabApp`
+      (via the existing generic `Window`, default size 1200×800) instead of the placeholder branch
+      — remove `music-lab` from the `isLargePlaceholder` list and give it its own explicit size
+      branch (matching the `visitor-arts`/`settings` pattern).
+      **Pass condition:** double-clicking "Music Lab" opens the real app at 1200×800; every other
+      non-special icon still opens the generic placeholder `Window`; `verify` passes.
+
+---
+
+## PHASE 24 — MUSIC LAB ICON POLISH
+
+_Requested by Sonny on 2026-08-18, from close-up screenshots of the reference player's Play
+button, transport bar, and sidebar Home/Library rows: swap the emoji controls in Music Lab for
+real vector icons matching that look — a vivid-green filled Play/Pause circle in the hero, clean
+line/filled icons in the transport bar (shuffle, previous, play-pause, next, repeat, a
+cast/connect icon, volume, close), and line icons for Home/Your Library in the sidebar. Same
+hand-built inline-SVG pattern already used in `src/components/icons/` (P89) — no new icon-library
+dependency._
+
+- [x] **P112** — Create `src/components/icons/{HomeIcon,LibraryIcon,ShuffleIcon,RepeatIcon,
+PlayIcon,PauseIcon,PreviousIcon,NextIcon,CastIcon,CloseIcon}.jsx` (24x24, `className` prop,
+      matching the existing icon-file convention — Play/Pause/Previous/Next filled, the rest
+      stroke-based line icons).
+      **Pass condition:** each renders a recognizable icon at its default size with no visual
+      regression to existing icons; `verify` passes.
+
+- [x] **P113** — Wire the new icons into Music Lab: `MusicLabSidebar.jsx` (Home/Library icons
+      replace 🏠/📚), `MusicLabScreen.jsx` (the hero Play/Pause button becomes a larger vivid-green
+      filled circle with a black `PlayIcon`/`PauseIcon`), and `MusicLabPlayerBar.jsx` (Shuffle/
+      Previous/Play-Pause/Next/Repeat/Close become real icons, plus a decorative `CastIcon` next to
+      the existing `SpeakerIcon`-style volume control), reusing the existing green-tint-when-active
+      styling for Shuffle/Repeat.
+      **Pass condition:** Music Lab's hero Play button and transport bar show clean vector icons
+      matching the reference screenshots, with all existing click behavior unchanged; `verify`
+      passes.
 
 ---
 
