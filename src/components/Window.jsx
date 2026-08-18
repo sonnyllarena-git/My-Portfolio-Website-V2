@@ -13,6 +13,7 @@ function Window({
   onMinimizeToggle,
   defaultWidth = MIN_WIDTH,
   defaultHeight = MIN_HEIGHT,
+  cascadeOffset = 0,
   children,
 }) {
   const [isMaximized, setIsMaximized] = useState(false)
@@ -23,8 +24,11 @@ function Window({
     return {
       width,
       height,
-      x: Math.max(0, (window.innerWidth - width) / 2),
-      y: Math.max(0, (window.innerHeight - TASKBAR_HEIGHT - height) / 2),
+      x: Math.max(0, (window.innerWidth - width) / 2 + cascadeOffset),
+      y: Math.max(
+        0,
+        (window.innerHeight - TASKBAR_HEIGHT - height) / 2 + cascadeOffset,
+      ),
     }
   })
 

@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 10 complete — awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-17 — `npm run verify` → PASS
+**Current task pointer:** `_(Phase 11 complete — awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
 ---
@@ -352,6 +352,82 @@ replacing the emoji placeholders wherever a real file exists. No file was provid
       **Pass condition:** Desktop, Downloads, Pictures, Music, Videos, and both drive tiles show
       their real icon images in This PC's sidebar, folder grid, and drives section; Documents
       keeps its emoji; `verify` passes.
+
+---
+
+## PHASE 11 — THIS PC NAVIGATION + FILE MENUS + MOUSE POLISH
+
+_Requested by Sonny on 2026-08-18, from a screenshot of the "This PC" window: File/Home/Share/View,
+Back/Forward/address bar/search box, and every folder/drive tile are currently inert. Confirmed
+with Sonny: (1) navigating into a folder/drive shows an empty-folder placeholder for now, real
+per-folder content comes later; (2) This PC's File menu = Open new window / Close / Frequent
+places, a document-type File menu (Resume, and by the same "notepad" logic from his first message,
+Contact Info) = Save As / Download / Print, Home/Share/View are Claude's call — kept as static
+inert item lists, matching the existing inert-menu-item pattern already used elsewhere (desktop
+right-click menu, Paint's menu bar), rather than inventing new mechanics nobody asked for; (3)
+right-click on a tile reuses the existing Open/Rename/Delete/Properties set from the desktop icons.
+Also asked to double-check mouse behavior everywhere: `Window.jsx` and `ResumeWindow.jsx` already
+`stopPropagation()` on right-click so the browser's native context menu (and native text
+selection/copy/paste) works in every window's content — Contact Info, Resume, Gmail's
+`contentEditable` body, Paint, and Visitor Arts all confirmed fine as-is, so no task below touches
+them for that reason alone._
+
+- [x] **P66** — Extend `Desktop.jsx`'s window model so an app can have more than one independent
+      open instance: `openWindows` entries gain an `instanceId` (defaults to `id`), add
+      `openNewInstance(id)` that always appends a fresh instance, and switch `closeApp`/
+      `toggleMinimize` to operate on `instanceId`; update `Taskbar.jsx`'s running-window buttons to
+      key off `instanceId`. Every other icon's existing single-instance open/focus/close/minimize
+      behavior must be unchanged.
+      **Pass condition:** temporarily calling `openNewInstance('this-pc')` twice produces two
+      independently closable/minimizable This PC windows with two separate taskbar running-icons;
+      every other icon still single-instances as before; `verify` passes.
+
+- [x] **P67** — Add real navigation state to `ThisPCWindow.jsx`: a location history stack with
+      `back()`/`forward()`/`navigateTo()`; wire Back/Forward (disabled at the ends of the stack),
+      Refresh (re-runs `navigateTo()` on the current location), and the breadcrumb's 🏠 icon
+      (navigates to root) to it; replace the hardcoded address-bar text with the real current
+      location's breadcrumb.
+      **Pass condition:** navigating updates the breadcrumb and enables Back; Back returns to the
+      previous location and enables Forward; 🏠 returns to root; `verify` passes.
+
+- [x] **P68** — Wire left-click select / double-click navigate / right-click context menu (reusing
+      the existing Open/Rename/Delete/Properties item set) onto the Quick Access sidebar items,
+      the This PC sidebar drive, the Folders grid tiles, and the Devices and drives tiles in
+      `ThisPCWindow.jsx`; double-click (or the menu's Open) calls `navigateTo()` from P67.
+      **Pass condition:** clicking a tile highlights it, clicking empty space clears the highlight,
+      double-clicking navigates and updates the breadcrumb/Back button, right-clicking shows the
+      4-item menu; `verify` passes.
+
+- [x] **P69** — Add File/Home/Share/View ribbon dropdowns to `ThisPCWindow.jsx`: File → "Open new
+      window" (new `onOpenNewWindow` prop), "Close" (`onClose`), "Frequent places" (the Quick
+      Access folders, each calling `navigateTo()` from P67); Home/Share/View → static inert item
+      lists. Wire `onOpenNewWindow` from `Desktop.jsx` to the `openNewInstance` added in P66.
+      **Pass condition:** File → Open new window opens a second independent This PC window; Close
+      closes the current one; Frequent places navigates; Home/Share/View show their static lists;
+      `verify` passes.
+
+- [x] **P70** — Add a "This folder is empty" placeholder view in `ThisPCWindow.jsx`'s main pane,
+      shown whenever the current location isn't the root, replacing the Folders/Devices grids.
+      **Pass condition:** navigating into any folder or drive shows the empty-folder placeholder;
+      navigating Back restores the grids; `verify` passes.
+
+- [x] **P71** — Wire the search box in `ThisPCWindow.jsx` to live-filter the root view's Folders and
+      Devices tiles by name (case-insensitive substring match), showing a "No results" message when
+      nothing matches; the box has no effect (or is disabled) away from the root.
+      **Pass condition:** typing part of a folder name narrows the visible tiles; clearing the box
+      restores them all; `verify` passes.
+
+- [x] **P72** — Add a File menu to `ResumeWindow.jsx`'s toolbar with Save As / Download / Print:
+      Print calls `window.print()`; Save As and Download both trigger a real `<a download>` at
+      `/resume.pdf` (the path Sonny will drop the real resume file into later).
+      **Pass condition:** Print opens the browser print dialog; Save As/Download attempt to
+      download `/resume.pdf`; `verify` passes.
+
+- [x] **P73** — Wire `ContactInfoApp.jsx`'s existing inert "File" menu item with the same Save As /
+      Download / Print set: Print calls `window.print()`; Save As/Download build a `Blob` from the
+      already-computed `documentText` and download it as `Contact-Info.txt`.
+      **Pass condition:** Print opens the print dialog; Save As/Download downloads a real
+      `Contact-Info.txt` containing the contact text; `verify` passes.
 
 ---
 

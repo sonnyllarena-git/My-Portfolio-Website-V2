@@ -9,7 +9,7 @@ import gmail from './gmail.png'
 import localDiskC from './local-disk-c.png'
 import localDiskD from './local-disk-d.png'
 import memoryWall from './memory-wall.png'
-import music from './music.png'
+import musicFolder from './music.png'
 import paint from './paint.png'
 import pictures from './pictures.png'
 import recycleBin from './recycle-bin.png'
@@ -38,7 +38,7 @@ export const iconImages = {
   desktop,
   downloads,
   pictures,
-  music,
+  'music-folder': musicFolder,
   videos,
   'local-disk-c': localDiskC,
   'local-disk-d': localDiskD,

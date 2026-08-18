@@ -23,6 +23,7 @@ function Desktop() {
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
   const column2 = desktopIcons.filter((icon) => icon.column === 2)
   const iconRefs = useRef(new Map())
+  const instanceCounter = useRef(0)
   const marqueeStart = useRef({ x: 0, y: 0 })
   const draggedDuringSelect = useRef(false)
   const [isSelecting, setIsSelecting] = useState(false)
@@ -98,8 +99,20 @@ function Desktop() {
     setOpenWindows((prev) =>
       prev.some((w) => w.id === id)
         ? prev.map((w) => (w.id === id ? { ...w, isMinimized: false } : w))
-        : [...prev, { id, isMinimized: false }],
+        : [...prev, { id, instanceId: id, isMinimized: false }],
     )
+  }
+
+  function openNewInstance(id) {
+    instanceCounter.current += 1
+    setOpenWindows((prev) => [
+      ...prev,
+      {
+        id,
+        instanceId: `${id}-${instanceCounter.current}`,
+        isMinimized: false,
+      },
+    ])
   }
 
   function handleIconOpen(id) {
@@ -110,14 +123,14 @@ function Desktop() {
     openApp(id)
   }
 
-  function closeApp(id) {
-    setOpenWindows((prev) => prev.filter((w) => w.id !== id))
+  function closeApp(instanceId) {
+    setOpenWindows((prev) => prev.filter((w) => w.instanceId !== instanceId))
   }
 
-  function toggleMinimize(id) {
+  function toggleMinimize(instanceId) {
     setOpenWindows((prev) =>
       prev.map((w) =>
-        w.id === id ? { ...w, isMinimized: !w.isMinimized } : w,
+        w.instanceId === instanceId ? { ...w, isMinimized: !w.isMinimized } : w,
       ),
     )
   }
@@ -204,18 +217,29 @@ function Desktop() {
           ))}
         </div>
       </div>
-      {openWindows.map((w) => {
+      {openWindows.map((w, index) => {
         const shared = {
           isMinimized: w.isMinimized,
-          onMinimizeToggle: () => toggleMinimize(w.id),
-          onClose: () => closeApp(w.id),
+          onMinimizeToggle: () => toggleMinimize(w.instanceId),
+          onClose: () => closeApp(w.instanceId),
         }
-        if (w.id === 'resume') return <ResumeWindow key={w.id} {...shared} />
-        if (w.id === 'this-pc') return <ThisPCWindow key={w.id} {...shared} />
+        const cascadeOffset =
+          openWindows.slice(0, index).filter((o) => o.id === w.id).length * 28
+        if (w.id === 'resume')
+          return <ResumeWindow key={w.instanceId} {...shared} />
+        if (w.id === 'this-pc')
+          return (
+            <ThisPCWindow
+              key={w.instanceId}
+              {...shared}
+              cascadeOffset={cascadeOffset}
+              onOpenNewWindow={() => openNewInstance('this-pc')}
+            />
+          )
         if (w.id === 'gmail') {
           return (
             <Window
-              key={w.id}
+              key={w.instanceId}
               {...shared}
               icon="✉️"
               title="New Message"
@@ -229,7 +253,7 @@ function Desktop() {
         if (w.id === 'contact-info') {
           return (
             <Window
-              key={w.id}
+              key={w.instanceId}
               {...shared}
               icon="📇"
               title="Contact Info.txt"
@@ -243,7 +267,7 @@ function Desktop() {
         if (w.id === 'paint') {
           return (
             <Window
-              key={w.id}
+              key={w.instanceId}
               {...shared}
               icon="🎨"
               title="Paint"
@@ -257,7 +281,7 @@ function Desktop() {
         if (w.id === 'visitor-arts') {
           return (
             <Window
-              key={w.id}
+              key={w.instanceId}
               {...shared}
               icon="🖼️"
               title="Visitor Arts"
@@ -269,7 +293,7 @@ function Desktop() {
           )
         }
         const icon = desktopIcons.find((i) => i.id === w.id)
-        return <Window key={w.id} {...shared} title={icon?.label} />
+        return <Window key={w.instanceId} {...shared} title={icon?.label} />
       })}
       {iconMenu && (
         <ContextMenu
@@ -306,6 +330,7 @@ function Desktop() {
           const icon = desktopIcons.find((i) => i.id === w.id)
           return {
             id: w.id,
+            instanceId: w.instanceId,
             label: icon?.label,
             icon: icon?.icon === 'pdf' ? '📄' : icon?.icon,
             isMinimized: w.isMinimized,

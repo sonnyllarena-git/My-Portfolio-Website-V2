@@ -1,8 +1,22 @@
+import { useState } from 'react'
+
+const RESUME_FILE_PATH = '/resume.pdf'
+
+function downloadResume() {
+  const link = document.createElement('a')
+  link.href = RESUME_FILE_PATH
+  link.download = 'Sonny-Llarena-Resume.pdf'
+  link.click()
+}
+
 function ResumeWindow({ onClose, isMinimized = false, onMinimizeToggle }) {
+  const [showFileMenu, setShowFileMenu] = useState(false)
+
   if (isMinimized) return null
 
   return (
     <div
+      onClick={() => setShowFileMenu(false)}
       onContextMenu={(e) => e.stopPropagation()}
       className="absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-white/10 bg-[#2b2b2b] shadow-2xl"
     >
@@ -25,9 +39,52 @@ function ResumeWindow({ onClose, isMinimized = false, onMinimizeToggle }) {
           </button>
         </div>
       </div>
-      <div className="flex items-center justify-between bg-[#3c3c3c] px-3 py-1 text-xs text-white/70">
+      <div className="relative flex items-center justify-between bg-[#3c3c3c] px-3 py-1 text-xs text-white/70">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowFileMenu((prev) => !prev)
+          }}
+          className="rounded px-1 hover:bg-white/10 hover:text-white"
+        >
+          File ▾
+        </button>
         <span>Page 1 of 1</span>
         <span>100%</span>
+        {showFileMenu && (
+          <div className="absolute top-full left-2 z-40 w-40 rounded-b-md border border-white/10 bg-[#1f2126] py-1 text-white shadow-xl">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                downloadResume()
+                setShowFileMenu(false)
+              }}
+              className="block w-full px-3 py-1.5 text-left hover:bg-white/10"
+            >
+              Save As
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                downloadResume()
+                setShowFileMenu(false)
+              }}
+              className="block w-full px-3 py-1.5 text-left hover:bg-white/10"
+            >
+              Download
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                window.print()
+                setShowFileMenu(false)
+              }}
+              className="block w-full px-3 py-1.5 text-left hover:bg-white/10"
+            >
+              Print
+            </button>
+          </div>
+        )}
       </div>
       <div className="flex justify-center bg-[#525659] p-6">
         <div className="h-80 w-64 space-y-3 rounded-sm bg-white p-4 shadow-lg">

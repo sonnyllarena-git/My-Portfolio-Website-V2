@@ -1,43 +1,104 @@
-import { iconImages } from '../assets/icons/index.js'
+import { useState } from 'react'
+import {
+  ROOT_LOCATION,
+  quickAccess,
+  thisPcDrives,
+} from '../data/thisPcLocations.js'
+import ContextMenu from './ContextMenu.jsx'
+import EmptyFolderView from './thispc/EmptyFolderView.jsx'
+import ItemIcon from './thispc/ItemIcon.jsx'
+import RibbonMenu from './thispc/RibbonMenu.jsx'
+import RootView from './thispc/RootView.jsx'
+import Tile from './thispc/Tile.jsx'
 import Window from './Window.jsx'
 
-const ribbonTabs = ['File', 'Home', 'Share', 'View']
+function ThisPCWindow({
+  onClose,
+  isMinimized,
+  onMinimizeToggle,
+  onOpenNewWindow,
+  cascadeOffset,
+}) {
+  const [history, setHistory] = useState([ROOT_LOCATION])
+  const [historyIndex, setHistoryIndex] = useState(0)
+  const [selectedTile, setSelectedTile] = useState(null)
+  const [tileMenu, setTileMenu] = useState(null)
+  const [activeRibbonTab, setActiveRibbonTab] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const current = history[historyIndex]
 
-const quickAccess = [
-  { label: 'Desktop', icon: '🖥️', id: 'desktop' },
-  { label: 'Downloads', icon: '⬇️', id: 'downloads' },
-  { label: 'Documents', icon: '📄' },
-  { label: 'Pictures', icon: '🖼️', id: 'pictures' },
-  { label: 'Music', icon: '🎵', id: 'music' },
-  { label: 'Videos', icon: '🎬', id: 'videos' },
-]
+  function navigateTo(location) {
+    setHistory((prev) => [...prev.slice(0, historyIndex + 1), location])
+    setHistoryIndex((prev) => prev + 1)
+  }
 
-const thisPcDrives = [
-  { label: 'Local Disk (C:)', icon: '💽', id: 'local-disk-c' },
-]
+  function goBack() {
+    setHistoryIndex((prev) => Math.max(0, prev - 1))
+  }
 
-const drives = [
-  { label: 'Local Disk (C:)', freeGb: 142, totalGb: 476, id: 'local-disk-c' },
-  { label: 'System Reserved (D:)', freeGb: 2, totalGb: 15, id: 'local-disk-d' },
-]
+  function goForward() {
+    setHistoryIndex((prev) => Math.min(history.length - 1, prev + 1))
+  }
 
-function ItemIcon({ id, icon, imgClassName, textClassName }) {
-  return iconImages[id] ? (
-    <img
-      src={iconImages[id]}
-      alt=""
-      className={`${imgClassName} object-contain`}
-    />
-  ) : (
-    <span className={textClassName}>{icon}</span>
-  )
-}
+  const breadcrumb =
+    current.type === 'root' ? 'This PC' : `This PC > ${current.label}`
 
-function driveUsedPercent(drive) {
-  return Math.round(((drive.totalGb - drive.freeGb) / drive.totalGb) * 100)
-}
+  function clearOverlays() {
+    setSelectedTile(null)
+    setTileMenu(null)
+    setActiveRibbonTab(null)
+  }
 
-function ThisPCWindow({ onClose, isMinimized, onMinimizeToggle }) {
+  function tileMenuItems(location) {
+    return [
+      { label: 'Open', onClick: () => navigateTo(location) },
+      { label: 'Rename', onClick: () => {} },
+      { label: 'Delete', onClick: () => {} },
+      { label: 'Properties', onClick: () => {} },
+    ]
+  }
+
+  const ribbonTabs = [
+    {
+      label: 'File',
+      items: [
+        { label: 'Open new window', onClick: onOpenNewWindow },
+        { label: 'Close', onClick: onClose },
+        { label: 'Frequent places', header: true },
+        ...quickAccess.map((item) => ({
+          label: item.label,
+          onClick: () => navigateTo({ type: 'location', label: item.label }),
+        })),
+      ],
+    },
+    {
+      label: 'Home',
+      items: [
+        { label: 'New folder', onClick: () => {} },
+        { label: 'Copy', onClick: () => {} },
+        { label: 'Paste', onClick: () => {} },
+        { label: 'Rename', onClick: () => {} },
+        { label: 'Delete', onClick: () => {} },
+      ],
+    },
+    {
+      label: 'Share',
+      items: [
+        { label: 'Share via Email', onClick: () => {} },
+        { label: 'Copy path', onClick: () => {} },
+      ],
+    },
+    {
+      label: 'View',
+      items: [
+        { label: 'Large icons', onClick: () => {} },
+        { label: 'List', onClick: () => {} },
+        { label: 'Details', onClick: () => {} },
+        { label: 'Show hidden items', onClick: () => {} },
+      ],
+    },
+  ]
+
   return (
     <Window
       icon="💻"
@@ -47,108 +108,135 @@ function ThisPCWindow({ onClose, isMinimized, onMinimizeToggle }) {
       onMinimizeToggle={onMinimizeToggle}
       defaultWidth={700}
       defaultHeight={520}
+      cascadeOffset={cascadeOffset}
     >
-      <div className="flex items-center gap-2 border-b border-white/10 bg-[#202225] px-2 py-1.5 text-white/80">
-        <button aria-label="Back" className="rounded px-1 hover:bg-white/10">
-          ←
-        </button>
-        <button aria-label="Forward" className="rounded px-1 hover:bg-white/10">
-          →
-        </button>
-        <button aria-label="Refresh" className="rounded px-1 hover:bg-white/10">
-          ⟳
-        </button>
-        <div className="flex flex-1 items-center gap-2 rounded-full bg-[#2b2d31] px-3 py-1 text-xs">
-          <span>🏠</span>
-          <span>This PC &gt; Local Disk (C:)</span>
-        </div>
-        <input
-          type="text"
-          placeholder="Search"
-          className="w-32 rounded-full bg-[#2b2d31] px-3 py-1 text-xs placeholder-white/40 focus:outline-none"
-        />
-      </div>
-      <div className="flex gap-4 border-b border-white/10 bg-[#1a1c22] px-3 text-xs text-white/70">
-        {ribbonTabs.map((tab) => (
-          <span
-            key={tab}
-            className="cursor-pointer border-b-2 border-transparent py-2 hover:text-white"
+      <div className="contents" onClick={clearOverlays}>
+        <div className="flex items-center gap-2 border-b border-white/10 bg-[#202225] px-2 py-1.5 text-white/80">
+          <button
+            aria-label="Back"
+            onClick={goBack}
+            disabled={historyIndex === 0}
+            className="rounded px-1 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent"
           >
-            {tab}
-          </span>
-        ))}
-      </div>
-      <div className="flex">
-        <div className="w-36 shrink-0 border-r border-white/10 bg-[#1f2126] py-2 text-xs">
-          <div className="px-3 py-1 text-white/50">Quick access</div>
-          {quickAccess.map((item) => (
-            <div
-              key={item.label}
-              className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-white/10"
-            >
-              <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
-              <span>{item.label}</span>
-            </div>
-          ))}
-          <div className="mt-2 px-3 py-1 text-white/50">This PC</div>
-          {thisPcDrives.map((item) => (
-            <div
-              key={item.label}
-              className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-white/10"
-            >
-              <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
-              <span>{item.label}</span>
-            </div>
-          ))}
+            ←
+          </button>
+          <button
+            aria-label="Forward"
+            onClick={goForward}
+            disabled={historyIndex === history.length - 1}
+            className="rounded px-1 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent"
+          >
+            →
+          </button>
+          <button
+            aria-label="Refresh"
+            onClick={() => navigateTo(current)}
+            className="rounded px-1 hover:bg-white/10"
+          >
+            ⟳
+          </button>
+          <div className="flex flex-1 items-center gap-2 rounded-full bg-[#2b2d31] px-3 py-1 text-xs">
+            <button aria-label="Home" onClick={() => navigateTo(ROOT_LOCATION)}>
+              🏠
+            </button>
+            <span>{breadcrumb}</span>
+          </div>
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            disabled={current.type !== 'root'}
+            className="w-32 rounded-full bg-[#2b2d31] px-3 py-1 text-xs placeholder-white/40 focus:outline-none disabled:opacity-40"
+          />
         </div>
-        <div className="flex-1 p-3 text-xs text-white/80">
-          <div className="mb-2 font-semibold">Folders</div>
-          <div className="grid grid-cols-3 gap-3">
+        <RibbonMenu
+          tabs={ribbonTabs}
+          activeTab={activeRibbonTab}
+          onToggleTab={(label) =>
+            setActiveRibbonTab((prev) => (prev === label ? null : label))
+          }
+        />
+        <div className="flex">
+          <div className="w-36 shrink-0 border-r border-white/10 bg-[#1f2126] py-2 text-xs">
+            <div className="px-3 py-1 text-white/50">Quick access</div>
             {quickAccess.map((item) => (
-              <div
+              <Tile
                 key={item.label}
-                className="flex cursor-pointer flex-col items-center gap-1 rounded p-2 hover:bg-white/10"
+                isSelected={selectedTile === item.label}
+                onSelect={() => setSelectedTile(item.label)}
+                onOpen={() =>
+                  navigateTo({ type: 'location', label: item.label })
+                }
+                onContextMenu={(x, y) =>
+                  setTileMenu({
+                    x,
+                    y,
+                    location: { type: 'location', label: item.label },
+                  })
+                }
+                className="flex cursor-pointer items-center gap-2 px-3 py-1.5"
               >
                 <ItemIcon
                   id={item.id}
                   icon={item.icon}
-                  imgClassName="h-6 w-6"
-                  textClassName="text-xl"
+                  imgClassName="h-4 w-4"
                 />
                 <span>{item.label}</span>
-              </div>
+              </Tile>
+            ))}
+            <div className="mt-2 px-3 py-1 text-white/50">This PC</div>
+            {thisPcDrives.map((item) => (
+              <Tile
+                key={item.label}
+                isSelected={selectedTile === item.label}
+                onSelect={() => setSelectedTile(item.label)}
+                onOpen={() =>
+                  navigateTo({ type: 'location', label: item.label })
+                }
+                onContextMenu={(x, y) =>
+                  setTileMenu({
+                    x,
+                    y,
+                    location: { type: 'location', label: item.label },
+                  })
+                }
+                className="flex cursor-pointer items-center gap-2 px-3 py-1.5"
+              >
+                <ItemIcon
+                  id={item.id}
+                  icon={item.icon}
+                  imgClassName="h-4 w-4"
+                />
+                <span>{item.label}</span>
+              </Tile>
             ))}
           </div>
-          <div className="mt-4 mb-2 font-semibold">Devices and drives</div>
-          <div className="grid grid-cols-2 gap-3">
-            {drives.map((drive) => (
-              <div
-                key={drive.label}
-                className="rounded-lg border border-white/10 p-3"
-              >
-                <div className="flex items-center gap-2">
-                  <ItemIcon
-                    id={drive.id}
-                    icon="💽"
-                    imgClassName="h-6 w-6"
-                    textClassName="text-lg"
-                  />
-                  <span className="font-medium">{drive.label}</span>
-                </div>
-                <div className="mt-1 text-white/60">
-                  {drive.freeGb} GB free of {drive.totalGb} GB
-                </div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-blue-500"
-                    style={{ width: `${driveUsedPercent(drive)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+          <div className="flex-1 p-3 text-xs text-white/80">
+            {current.type === 'root' ? (
+              <RootView
+                selectedTile={selectedTile}
+                onSelectTile={setSelectedTile}
+                onOpenTile={(label) => navigateTo({ type: 'location', label })}
+                onTileContextMenu={(x, y, label) =>
+                  setTileMenu({ x, y, location: { type: 'location', label } })
+                }
+                searchTerm={searchTerm}
+              />
+            ) : (
+              <EmptyFolderView />
+            )}
           </div>
         </div>
       </div>
+      {tileMenu && (
+        <ContextMenu
+          x={tileMenu.x}
+          y={tileMenu.y}
+          onClose={() => setTileMenu(null)}
+          items={tileMenuItems(tileMenu.location)}
+        />
+      )}
     </Window>
   )
 }

@@ -80,12 +80,12 @@ function Taskbar({ openWindows = [], onWindowClick }) {
         <div className="ml-4 flex items-center gap-1 border-l border-white/10 pl-4">
           {openWindows.map((w) => (
             <RunningAppButton
-              key={w.id}
+              key={w.instanceId}
               id={w.id}
               icon={w.icon}
               label={w.label}
               isMinimized={w.isMinimized}
-              onClick={() => onWindowClick(w.id)}
+              onClick={() => onWindowClick(w.instanceId)}
             />
           ))}
         </div>

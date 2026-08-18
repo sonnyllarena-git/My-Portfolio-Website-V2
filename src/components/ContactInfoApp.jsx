@@ -12,6 +12,16 @@ const readMinutes = Math.max(1, Math.round(wordCount / 200))
 
 const menuItems = ['File', 'Edit', 'Format', 'View', 'Help']
 
+function downloadContactText() {
+  const blob = new Blob([documentText], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'Contact-Info.txt'
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 function ContactRow({ label, value, isLink, editable }) {
   return (
     <div className="grid grid-cols-[160px_1fr] gap-4 border-b border-white/10 py-3">
@@ -39,6 +49,7 @@ function ContactRow({ label, value, isLink, editable }) {
 function ContactInfoApp() {
   const [mode, setMode] = useState('read')
   const [showToast, setShowToast] = useState(false)
+  const [showFileMenu, setShowFileMenu] = useState(false)
 
   function handleCopyAll() {
     navigator.clipboard.writeText(documentText).then(() => {
@@ -48,14 +59,64 @@ function ContactInfoApp() {
   }
 
   return (
-    <div className="relative flex h-full flex-col text-sm text-white">
+    <div
+      className="relative flex h-full flex-col text-sm text-white"
+      onClick={() => setShowFileMenu(false)}
+    >
       <div className="flex items-center justify-between border-b border-white/10 bg-[#202225] px-3 py-1.5">
-        <div className="flex gap-4 text-white/70">
-          {menuItems.map((item) => (
-            <span key={item} className="cursor-pointer hover:text-white">
-              {item}
-            </span>
-          ))}
+        <div className="relative flex gap-4 text-white/70">
+          {menuItems.map((item) =>
+            item === 'File' ? (
+              <button
+                key={item}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowFileMenu((prev) => !prev)
+                }}
+                className="cursor-pointer hover:text-white"
+              >
+                {item}
+              </button>
+            ) : (
+              <span key={item} className="cursor-pointer hover:text-white">
+                {item}
+              </span>
+            ),
+          )}
+          {showFileMenu && (
+            <div className="absolute top-full left-0 z-40 w-40 rounded-b-md border border-white/10 bg-[#1f2126] py-1 text-white shadow-xl">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  downloadContactText()
+                  setShowFileMenu(false)
+                }}
+                className="block w-full px-3 py-1.5 text-left hover:bg-white/10"
+              >
+                Save As
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  downloadContactText()
+                  setShowFileMenu(false)
+                }}
+                className="block w-full px-3 py-1.5 text-left hover:bg-white/10"
+              >
+                Download
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.print()
+                  setShowFileMenu(false)
+                }}
+                className="block w-full px-3 py-1.5 text-left hover:bg-white/10"
+              >
+                Print
+              </button>
+            </div>
+          )}
         </div>
         <div className="flex gap-1">
           <button
