@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 25 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 26 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-18 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -1003,6 +1003,28 @@ thumbnailSrc}`, sorted by slug.
       **Pass condition:** a track folder with a real `media.*` file plays real audio via the
       transport bar exactly like video does; a track with no media file still uses the cosmetic
       waveform simulation; `verify` passes.
+
+---
+
+## PHASE 26 — TECH STACK ICON + EXPLORER ICON-SIZE FIX
+
+_Requested by Sonny on 2026-08-18: add a new empty "Tech Stack" desktop icon using the
+`tech-stack.png` he dropped into `src/assets/icons/`, use that same logo for the existing (until
+now emoji-only) "Tech Stack" folder inside Developer Lab, and fix the Developer Lab/This PC folder
+tile icons to match Desktop icon sizing. Root cause of the size mismatch: `ItemIcon.jsx`'s
+emoji-fallback branch rendered a bare `<span>` with no fixed box, while its image/PDF branches (and
+`DesktopIcon.jsx`) always sit inside a centered `h-8 w-8` box — so any folder tile without a real
+image (Projects, and Tech Stack before this phase) rendered visibly smaller/off-center than
+image-backed tiles, not actually a stale P96 size value._
+
+- [x] **P119** — Add `tech-stack` to `src/assets/icons/index.js`'s `iconImages` map; add a new
+      `{ id: 'tech-stack', label: 'Tech Stack', column: 2, icon: '🧰' }` entry to
+      `src/data/desktopIcons.js`; add `id: 'tech-stack'` to the "Tech Stack" entry in
+      `src/data/developerLabLocations.js`'s `folders`; wrap `ItemIcon.jsx`'s emoji-fallback branch
+      in the same centered `imgClassName` box used by its image/PDF branches.
+      **Pass condition:** a new "Tech Stack" desktop icon shows the real logo and opens the generic
+      empty placeholder `Window`; Developer Lab's Tech Stack folder tile shows the same logo at the
+      same visual size as Projects/Resume and the This PC/Desktop icons; `verify` passes.
 
 ---
 

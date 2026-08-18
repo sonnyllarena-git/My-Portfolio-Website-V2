@@ -14,7 +14,13 @@ function ItemIcon({ id, icon, imgClassName, textClassName }) {
   if (icon === 'pdf') {
     return <PdfGlyph className={imgClassName} />
   }
-  return <span className={textClassName}>{icon}</span>
+  return (
+    <span
+      className={`flex items-center justify-center ${imgClassName} ${textClassName ?? ''}`}
+    >
+      {icon}
+    </span>
+  )
 }
 
 export default ItemIcon

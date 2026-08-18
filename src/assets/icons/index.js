@@ -17,6 +17,7 @@ import search from './search.png'
 import settings from './settings.png'
 import start from './start.png'
 import store from './store.png'
+import techStack from './tech-stack.png'
 import thisPc from './this-pc.png'
 import videos from './videos.png'
 import visitorArts from './visitor-arts.png'
@@ -44,4 +45,5 @@ export const iconImages = {
   videos,
   'local-disk-c': localDiskC,
   'local-disk-d': localDiskD,
+  'tech-stack': techStack,
 }

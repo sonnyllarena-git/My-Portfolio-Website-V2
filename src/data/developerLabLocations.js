@@ -12,6 +12,6 @@ export const pcDrives = [
 
 export const folders = [
   { label: 'Projects', icon: '📁' },
-  { label: 'Tech Stack', icon: '🧰' },
+  { label: 'Tech Stack', icon: '🧰', id: 'tech-stack' },
   { label: 'Resume', icon: 'pdf' },
 ]

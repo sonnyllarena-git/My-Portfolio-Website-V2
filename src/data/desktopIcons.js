@@ -13,4 +13,5 @@ export const desktopIcons = [
   { id: 'memory-wall', label: 'Memory Wall', column: 2, icon: '🖼️' },
   { id: 'paint', label: 'Paint', column: 2, icon: '🎨' },
   { id: 'visitor-arts', label: 'Visitor Arts', column: 2, icon: '🖌️' },
+  { id: 'tech-stack', label: 'Tech Stack', column: 2, icon: '🧰' },
 ]
