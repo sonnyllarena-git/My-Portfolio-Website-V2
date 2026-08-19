@@ -25,6 +25,7 @@ export const folders = [
       {
         label: 'Projects',
         icon: '🗃️',
+        id: 'projects',
         kind: 'app',
         appId: 'projects-compilation',
       },

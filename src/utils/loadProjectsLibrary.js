@@ -23,7 +23,7 @@ const FIELD_LABELS = [
 function parseNotes(raw) {
   const fields = {}
   let currentKey = null
-  raw.split('\n').forEach((line) => {
+  raw.split(/\r\n|\r|\n/).forEach((line) => {
     const match = line.match(/^([^:]+):\s*(.*)$/)
     const label = match?.[1]?.trim().toLowerCase()
     if (match && FIELD_LABELS.includes(label)) {

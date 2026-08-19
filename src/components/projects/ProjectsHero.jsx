@@ -8,9 +8,9 @@ function ProjectsHero({ project }) {
   }
 
   return (
-    <div className="h-[500px] overflow-hidden rounded-xl border border-white/10 bg-[#141414]">
-      <div className="scrollbar-thin flex h-full flex-col overflow-y-auto">
-        <div className="h-56 w-full shrink-0">
+    <div className="flex h-[500px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#141414]">
+      <div className="scrollbar-black flex-1 overflow-y-auto p-4">
+        <div className="relative mx-auto mt-2 aspect-[1024/559] w-full max-w-[1024px] overflow-hidden rounded-xl border border-white/10 shadow-2xl">
           {project.photoSrc ? (
             <img
               src={project.photoSrc}
@@ -23,7 +23,7 @@ function ProjectsHero({ project }) {
             </div>
           )}
         </div>
-        <div className="flex-1 px-6 pt-4">
+        <div className="pt-4">
           <h2 className="text-2xl font-bold text-white">{project.title}</h2>
           {project.description && (
             <p className="mt-2 text-sm leading-relaxed text-gray-400">
@@ -48,19 +48,19 @@ function ProjectsHero({ project }) {
             </>
           )}
         </div>
-        {project.projectLink && (
-          <div className="sticky bottom-0 mt-8 border-t border-white/10 bg-[#141414] px-6 pt-4 pb-6 text-center">
-            <a
-              href={project.projectLink}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-sm font-semibold text-blue-400 transition-colors hover:text-blue-300"
-            >
-              View Project ↗
-            </a>
-          </div>
-        )}
       </div>
+      {project.projectLink && (
+        <div className="shrink-0 border-t border-white/10 bg-[#141414] px-6 py-4 text-center">
+          <a
+            href={project.projectLink}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-blue-400 transition-colors hover:text-blue-300"
+          >
+            View Project ↗
+          </a>
+        </div>
+      )}
     </div>
   )
 }

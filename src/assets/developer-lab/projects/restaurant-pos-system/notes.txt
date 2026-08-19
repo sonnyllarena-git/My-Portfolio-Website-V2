@@ -1,5 +1,29 @@
 Title: Restaurant POS System
-Description: Details coming soon.
+Description: A hybrid local-first & cloud-ready Point of Sale (POS) system built for small to medium restaurants. Feature-rich Progressive Web App (PWA) with cash-first order processing, real-time kitchen display, inventory & pricing, and sales reports—running seamlessly offline via IndexedDB or hosted online in the cloud.
+Built as a Progressive Web App with React + Vite + Tailwind, installable on desktop or mobile with no app store required. It handles dine-in, takeout, delivery, and scheduled orders with a kitchen display system, table management, inventory/pricing management, and sales reporting, storing all data client-side in IndexedDB with no backend server.
+
 Tech Stack:
-Category: IT & Systems Administration
-Project Link:
+
+Frontend (the whole app — no backend exists)
+
+React 18.3 + React Router 6
+Vite 5 (build/dev server)
+Tailwind CSS 3 + PostCSS + Autoprefixer
+Recharts 2 (for the Reports dashboard charts)
+
+Data & offline
+
+IndexedDB (browser-native, database name pos_system) — all data lives client-side, no backend server or cloud sync
+Service Worker + Web App Manifest → runs as a PWA, installable on desktop/iPhone with no App Store
+
+Hosting/CI
+
+Vercel, auto-deploys from the main branch (root dir frontend, build npm run build, output dist)
+
+Notable: there's a desktop-app/ folder in the repo, but it only contains icon/branding assets — no Electron shell was ever implemented, despite the original plan being Electron + SQLite. The README (last updated July 2026) is explicit about this gap, plus a flat Marketing/ folder with sales collateral (pricing tiers, graphics) since this is being pitched as a sellable product to restaurants in Batangas, Philippines.
+
+One thing worth flagging since you're IT: the README documents demo login credentials in plain text (admin/admin123, etc.) and notes the live Vercel demo URL is currently public/unprotected — worth locking down before this goes anywhere near real customer data.
+
+Category: Software Dev
+Project Link: https://github.com/sonnyllarena-git/restaurant-pos-system-app
+Tags: React, React Router, Vite, Tailwind CSS, Recharts, IndexedDB, PWA, Vercel

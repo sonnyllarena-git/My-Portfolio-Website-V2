@@ -3,6 +3,7 @@ export const desktopIcons = [
   { id: 'recycle-bin', label: 'Recycle Bin', column: 1, icon: '🗑️' },
   { id: 'music-lab', label: 'Music Lab', column: 1, icon: '🎵' },
   { id: 'developer-lab', label: 'Developer Lab', column: 1, icon: '🛠️' },
+  { id: 'projects', label: 'Projects', column: 1, icon: '🗃️' },
   { id: 'resume', label: 'Resume', column: 1, icon: 'pdf' },
   { id: 'biography', label: 'Biography', column: 1, icon: '🧑' },
   { id: 'contact-info', label: 'Contact Info', column: 1, icon: '📇' },

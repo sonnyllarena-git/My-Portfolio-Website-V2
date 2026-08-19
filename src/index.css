@@ -30,4 +30,20 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #404040;
   }
+
+  .scrollbar-black::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-black::-webkit-scrollbar-track {
+    background: #000000;
+    border-radius: 4px;
+  }
+  .scrollbar-black::-webkit-scrollbar-thumb {
+    background: #262626;
+    border-radius: 9999px;
+  }
+  .scrollbar-black::-webkit-scrollbar-thumb:hover {
+    background: #404040;
+  }
 }
