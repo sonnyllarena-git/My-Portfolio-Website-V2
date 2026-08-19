@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 35 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `TASK P178 — Wire FlappyBirdGame into GamesApp.jsx`
 **Last verified:** 2026-08-19 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -1561,6 +1561,268 @@ border-white/10 bg-[#141414]`, inner `h-full overflow-y-auto scrollbar-thin p-4`
 
 ---
 
+## PHASE 36 — GAMES ARCADE: SHARED HUB + LOCAL LEADERBOARD ENGINE
+
+_Requested by Sonny on 2026-08-19: turn the existing `games` desktop icon (currently the generic
+placeholder `Window`) into a real arcade hub with 5 games — Flappy Bird clone, 2048, Endless
+Runner, Typing Speed Test, Memory Flip Card. Confirmed with Sonny: leaderboards are
+**localStorage-backed, per-browser only**, for now — no backend/database (that stays banned per
+CLAUDE.md §2 until Sonny explicitly approves one; a real shared/global leaderboard is tracked in
+the Backlog below for later). Games are built one at a time in the order Sonny listed, starting
+with Flappy Bird (Phase 37). This phase builds the shared arcade shell + score-persistence engine
+every game phase reuses; no game logic lives here._
+
+- [x] **P166** — Create `src/utils/gameScores.js`: pure localStorage helpers — `readScores(gameId)`
+      (safe JSON parse of `localStorage['arcade:<gameId>']`, returns `[]` on missing/corrupt data)
+      and `writeTopScores(gameId, scores, sortOrder, limit = 10)` (sorts ascending or descending per
+      `sortOrder`, truncates to `limit`, writes back as JSON). Co-located `gameScores.test.js`
+      covering a normal round-trip and a corrupt-JSON fallback.
+      **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
+
+- [x] **P167** — Create `src/context/GamesContext.jsx`: `GamesProvider` + `useGames()` hook wrapping
+      `gameScores.js` — `getTopScores(gameId)` and `submitScore(gameId, { value, label, sortOrder })`
+      (stamps a `timestamp`, calls `writeTopScores`, and updates React state so any mounted
+      leaderboard re-renders immediately, no reload needed). Wrap `<Desktop />` with it in
+      `src/App.jsx` alongside the existing providers.
+      **Pass condition:** a component under the provider can submit a score and immediately see it
+      via `getTopScores`; `verify` passes.
+
+- [x] **P168** — Create `src/data/gamesCatalog.js`: an array of the 5 games' metadata — `id`,
+      `title`, `tagline`, `icon` (emoji, no new asset dependency), `scoreLabel` (e.g. "Best Score",
+      "Fastest Time"), `sortOrder` (`'desc'` for points-based games, `'asc'` for the time-based
+      Memory Flip), `status` (`'coming-soon'` until that game's own phase lands and flips it to
+      `'ready'`).
+      **Pass condition:** file exports a well-formed 5-entry array; `verify` passes.
+
+- [x] **P169** — Create `src/components/games/GameLeaderboard.jsx`: given `gameId`/`scoreLabel`/
+      `sortOrder` props, renders a ranked "High Scores" list from `useGames().getTopScores(gameId)`
+      (rank #, formatted value, each entry's optional `label`, relative date), with a "No scores
+      yet — be the first!" empty state.
+      **Pass condition:** standalone render with seeded localStorage scores shows them ranked
+      correctly; with none, shows the empty state; `verify` passes.
+
+- [x] **P170** — Create `src/components/games/GamesHub.jsx`: the arcade menu — one tile per
+      `gamesCatalog.js` entry (icon, title, tagline, live best-score preview via `useGames()`, a
+      "Coming soon" badge when `status !== 'ready'`), calling `onSelectGame(id)` on click (disabled
+      for coming-soon tiles).
+      **Pass condition:** standalone render shows all 5 tiles; clicking a ready tile fires
+      `onSelectGame`; coming-soon tiles are inert; `verify` passes.
+
+- [x] **P171** — Create `src/components/GamesApp.jsx`: owns `activeGameId` state, renders
+      `GamesHub` by default; selecting a game renders a per-game placeholder view (icon + "Coming
+      soon") with a "← Back to Arcade" button, ready for each real game component to slot in as its
+      phase lands.
+      **Pass condition:** standalone render shows the hub; selecting a game swaps to its placeholder
+      view; Back returns to the hub; `verify` passes.
+
+- [x] **P172** — Wire the `games` icon in `src/components/Desktop.jsx` to open `GamesApp` (window,
+      default size 1200×800) instead of the generic placeholder `Window`, matching the
+      `visitor-arts`/`memory-wall` branch pattern (add to `WINDOW_PREVIEW_SIZES` and
+      `renderPreviewBody` too).
+      **Pass condition:** double-clicking "Games" opens the real arcade hub; every other non-special
+      icon still opens the generic placeholder `Window`; `verify` passes.
+
+---
+
+## PHASE 37 — GAME 1: FLAPPY BIRD CLONE
+
+_First game per Sonny's build order. Canvas-based: gravity + jump-on-click/space, scrolling pipes
+with gaps, collision ends the run, score = pipes passed. Plugs into Phase 36's `GamesApp`/
+`GameLeaderboard`/`useGames()`._
+
+- [x] **P173** — Create `src/utils/games/flappyBirdPhysics.js`: pure functions —
+      `applyGravity(bird, dt)`, `jump(bird)`, `movePipes(pipes, dt, speed)`,
+      `spawnPipe(pipes, canvasHeight, gapSize)`, `checkCollision(bird, pipes, canvasHeight)`.
+      Co-located test file with one non-colliding case and one colliding case.
+      **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
+
+- [x] **P174** — Create `src/components/games/flappybird/FlappyBirdCanvas.jsx`: a `<canvas>`
+      rendering the bird (simple shape/emoji) via `requestAnimationFrame`, wired to
+      `flappyBirdPhysics.js` for gravity-only free-fall (no pipes yet); click/space calls `jump()`;
+      the RAF loop is cancelled on unmount.
+      **Pass condition:** standalone render shows the bird falling under gravity; clicking makes it
+      jump upward; `verify` passes.
+
+- [x] **P175** — Extend `FlappyBirdCanvas.jsx` to spawn and scroll pipes via `spawnPipe`/
+      `movePipes`, incrementing an internal score each time the bird's x-position passes a pipe
+      without colliding.
+      **Pass condition:** standalone render shows pipes scrolling left and spawning periodically;
+      the score visibly increments as they're passed; `verify` passes.
+
+- [x] **P176** — Wire collision in `FlappyBirdCanvas.jsx` via `checkCollision` (pipes + ground/
+      ceiling): on collision, stop the RAF loop and call an `onGameOver(score)` prop.
+      **Pass condition:** a forced collision calls `onGameOver` with the reached score and the loop
+      stops advancing; `verify` passes.
+
+- [x] **P177** — Create `src/components/games/flappybird/FlappyBirdGame.jsx`: composes
+      `FlappyBirdCanvas` with a start screen ("Click or press Space to start"), and a game-over
+      overlay (final score + `GameLeaderboard` for `'flappy-bird'` + "Play Again"), submitting via
+      `useGames().submitScore('flappy-bird', ...)` on game over.
+      **Pass condition:** start screen shows before play; a run ending in collision shows the
+      overlay with the score and an updated leaderboard; Play Again resets to the start screen;
+      `verify` passes.
+
+- [ ] **P178** — Wire `FlappyBirdGame` into `src/components/GamesApp.jsx` for
+      `id === 'flappy-bird'`, replacing its placeholder view; flip `flappy-bird`'s `status` to
+      `'ready'` in `src/data/gamesCatalog.js`.
+      **Pass condition:** selecting Flappy Bird from the arcade hub opens the real playable game;
+      the other 4 tiles still show "Coming soon"; `verify` passes.
+
+---
+
+## PHASE 38 — GAME 2: 2048
+
+_Second game per Sonny's build order. Pure grid logic (slide/merge/spawn/game-over), no game loop
+needed. Plugs into Phase 36's shared hub/leaderboard._
+
+- [ ] **P179** — Create `src/utils/games/twenty48Logic.js`: pure functions — `createEmptyGrid()`,
+      `spawnTile(grid)` (random empty cell gets 2 [90%] or 4 [10%]), `slideAndMergeRow(row)` (the
+      single-row slide+merge+score-delta primitive all 4 directions reduce to via transpose/
+      reverse), `move(grid, direction)` returning `{ grid, scoreDelta, moved }`,
+      `isGameOver(grid)`. Co-located test file covering a merge case, a no-op-move case, and a
+      game-over case.
+      **Pass condition:** `npm run test` shows all 3 cases passing; `verify` passes.
+
+- [ ] **P180** — Create `src/components/games/twenty48/Grid2048.jsx`: renders a 4×4 `grid` prop as
+      colored number tiles (classic 2048 per-value palette), no interactivity.
+      **Pass condition:** standalone render with a sample grid shows correctly colored/numbered
+      tiles; `verify` passes.
+
+- [ ] **P181** — Create `src/components/games/twenty48/Game2048.jsx`: owns grid/score state
+      (seeded with two spawned tiles), a keydown listener for arrow keys calling `move()`, spawning
+      a new tile after any move that actually changed the grid, and showing the live score.
+      **Pass condition:** standalone render lets arrow keys shift/merge tiles and updates the score;
+      `verify` passes.
+
+- [ ] **P182** — Add the game-over overlay to `Game2048.jsx`: when `isGameOver(grid)` is true, show
+      the final score, `GameLeaderboard` for `'2048'`, and "Play Again" (resets grid/score);
+      submit via `useGames().submitScore('2048', ...)` on game over.
+      **Pass condition:** playing to a full, unmergeable grid shows the overlay with the final score
+      and an updated leaderboard; Play Again resets; `verify` passes.
+
+- [ ] **P183** — Wire `Game2048` into `GamesApp.jsx` for `id === '2048'`; flip its `status` to
+      `'ready'` in `gamesCatalog.js`.
+      **Pass condition:** selecting 2048 from the hub opens the real playable game; `verify` passes.
+
+---
+
+## PHASE 39 — GAME 3: ENDLESS RUNNER
+
+_Third game per Sonny's build order. Same canvas/RAF shape as Flappy Bird (Phase 37) but its own
+tuning: auto-running character, jump over obstacles, distance-based score with gradually
+increasing speed. Plugs into Phase 36's shared hub/leaderboard._
+
+- [ ] **P184** — Create `src/utils/games/runnerPhysics.js`: pure functions — `applyGravity`/
+      `jump` (this game's own tuning), `moveObstacles(obstacles, dt, speed)`,
+      `spawnObstacle(obstacles, groundY)`, `checkCollision(player, obstacles)`. Co-located test file
+      with a colliding and a non-colliding case.
+      **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
+
+- [ ] **P185** — Create `src/components/games/runner/RunnerCanvas.jsx`: ground + player shape via
+      `requestAnimationFrame`, gravity/jump only (no obstacles yet), RAF loop cancelled on unmount.
+      **Pass condition:** standalone render shows the player jumping over a fixed ground on click/
+      space; `verify` passes.
+
+- [ ] **P186** — Extend `RunnerCanvas.jsx` with obstacle spawning/scrolling via
+      `runnerPhysics.js`, plus a distance-based score that increments every frame and a scroll
+      speed that gradually increases the longer the run lasts.
+      **Pass condition:** obstacles scroll and spawn; the score increments over time; speed visibly
+      increases the longer it runs; `verify` passes.
+
+- [ ] **P187** — Wire collision in `RunnerCanvas.jsx` via `checkCollision` → stop the RAF loop and
+      call `onGameOver(score)`.
+      **Pass condition:** colliding with an obstacle ends the run and reports the reached score;
+      `verify` passes.
+
+- [ ] **P188** — Create `src/components/games/runner/RunnerGame.jsx`: composes `RunnerCanvas` with
+      a start screen, a game-over overlay (`GameLeaderboard` for `'endless-runner'` + "Play Again"),
+      submitting via `useGames().submitScore('endless-runner', ...)` on game over.
+      **Pass condition:** the full start → play → game-over → replay loop works; `verify` passes.
+
+- [ ] **P189** — Wire `RunnerGame` into `GamesApp.jsx` for `id === 'endless-runner'`; flip its
+      `status` to `'ready'` in `gamesCatalog.js`.
+      **Pass condition:** selecting Endless Runner from the hub opens the real playable game;
+      `verify` passes.
+
+---
+
+## PHASE 40 — GAME 4: TYPING SPEED TEST / CODE SPEED RACER
+
+_Fourth game per Sonny's build order. No game loop — a timed typing form: live per-character
+correctness highlighting, WPM + accuracy computed on completion. Plugs into Phase 36's shared hub/
+leaderboard._
+
+- [ ] **P190** — Create `src/data/typingSnippets.js`: a small curated list of short code/tech
+      snippets and sentences to type.
+      **Pass condition:** exports a non-empty array of strings; `verify` passes.
+
+- [ ] **P191** — Create `src/utils/games/typingStats.js`: pure functions —
+      `calculateWPM(charsTyped, elapsedMs)` and `calculateAccuracy(correctChars, totalTyped)`.
+      Co-located test file with known-value cases for both.
+      **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
+
+- [ ] **P192** — Create `src/components/games/typing/TypingTestArea.jsx`: renders the target
+      snippet with per-character highlighting (correct/incorrect/untyped) as the user types into a
+      controlled input, starting an internal timer on the first keystroke, and calling
+      `onComplete({ wpm, accuracy })` once the snippet is fully typed.
+      **Pass condition:** typing through a snippet (including one mistake) shows correct
+      highlighting and calls `onComplete` with a plausible WPM/accuracy; `verify` passes.
+
+- [ ] **P193** — Create `src/components/games/typing/TypingSpeedGame.jsx`: picks a random snippet
+      from `typingSnippets.js`, renders `TypingTestArea`; on complete shows results (WPM +
+      accuracy), `GameLeaderboard` for `'typing-speed'` (value = WPM, `label` = accuracy%),
+      submits via `useGames().submitScore`; "Try Again" picks a new random snippet.
+      **Pass condition:** completing a snippet shows results and updates the leaderboard; Try Again
+      resets with a new snippet; `verify` passes.
+
+- [ ] **P194** — Wire `TypingSpeedGame` into `GamesApp.jsx` for `id === 'typing-speed'`; flip its
+      `status` to `'ready'` in `gamesCatalog.js`.
+      **Pass condition:** selecting it from the hub plays the real game; `verify` passes.
+
+---
+
+## PHASE 41 — GAME 5: MEMORY FLIP CARD (SPEED RUN)
+
+_Fifth and final game per Sonny's build order. Grid of face-down cards, flip two at a time,
+fastest-completion-time leaderboard (`sortOrder: 'asc'`, already set in Phase 36's catalog).
+Plugs into Phase 36's shared hub/leaderboard._
+
+- [ ] **P195** — Create `src/data/memoryCardIcons.js`: a list of 8 unique emoji/tech icons used as
+      card faces.
+      **Pass condition:** exports 8+ unique entries; `verify` passes.
+
+- [ ] **P196** — Create `src/utils/games/memoryDeck.js`: pure `buildShuffledDeck(icons)` returning
+      a Fisher-Yates-shuffled array of paired `{ id, icon, isFlipped, isMatched }` cards.
+      Co-located test verifying each icon appears exactly twice and the deck size is correct.
+      **Pass condition:** `npm run test` shows the deck-validity case passing; `verify` passes.
+
+- [ ] **P197** — Create `src/components/games/memory/MemoryCard.jsx`: one flippable card (back by
+      default, front when `isFlipped`/`isMatched`), click calls `onFlip(id)`, disabled when already
+      matched or flipped.
+      **Pass condition:** standalone render shows the back by default and the front when
+      `isFlipped` is true; `verify` passes.
+
+- [ ] **P198** — Create `src/components/games/memory/MemoryFlipGame.jsx`: grid of `MemoryCard`
+      from `buildShuffledDeck`, flip-two-at-a-time logic (a mismatch auto-flips back after a short
+      delay via a `setTimeout` cleaned up on unmount — per the existing `react-hooks/refs`
+      constraint in LESSONS.md), a move counter, and a timer starting on first flip and stopping
+      once all pairs are matched.
+      **Pass condition:** matching two cards keeps them face-up; mismatching flips them back after
+      the delay; the timer/move count track correctly; `verify` passes.
+
+- [ ] **P199** — Add the completion overlay to `MemoryFlipGame.jsx`: once fully matched, show the
+      final time + move count, `GameLeaderboard` for `'memory-flip'` (ascending/fastest-time sort),
+      submit via `useGames().submitScore`, and "Play Again" reshuffles a fresh deck.
+      **Pass condition:** completing the board shows the overlay and updates the leaderboard; Play
+      Again reshuffles and resets; `verify` passes.
+
+- [ ] **P200** — Wire `MemoryFlipGame` into `GamesApp.jsx` for `id === 'memory-flip'`; flip its
+      `status` to `'ready'` in `gamesCatalog.js`.
+      **Pass condition:** selecting it from the hub plays the real game; every one of the 5 arcade
+      tiles is now a real playable game with a working local leaderboard; `verify` passes.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.
@@ -1574,6 +1836,11 @@ Anything here is out of scope until Sonny moves it up.
   selection state (Phase 14, P85); accent color now drives the window frame border (Phase 17,
   P93), but re-skinning the taskbar/icons/everything else to respect accent color or theme mode is
   real follow-up work Sonny confirmed he wants done later, not now.
+- **Shared/global arcade leaderboard across all visitors** — Phase 36's leaderboards (P166–P200)
+  are localStorage-backed, per-browser only, per Sonny's explicit 2026-08-19 answer. A real
+  cross-visitor leaderboard needs a backend + database, which is a new architectural layer banned
+  by CLAUDE.md §2 without Sonny's explicit sign-off — he confirmed he wants this "built later," so
+  it stays here until he moves it up and approves the stack addition it requires.
 
 ---
 

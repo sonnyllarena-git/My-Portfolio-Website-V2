@@ -11,6 +11,7 @@ import GmailComposeApp from './GmailComposeApp.jsx'
 import PaintApp from './PaintApp.jsx'
 import VisitorArtsApp from './VisitorArtsApp.jsx'
 import MemoryWallApp from './MemoryWallApp.jsx'
+import GamesApp from './GamesApp.jsx'
 import SettingsApp from './SettingsApp.jsx'
 import MusicLabApp from './MusicLabApp.jsx'
 import ZoomChatApp from './ZoomChatApp.jsx'
@@ -43,6 +44,7 @@ const WINDOW_PREVIEW_SIZES = {
   paint: [1200, 800],
   'visitor-arts': [1200, 800],
   'memory-wall': [950, 650],
+  games: [1200, 800],
   settings: [1200, 800],
   'music-lab': [1200, 800],
   'zoom-chat': [400, 600],
@@ -82,6 +84,7 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'paint') return <PaintApp onOpenGallery={() => {}} />
   if (w.id === 'visitor-arts') return <VisitorArtsApp onOpenPaint={() => {}} />
   if (w.id === 'memory-wall') return <MemoryWallApp />
+  if (w.id === 'games') return <GamesApp />
   if (w.id === 'settings')
     return <SettingsApp onOpenGmail={() => {}} onOpenZoomChat={() => {}} />
   if (w.id === 'music-lab') return <MusicLabApp />
@@ -454,6 +457,20 @@ function Desktop() {
                 defaultHeight={650}
               >
                 <MemoryWallApp />
+              </Window>
+            )
+          }
+          if (w.id === 'games') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🎮"
+                title="Games"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <GamesApp />
               </Window>
             )
           }
