@@ -479,10 +479,15 @@ function Desktop() {
                 defaultWidth={400}
                 defaultHeight={600}
               >
-                <ZoomChatApp
-                  onClose={shared.onClose}
-                  onOpenGmail={() => handleIconOpen('gmail')}
-                />
+                {({ toggleMaximize, isMaximized }) => (
+                  <ZoomChatApp
+                    onClose={shared.onClose}
+                    onMinimize={shared.onMinimizeToggle}
+                    onMaximize={toggleMaximize}
+                    isMaximized={isMaximized}
+                    onOpenGmail={() => handleIconOpen('gmail')}
+                  />
+                )}
               </Window>
             )
           }

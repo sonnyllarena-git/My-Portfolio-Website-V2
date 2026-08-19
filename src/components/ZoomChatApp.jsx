@@ -13,6 +13,7 @@ import {
 import ZoomChatLoading from './zoomChat/ZoomChatLoading.jsx'
 import ZoomChatHeader from './zoomChat/ZoomChatHeader.jsx'
 import ZoomChatMessage from './zoomChat/ZoomChatMessage.jsx'
+import ZoomChatEmojiPicker from './zoomChat/ZoomChatEmojiPicker.jsx'
 
 const ANYTHING_ELSE_REPLY = 'Great! Is there anything else I can help you with?'
 const CONTACT_CTA = {
@@ -30,16 +31,24 @@ function makeMessage(role, content, extra = {}) {
   return { id: idCounter, role, content, timestamp: new Date(), ...extra }
 }
 
-function ZoomChatApp({ onClose, onOpenGmail }) {
+function ZoomChatApp({
+  onClose,
+  onMinimize,
+  onMaximize,
+  isMaximized,
+  onOpenGmail,
+}) {
   const [phase, setPhase] = useState('loading')
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [guestName, setGuestName] = useState(null)
   const [pendingFollowUpMessageId, setPendingFollowUpMessageId] = useState(null)
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false)
   const scrollRef = useRef(null)
   const pendingFollowUpRef = useRef(null)
   const consecutiveMissesRef = useRef(0)
+  const emojiButtonRef = useRef(null)
 
   function appendMessage(msg) {
     setMessages((prev) => [...prev, msg])
@@ -59,6 +68,22 @@ function ZoomChatApp({ onClose, onOpenGmail }) {
       behavior: 'smooth',
     })
   }, [messages, isTyping])
+
+  useEffect(() => {
+    if (!emojiPickerOpen) return
+    function handleClickOutside(e) {
+      if (!emojiButtonRef.current?.contains(e.target)) {
+        setEmojiPickerOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [emojiPickerOpen])
+
+  function handleEmojiSelect(emoji) {
+    setInput((prev) => prev + emoji)
+    setEmojiPickerOpen(false)
+  }
 
   function handleJoinMeeting() {
     setPhase('name')
@@ -221,7 +246,12 @@ function ZoomChatApp({ onClose, onOpenGmail }) {
 
   return (
     <div className="flex h-full flex-col bg-white text-black">
-      <ZoomChatHeader onClose={onClose} />
+      <ZoomChatHeader
+        onClose={onClose}
+        onMinimize={onMinimize}
+        onMaximize={onMaximize}
+        isMaximized={isMaximized}
+      />
       <div
         ref={scrollRef}
         className="flex-1 space-y-3 overflow-y-auto px-4 py-3"
@@ -249,42 +279,54 @@ function ZoomChatApp({ onClose, onOpenGmail }) {
           </div>
         )}
       </div>
-      <form
-        onSubmit={handleSubmit}
-        className="flex shrink-0 items-center gap-2 border-t border-black/10 px-3 py-2.5"
-      >
-        <button
-          type="button"
-          aria-label="Attach file"
-          className="shrink-0 text-black/50 hover:text-black"
+      <div className="shrink-0 px-3 pb-3">
+        <form
+          onSubmit={handleSubmit}
+          className="flex items-center gap-2 rounded-2xl border border-black/15 px-4 py-2"
         >
-          📎
-        </button>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={inputPlaceholder}
-          className="flex-1 rounded-full bg-black/5 px-3.5 py-2 text-sm text-black placeholder-black/40 outline-none"
-        />
-        <button
-          type="button"
-          aria-label="Add emoji"
-          className="shrink-0 text-black/50 hover:text-black"
-        >
-          🙂
-        </button>
-        <button
-          type="submit"
-          aria-label="Send message"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/10 text-black hover:bg-black/20"
-        >
-          &uarr;
-        </button>
-      </form>
+          <div className="flex flex-1 flex-col gap-2 py-0.5">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={inputPlaceholder}
+              className="w-full bg-transparent text-sm text-black placeholder-black/40 outline-none"
+            />
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="Attach file"
+                className="text-black/50 hover:text-black"
+              >
+                📎
+              </button>
+              <div ref={emojiButtonRef} className="relative">
+                <button
+                  type="button"
+                  aria-label="Add emoji"
+                  onClick={() => setEmojiPickerOpen((open) => !open)}
+                  className="text-black/50 hover:text-black"
+                >
+                  🙂
+                </button>
+                {emojiPickerOpen && (
+                  <ZoomChatEmojiPicker onSelect={handleEmojiSelect} />
+                )}
+              </div>
+            </div>
+          </div>
+          <button
+            type="submit"
+            aria-label="Send message"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/10 text-black hover:bg-black/20"
+          >
+            &uarr;
+          </button>
+        </form>
+      </div>
       <p className="shrink-0 px-4 pb-3 text-center text-[11px] text-black/40">
-        This is a demo assistant — nothing you type here is stored or sent
-        anywhere.
+        Zoom may retain transcripts to improve the quality of our products,
+        services, and training.
       </p>
     </div>
   )

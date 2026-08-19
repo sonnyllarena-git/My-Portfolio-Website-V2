@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Rnd } from 'react-rnd'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
@@ -29,7 +29,7 @@ function Window({
   const isHidden = isMinimized || isClosing
   const [shouldRender, setShouldRender] = useState(!isHidden)
   const [isMaximized, setIsMaximized] = useState(false)
-  const previousLayout = useRef(null)
+  const [previousLayout, setPreviousLayout] = useState(null)
 
   useEffect(() => {
     const timer = setTimeout(
@@ -54,10 +54,10 @@ function Window({
 
   function toggleMaximize() {
     if (isMaximized) {
-      setLayout(previousLayout.current ?? layout)
+      setLayout(previousLayout ?? layout)
       setIsMaximized(false)
     } else {
-      previousLayout.current = layout
+      setPreviousLayout(layout)
       setLayout({
         x: 0,
         y: 0,
@@ -135,11 +135,13 @@ function Window({
           </div>
         )}
         <div className="flex-1 overflow-auto">
-          {children ?? (
-            <div className="flex h-full items-center justify-center text-sm text-white/40">
-              Coming soon
-            </div>
-          )}
+          {typeof children === 'function'
+            ? children({ toggleMaximize, isMaximized })
+            : (children ?? (
+                <div className="flex h-full items-center justify-center text-sm text-white/40">
+                  Coming soon
+                </div>
+              ))}
         </div>
       </motion.div>
     </Rnd>
