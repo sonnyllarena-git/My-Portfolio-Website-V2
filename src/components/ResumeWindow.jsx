@@ -25,16 +25,16 @@ function ResumeWindow({
   const { accentColor } = useSystemSettings()
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
   const isHidden = isMinimized || isClosing
-  const [shouldRender, setShouldRender] = useState(!isHidden)
+  const [shouldRender, setShouldRender] = useState(!isClosing)
   const [showFileMenu, setShowFileMenu] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(
-      () => setShouldRender(!isHidden),
-      isHidden ? FADE_DURATION * 1000 : 0,
+      () => setShouldRender(!isClosing),
+      isClosing ? FADE_DURATION * 1000 : 0,
     )
     return () => clearTimeout(timer)
-  }, [isHidden])
+  }, [isClosing])
 
   if (!shouldRender) return null
 
@@ -47,7 +47,7 @@ function ResumeWindow({
       animate={{ opacity: isHidden ? 0 : 1 }}
       transition={{ duration: FADE_DURATION }}
       style={{ borderColor: accentHex, zIndex }}
-      className="pointer-events-auto absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border-2 bg-[#2b2b2b] shadow-2xl"
+      className={`absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border-2 bg-[#2b2b2b] shadow-2xl ${isHidden ? 'pointer-events-none' : 'pointer-events-auto'}`}
     >
       <div className="flex items-center justify-between bg-[#b30b00] px-3 py-2 text-white">
         <span className="text-sm font-medium">Resume.pdf</span>

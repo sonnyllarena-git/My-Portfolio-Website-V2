@@ -27,17 +27,17 @@ function Window({
   const { accentColor } = useSystemSettings()
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
   const isHidden = isMinimized || isClosing
-  const [shouldRender, setShouldRender] = useState(!isHidden)
+  const [shouldRender, setShouldRender] = useState(!isClosing)
   const [isMaximized, setIsMaximized] = useState(false)
   const [previousLayout, setPreviousLayout] = useState(null)
 
   useEffect(() => {
     const timer = setTimeout(
-      () => setShouldRender(!isHidden),
-      isHidden ? FADE_DURATION * 1000 : 0,
+      () => setShouldRender(!isClosing),
+      isClosing ? FADE_DURATION * 1000 : 0,
     )
     return () => clearTimeout(timer)
-  }, [isHidden])
+  }, [isClosing])
   const [layout, setLayout] = useState(() => {
     const width = Math.max(defaultWidth, MIN_WIDTH)
     const height = Math.max(defaultHeight, MIN_HEIGHT)
@@ -88,7 +88,7 @@ function Window({
       dragHandleClassName="window-title-bar"
       disableDragging={isMaximized}
       enableResizing={!isMaximized}
-      className="pointer-events-auto"
+      className={isHidden ? 'pointer-events-none' : 'pointer-events-auto'}
       style={{ zIndex }}
     >
       <motion.div
