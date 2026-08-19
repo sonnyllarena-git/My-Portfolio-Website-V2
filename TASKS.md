@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `TASK P178 — Wire FlappyBirdGame into GamesApp.jsx`
+**Current task pointer:** `TASK P194 — Wire TypingSpeedGame into GamesApp.jsx`
 **Last verified:** 2026-08-19 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -1662,7 +1662,7 @@ with gaps, collision ends the run, score = pipes passed. Plugs into Phase 36's `
       overlay with the score and an updated leaderboard; Play Again resets to the start screen;
       `verify` passes.
 
-- [ ] **P178** — Wire `FlappyBirdGame` into `src/components/GamesApp.jsx` for
+- [x] **P178** — Wire `FlappyBirdGame` into `src/components/GamesApp.jsx` for
       `id === 'flappy-bird'`, replacing its placeholder view; flip `flappy-bird`'s `status` to
       `'ready'` in `src/data/gamesCatalog.js`.
       **Pass condition:** selecting Flappy Bird from the arcade hub opens the real playable game;
@@ -1675,7 +1675,7 @@ with gaps, collision ends the run, score = pipes passed. Plugs into Phase 36's `
 _Second game per Sonny's build order. Pure grid logic (slide/merge/spawn/game-over), no game loop
 needed. Plugs into Phase 36's shared hub/leaderboard._
 
-- [ ] **P179** — Create `src/utils/games/twenty48Logic.js`: pure functions — `createEmptyGrid()`,
+- [x] **P179** — Create `src/utils/games/twenty48Logic.js`: pure functions — `createEmptyGrid()`,
       `spawnTile(grid)` (random empty cell gets 2 [90%] or 4 [10%]), `slideAndMergeRow(row)` (the
       single-row slide+merge+score-delta primitive all 4 directions reduce to via transpose/
       reverse), `move(grid, direction)` returning `{ grid, scoreDelta, moved }`,
@@ -1683,24 +1683,24 @@ needed. Plugs into Phase 36's shared hub/leaderboard._
       game-over case.
       **Pass condition:** `npm run test` shows all 3 cases passing; `verify` passes.
 
-- [ ] **P180** — Create `src/components/games/twenty48/Grid2048.jsx`: renders a 4×4 `grid` prop as
+- [x] **P180** — Create `src/components/games/twenty48/Grid2048.jsx`: renders a 4×4 `grid` prop as
       colored number tiles (classic 2048 per-value palette), no interactivity.
       **Pass condition:** standalone render with a sample grid shows correctly colored/numbered
       tiles; `verify` passes.
 
-- [ ] **P181** — Create `src/components/games/twenty48/Game2048.jsx`: owns grid/score state
+- [x] **P181** — Create `src/components/games/twenty48/Game2048.jsx`: owns grid/score state
       (seeded with two spawned tiles), a keydown listener for arrow keys calling `move()`, spawning
       a new tile after any move that actually changed the grid, and showing the live score.
       **Pass condition:** standalone render lets arrow keys shift/merge tiles and updates the score;
       `verify` passes.
 
-- [ ] **P182** — Add the game-over overlay to `Game2048.jsx`: when `isGameOver(grid)` is true, show
+- [x] **P182** — Add the game-over overlay to `Game2048.jsx`: when `isGameOver(grid)` is true, show
       the final score, `GameLeaderboard` for `'2048'`, and "Play Again" (resets grid/score);
       submit via `useGames().submitScore('2048', ...)` on game over.
       **Pass condition:** playing to a full, unmergeable grid shows the overlay with the final score
       and an updated leaderboard; Play Again resets; `verify` passes.
 
-- [ ] **P183** — Wire `Game2048` into `GamesApp.jsx` for `id === '2048'`; flip its `status` to
+- [x] **P183** — Wire `Game2048` into `GamesApp.jsx` for `id === '2048'`; flip its `status` to
       `'ready'` in `gamesCatalog.js`.
       **Pass condition:** selecting 2048 from the hub opens the real playable game; `verify` passes.
 
@@ -1712,34 +1712,34 @@ _Third game per Sonny's build order. Same canvas/RAF shape as Flappy Bird (Phase
 tuning: auto-running character, jump over obstacles, distance-based score with gradually
 increasing speed. Plugs into Phase 36's shared hub/leaderboard._
 
-- [ ] **P184** — Create `src/utils/games/runnerPhysics.js`: pure functions — `applyGravity`/
+- [x] **P184** — Create `src/utils/games/runnerPhysics.js`: pure functions — `applyGravity`/
       `jump` (this game's own tuning), `moveObstacles(obstacles, dt, speed)`,
       `spawnObstacle(obstacles, groundY)`, `checkCollision(player, obstacles)`. Co-located test file
       with a colliding and a non-colliding case.
       **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
 
-- [ ] **P185** — Create `src/components/games/runner/RunnerCanvas.jsx`: ground + player shape via
+- [x] **P185** — Create `src/components/games/runner/RunnerCanvas.jsx`: ground + player shape via
       `requestAnimationFrame`, gravity/jump only (no obstacles yet), RAF loop cancelled on unmount.
       **Pass condition:** standalone render shows the player jumping over a fixed ground on click/
       space; `verify` passes.
 
-- [ ] **P186** — Extend `RunnerCanvas.jsx` with obstacle spawning/scrolling via
+- [x] **P186** — Extend `RunnerCanvas.jsx` with obstacle spawning/scrolling via
       `runnerPhysics.js`, plus a distance-based score that increments every frame and a scroll
       speed that gradually increases the longer the run lasts.
       **Pass condition:** obstacles scroll and spawn; the score increments over time; speed visibly
       increases the longer it runs; `verify` passes.
 
-- [ ] **P187** — Wire collision in `RunnerCanvas.jsx` via `checkCollision` → stop the RAF loop and
+- [x] **P187** — Wire collision in `RunnerCanvas.jsx` via `checkCollision` → stop the RAF loop and
       call `onGameOver(score)`.
       **Pass condition:** colliding with an obstacle ends the run and reports the reached score;
       `verify` passes.
 
-- [ ] **P188** — Create `src/components/games/runner/RunnerGame.jsx`: composes `RunnerCanvas` with
+- [x] **P188** — Create `src/components/games/runner/RunnerGame.jsx`: composes `RunnerCanvas` with
       a start screen, a game-over overlay (`GameLeaderboard` for `'endless-runner'` + "Play Again"),
       submitting via `useGames().submitScore('endless-runner', ...)` on game over.
       **Pass condition:** the full start → play → game-over → replay loop works; `verify` passes.
 
-- [ ] **P189** — Wire `RunnerGame` into `GamesApp.jsx` for `id === 'endless-runner'`; flip its
+- [x] **P189** — Wire `RunnerGame` into `GamesApp.jsx` for `id === 'endless-runner'`; flip its
       `status` to `'ready'` in `gamesCatalog.js`.
       **Pass condition:** selecting Endless Runner from the hub opens the real playable game;
       `verify` passes.
@@ -1752,23 +1752,23 @@ _Fourth game per Sonny's build order. No game loop — a timed typing form: live
 correctness highlighting, WPM + accuracy computed on completion. Plugs into Phase 36's shared hub/
 leaderboard._
 
-- [ ] **P190** — Create `src/data/typingSnippets.js`: a small curated list of short code/tech
+- [x] **P190** — Create `src/data/typingSnippets.js`: a small curated list of short code/tech
       snippets and sentences to type.
       **Pass condition:** exports a non-empty array of strings; `verify` passes.
 
-- [ ] **P191** — Create `src/utils/games/typingStats.js`: pure functions —
+- [x] **P191** — Create `src/utils/games/typingStats.js`: pure functions —
       `calculateWPM(charsTyped, elapsedMs)` and `calculateAccuracy(correctChars, totalTyped)`.
       Co-located test file with known-value cases for both.
       **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
 
-- [ ] **P192** — Create `src/components/games/typing/TypingTestArea.jsx`: renders the target
+- [x] **P192** — Create `src/components/games/typing/TypingTestArea.jsx`: renders the target
       snippet with per-character highlighting (correct/incorrect/untyped) as the user types into a
       controlled input, starting an internal timer on the first keystroke, and calling
       `onComplete({ wpm, accuracy })` once the snippet is fully typed.
       **Pass condition:** typing through a snippet (including one mistake) shows correct
       highlighting and calls `onComplete` with a plausible WPM/accuracy; `verify` passes.
 
-- [ ] **P193** — Create `src/components/games/typing/TypingSpeedGame.jsx`: picks a random snippet
+- [x] **P193** — Create `src/components/games/typing/TypingSpeedGame.jsx`: picks a random snippet
       from `typingSnippets.js`, renders `TypingTestArea`; on complete shows results (WPM +
       accuracy), `GameLeaderboard` for `'typing-speed'` (value = WPM, `label` = accuracy%),
       submits via `useGames().submitScore`; "Try Again" picks a new random snippet.

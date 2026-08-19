@@ -1,9 +1,12 @@
+import flappyBirdIcon from '../components/games/flappybird/assets/icon/flappy bird icon.png'
+
 export const gamesCatalog = [
   {
     id: 'flappy-bird',
     title: 'Flappy Bird',
     tagline: 'Tap to fly, dodge the pipes.',
     icon: '🐦',
+    iconImage: flappyBirdIcon,
     scoreLabel: 'Best Score',
     sortOrder: 'desc',
     status: 'ready',
@@ -15,7 +18,7 @@ export const gamesCatalog = [
     icon: '🔢',
     scoreLabel: 'Best Score',
     sortOrder: 'desc',
-    status: 'coming-soon',
+    status: 'ready',
   },
   {
     id: 'endless-runner',
@@ -24,7 +27,7 @@ export const gamesCatalog = [
     icon: '🏃',
     scoreLabel: 'Best Distance',
     sortOrder: 'desc',
-    status: 'coming-soon',
+    status: 'ready',
   },
   {
     id: 'typing-speed',
@@ -33,7 +36,7 @@ export const gamesCatalog = [
     icon: '⌨️',
     scoreLabel: 'Best WPM',
     sortOrder: 'desc',
-    status: 'coming-soon',
+    status: 'ready',
   },
   {
     id: 'memory-flip',

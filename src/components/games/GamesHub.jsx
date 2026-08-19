@@ -18,7 +18,15 @@ function GameTile({ game, preview, onSelectGame }) {
       }`}
     >
       <div className="flex w-full items-center justify-between">
-        <span className="text-3xl">{game.icon}</span>
+        {game.iconImage ? (
+          <img
+            src={game.iconImage}
+            alt=""
+            className="h-10 w-10 rounded-lg object-cover"
+          />
+        ) : (
+          <span className="text-3xl">{game.icon}</span>
+        )}
         {!isReady && (
           <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-gray-300">
             Coming soon

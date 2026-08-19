@@ -2,9 +2,15 @@ import { useState } from 'react'
 import { gamesCatalog } from '../data/gamesCatalog.js'
 import GamesHub from './games/GamesHub.jsx'
 import FlappyBirdGame from './games/flappybird/FlappyBirdGame.jsx'
+import Game2048 from './games/twenty48/Game2048.jsx'
+import RunnerGame from './games/runner/RunnerGame.jsx'
+import TypingSpeedGame from './games/typing/TypingSpeedGame.jsx'
 
 const GAME_COMPONENTS = {
   'flappy-bird': FlappyBirdGame,
+  2048: Game2048,
+  'endless-runner': RunnerGame,
+  'typing-speed': TypingSpeedGame,
 }
 
 export default function GamesApp() {
@@ -51,7 +57,15 @@ export default function GamesApp() {
         ← Back to Arcade
       </button>
       <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-        <span className="text-5xl">{activeGame.icon}</span>
+        {activeGame.iconImage ? (
+          <img
+            src={activeGame.iconImage}
+            alt=""
+            className="h-16 w-16 rounded-xl object-cover"
+          />
+        ) : (
+          <span className="text-5xl">{activeGame.icon}</span>
+        )}
         <h2 className="text-xl font-bold text-white">{activeGame.title}</h2>
         <p className="text-sm text-gray-400">Coming soon</p>
       </div>

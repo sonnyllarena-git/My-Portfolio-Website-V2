@@ -7,12 +7,17 @@ import {
   checkCollision,
   PIPE_WIDTH,
 } from '../../../utils/games/flappyBirdPhysics.js'
+import flappyPlayerSprite from './assets/components/flappy player.png'
 
 const CANVAS_WIDTH = 400
 const CANVAS_HEIGHT = 600
 const PIPE_SPEED = 120
 const PIPE_GAP_SIZE = 150
 const PIPE_SPAWN_INTERVAL = 1.6
+const BIRD_SPRITE_SIZE = 32
+
+const playerImage = new Image()
+playerImage.src = flappyPlayerSprite
 
 function draw(ctx, bird, pipes, score) {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
@@ -27,8 +32,20 @@ function draw(ctx, bird, pipes, score) {
     ctx.fillRect(pipe.x, gapBottom, PIPE_WIDTH, CANVAS_HEIGHT - gapBottom)
   }
 
-  ctx.font = '32px serif'
-  ctx.fillText('🐦', bird.x - 16, bird.y + 12)
+  if (playerImage.complete) {
+    const tilt = Math.max(-0.5, Math.min(0.9, bird.velocity / 700))
+    ctx.save()
+    ctx.translate(bird.x, bird.y)
+    ctx.rotate(tilt)
+    ctx.drawImage(
+      playerImage,
+      -BIRD_SPRITE_SIZE / 2,
+      -BIRD_SPRITE_SIZE / 2,
+      BIRD_SPRITE_SIZE,
+      BIRD_SPRITE_SIZE,
+    )
+    ctx.restore()
+  }
 
   ctx.fillStyle = '#ffffff'
   ctx.font = 'bold 24px sans-serif'
