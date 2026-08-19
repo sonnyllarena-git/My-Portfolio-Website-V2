@@ -5,12 +5,14 @@ import FlappyBirdGame from './games/flappybird/FlappyBirdGame.jsx'
 import Game2048 from './games/twenty48/Game2048.jsx'
 import RunnerGame from './games/runner/RunnerGame.jsx'
 import TypingSpeedGame from './games/typing/TypingSpeedGame.jsx'
+import MemoryFlipGame from './games/memory/MemoryFlipGame.jsx'
 
 const GAME_COMPONENTS = {
   'flappy-bird': FlappyBirdGame,
   2048: Game2048,
   'endless-runner': RunnerGame,
   'typing-speed': TypingSpeedGame,
+  'memory-flip': MemoryFlipGame,
 }
 
 export default function GamesApp() {
@@ -41,7 +43,7 @@ export default function GamesApp() {
           ← Back to Arcade
         </button>
         <div className="flex-1 overflow-y-auto">
-          <GameComponent />
+          <GameComponent onExit={() => setActiveGameId(null)} />
         </div>
       </div>
     )

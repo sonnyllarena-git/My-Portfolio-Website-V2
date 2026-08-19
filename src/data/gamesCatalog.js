@@ -1,4 +1,5 @@
 import flappyBirdIcon from '../components/games/flappybird/assets/icon/flappy bird icon.png'
+import flappyBirdThumbnail from '../components/games/flappybird/assets/components/flappy thumbnail.png'
 
 export const gamesCatalog = [
   {
@@ -7,6 +8,7 @@ export const gamesCatalog = [
     tagline: 'Tap to fly, dodge the pipes.',
     icon: '🐦',
     iconImage: flappyBirdIcon,
+    thumbnail: flappyBirdThumbnail,
     scoreLabel: 'Best Score',
     sortOrder: 'desc',
     status: 'ready',
@@ -45,6 +47,6 @@ export const gamesCatalog = [
     icon: '🧠',
     scoreLabel: 'Fastest Time',
     sortOrder: 'asc',
-    status: 'coming-soon',
+    status: 'ready',
   },
 ]

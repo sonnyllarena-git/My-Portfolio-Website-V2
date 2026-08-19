@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `TASK P194 — Wire TypingSpeedGame into GamesApp.jsx`
+**Current task pointer:** `_(Phase 41 complete — Games Arcade finished, awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-19 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -1775,7 +1775,7 @@ leaderboard._
       **Pass condition:** completing a snippet shows results and updates the leaderboard; Try Again
       resets with a new snippet; `verify` passes.
 
-- [ ] **P194** — Wire `TypingSpeedGame` into `GamesApp.jsx` for `id === 'typing-speed'`; flip its
+- [x] **P194** — Wire `TypingSpeedGame` into `GamesApp.jsx` for `id === 'typing-speed'`; flip its
       `status` to `'ready'` in `gamesCatalog.js`.
       **Pass condition:** selecting it from the hub plays the real game; `verify` passes.
 
@@ -1787,22 +1787,22 @@ _Fifth and final game per Sonny's build order. Grid of face-down cards, flip two
 fastest-completion-time leaderboard (`sortOrder: 'asc'`, already set in Phase 36's catalog).
 Plugs into Phase 36's shared hub/leaderboard._
 
-- [ ] **P195** — Create `src/data/memoryCardIcons.js`: a list of 8 unique emoji/tech icons used as
+- [x] **P195** — Create `src/data/memoryCardIcons.js`: a list of 8 unique emoji/tech icons used as
       card faces.
       **Pass condition:** exports 8+ unique entries; `verify` passes.
 
-- [ ] **P196** — Create `src/utils/games/memoryDeck.js`: pure `buildShuffledDeck(icons)` returning
+- [x] **P196** — Create `src/utils/games/memoryDeck.js`: pure `buildShuffledDeck(icons)` returning
       a Fisher-Yates-shuffled array of paired `{ id, icon, isFlipped, isMatched }` cards.
       Co-located test verifying each icon appears exactly twice and the deck size is correct.
       **Pass condition:** `npm run test` shows the deck-validity case passing; `verify` passes.
 
-- [ ] **P197** — Create `src/components/games/memory/MemoryCard.jsx`: one flippable card (back by
+- [x] **P197** — Create `src/components/games/memory/MemoryCard.jsx`: one flippable card (back by
       default, front when `isFlipped`/`isMatched`), click calls `onFlip(id)`, disabled when already
       matched or flipped.
       **Pass condition:** standalone render shows the back by default and the front when
       `isFlipped` is true; `verify` passes.
 
-- [ ] **P198** — Create `src/components/games/memory/MemoryFlipGame.jsx`: grid of `MemoryCard`
+- [x] **P198** — Create `src/components/games/memory/MemoryFlipGame.jsx`: grid of `MemoryCard`
       from `buildShuffledDeck`, flip-two-at-a-time logic (a mismatch auto-flips back after a short
       delay via a `setTimeout` cleaned up on unmount — per the existing `react-hooks/refs`
       constraint in LESSONS.md), a move counter, and a timer starting on first flip and stopping
@@ -1810,13 +1810,13 @@ Plugs into Phase 36's shared hub/leaderboard._
       **Pass condition:** matching two cards keeps them face-up; mismatching flips them back after
       the delay; the timer/move count track correctly; `verify` passes.
 
-- [ ] **P199** — Add the completion overlay to `MemoryFlipGame.jsx`: once fully matched, show the
+- [x] **P199** — Add the completion overlay to `MemoryFlipGame.jsx`: once fully matched, show the
       final time + move count, `GameLeaderboard` for `'memory-flip'` (ascending/fastest-time sort),
       submit via `useGames().submitScore`, and "Play Again" reshuffles a fresh deck.
       **Pass condition:** completing the board shows the overlay and updates the leaderboard; Play
       Again reshuffles and resets; `verify` passes.
 
-- [ ] **P200** — Wire `MemoryFlipGame` into `GamesApp.jsx` for `id === 'memory-flip'`; flip its
+- [x] **P200** — Wire `MemoryFlipGame` into `GamesApp.jsx` for `id === 'memory-flip'`; flip its
       `status` to `'ready'` in `gamesCatalog.js`.
       **Pass condition:** selecting it from the hub plays the real game; every one of the 5 arcade
       tiles is now a real playable game with a working local leaderboard; `verify` passes.

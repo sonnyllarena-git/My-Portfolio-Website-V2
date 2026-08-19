@@ -40,19 +40,61 @@ function GameTile({ game, preview, onSelectGame }) {
   )
 }
 
+function FeaturedGameTile({ game, bestScore, totalPlays, onSelectGame }) {
+  const isReady = game.status === 'ready'
+  return (
+    <button
+      type="button"
+      disabled={!isReady}
+      onClick={() => onSelectGame(game.id)}
+      className={`flex flex-col self-start overflow-hidden rounded-xl border-2 border-amber-500/50 bg-[#141414] text-left transition-colors sm:row-span-2 ${
+        isReady ? 'hover:border-amber-400' : 'cursor-not-allowed opacity-50'
+      }`}
+    >
+      <img
+        src={game.thumbnail}
+        alt={game.title}
+        className="aspect-video w-full object-cover"
+      />
+      <div className="flex flex-col gap-2 px-4 py-3">
+        <p className="text-xs font-bold tracking-wide text-gray-400">
+          BEST SCORE: <span className="text-white">{bestScore ?? '—'}</span>
+        </p>
+        <p className="text-xs font-bold tracking-wide text-gray-400">
+          TOTAL PLAYS: <span className="text-white">{totalPlays}</span>
+        </p>
+      </div>
+    </button>
+  )
+}
+
 export default function GamesHub({ onSelectGame }) {
-  const { getTopScores } = useGames()
+  const { getTopScores, getTotalPlays } = useGames()
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {gamesCatalog.map((game) => (
-        <GameTile
-          key={game.id}
-          game={game}
-          preview={bestScorePreview(getTopScores, game)}
-          onSelectGame={onSelectGame}
-        />
-      ))}
+      {gamesCatalog.map((game) => {
+        if (game.thumbnail) {
+          const [top] = getTopScores(game.id)
+          return (
+            <FeaturedGameTile
+              key={game.id}
+              game={game}
+              bestScore={top?.value}
+              totalPlays={getTotalPlays(game.id)}
+              onSelectGame={onSelectGame}
+            />
+          )
+        }
+        return (
+          <GameTile
+            key={game.id}
+            game={game}
+            preview={bestScorePreview(getTopScores, game)}
+            onSelectGame={onSelectGame}
+          />
+        )
+      })}
     </div>
   )
 }

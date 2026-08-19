@@ -8,6 +8,9 @@ import {
   PIPE_WIDTH,
 } from '../../../utils/games/flappyBirdPhysics.js'
 import flappyPlayerSprite from './assets/components/flappy player.png'
+import flappyMapBackground from './assets/components/map.png'
+import flappyPipeSprite from './assets/components/pipe.png'
+import jumpSound from './assets/audio/jump.mp3'
 
 const CANVAS_WIDTH = 400
 const CANVAS_HEIGHT = 600
@@ -16,20 +19,89 @@ const PIPE_GAP_SIZE = 150
 const PIPE_SPAWN_INTERVAL = 1.6
 const BIRD_SPRITE_SIZE = 32
 
+// pipe.png is a single "hangs from ceiling, cap at bottom" sprite; the shaft
+// and cap are cropped from it and the whole thing is mirrored vertically to
+// build the bottom pipe.
+const PIPE_SHAFT_SRC = { x: 126, y: 0, w: 157, h: 400 }
+const PIPE_CAP_SRC = { x: 119, y: 401, w: 171, h: 75 }
+const PIPE_CAP_WIDTH = PIPE_WIDTH + 10
+const PIPE_CAP_HEIGHT = Math.round(
+  PIPE_CAP_SRC.h * (PIPE_CAP_WIDTH / PIPE_CAP_SRC.w),
+)
+const PIPE_CAP_OVERHANG = (PIPE_CAP_WIDTH - PIPE_WIDTH) / 2
+
 const playerImage = new Image()
 playerImage.src = flappyPlayerSprite
 
-function draw(ctx, bird, pipes, score) {
-  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-  ctx.fillStyle = '#0d0d0d'
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+const mapImage = new Image()
+mapImage.src = flappyMapBackground
 
-  ctx.fillStyle = '#22c55e'
+const pipeImage = new Image()
+pipeImage.src = flappyPipeSprite
+
+function drawTopPipe(ctx, x, gapTop) {
+  const shaftHeight = Math.max(0, gapTop - PIPE_CAP_HEIGHT)
+  if (shaftHeight > 0) {
+    const s = PIPE_SHAFT_SRC
+    ctx.drawImage(pipeImage, s.x, s.y, s.w, s.h, x, 0, PIPE_WIDTH, shaftHeight)
+  }
+  const c = PIPE_CAP_SRC
+  ctx.drawImage(
+    pipeImage,
+    c.x,
+    c.y,
+    c.w,
+    c.h,
+    x - PIPE_CAP_OVERHANG,
+    shaftHeight,
+    PIPE_CAP_WIDTH,
+    PIPE_CAP_HEIGHT,
+  )
+}
+
+function drawBottomPipe(ctx, x, gapBottom) {
+  const shaftHeight = Math.max(0, CANVAS_HEIGHT - gapBottom - PIPE_CAP_HEIGHT)
+  ctx.save()
+  ctx.translate(0, CANVAS_HEIGHT)
+  ctx.scale(1, -1)
+  if (shaftHeight > 0) {
+    const s = PIPE_SHAFT_SRC
+    ctx.drawImage(pipeImage, s.x, s.y, s.w, s.h, x, 0, PIPE_WIDTH, shaftHeight)
+  }
+  const c = PIPE_CAP_SRC
+  ctx.drawImage(
+    pipeImage,
+    c.x,
+    c.y,
+    c.w,
+    c.h,
+    x - PIPE_CAP_OVERHANG,
+    shaftHeight,
+    PIPE_CAP_WIDTH,
+    PIPE_CAP_HEIGHT,
+  )
+  ctx.restore()
+}
+
+function draw(ctx, bird, pipes, score) {
+  if (mapImage.complete) {
+    ctx.drawImage(mapImage, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  } else {
+    ctx.fillStyle = '#0d0d0d'
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  }
+
   for (const pipe of pipes) {
     const gapTop = pipe.gapCenter - pipe.gapSize / 2
     const gapBottom = pipe.gapCenter + pipe.gapSize / 2
-    ctx.fillRect(pipe.x, 0, PIPE_WIDTH, gapTop)
-    ctx.fillRect(pipe.x, gapBottom, PIPE_WIDTH, CANVAS_HEIGHT - gapBottom)
+    if (pipeImage.complete) {
+      drawTopPipe(ctx, pipe.x, gapTop)
+      drawBottomPipe(ctx, pipe.x, gapBottom)
+    } else {
+      ctx.fillStyle = '#22c55e'
+      ctx.fillRect(pipe.x, 0, PIPE_WIDTH, gapTop)
+      ctx.fillRect(pipe.x, gapBottom, PIPE_WIDTH, CANVAS_HEIGHT - gapBottom)
+    }
   }
 
   if (playerImage.complete) {
@@ -52,7 +124,7 @@ function draw(ctx, bird, pipes, score) {
   ctx.fillText(String(score), CANVAS_WIDTH / 2 - 8, 40)
 }
 
-export default function FlappyBirdCanvas({ onGameOver }) {
+export default function FlappyBirdCanvas({ paused, onGameOver }) {
   const canvasRef = useRef(null)
   const birdRef = useRef({ x: 80, y: CANVAS_HEIGHT / 2, velocity: 0 })
   const pipesRef = useRef([])
@@ -60,13 +132,29 @@ export default function FlappyBirdCanvas({ onGameOver }) {
   const spawnTimerRef = useRef(0)
   const isRunningRef = useRef(true)
   const onGameOverRef = useRef(onGameOver)
+  const pausedRef = useRef(paused)
+  const jumpAudioRef = useRef(null)
 
   useEffect(() => {
     onGameOverRef.current = onGameOver
   }, [onGameOver])
 
   useEffect(() => {
+    pausedRef.current = paused
+  }, [paused])
+
+  useEffect(() => {
+    jumpAudioRef.current = new Audio(jumpSound)
+  }, [])
+
+  useEffect(() => {
     const ctx = canvasRef.current.getContext('2d')
+
+    if (paused) {
+      draw(ctx, birdRef.current, pipesRef.current, scoreRef.current)
+      return
+    }
+
     let frameId
     let lastTime = performance.now()
 
@@ -112,11 +200,15 @@ export default function FlappyBirdCanvas({ onGameOver }) {
 
     frameId = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(frameId)
-  }, [])
+  }, [paused])
 
   function handleJump() {
-    if (!isRunningRef.current) return
+    if (!isRunningRef.current || pausedRef.current) return
     birdRef.current = jump(birdRef.current)
+    if (jumpAudioRef.current) {
+      jumpAudioRef.current.currentTime = 0
+      jumpAudioRef.current.play().catch(() => {})
+    }
   }
 
   useEffect(() => {
