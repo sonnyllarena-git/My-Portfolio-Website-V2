@@ -21,6 +21,7 @@ function Window({
   cascadeOffset = 0,
   zIndex,
   onFocus,
+  hideTitleBar = false,
   children,
 }) {
   const { accentColor } = useSystemSettings()
@@ -99,38 +100,40 @@ function Window({
         style={{ borderColor: accentHex }}
         className="flex h-full w-full flex-col overflow-hidden rounded-lg border-2 bg-[#1a1c22] text-white shadow-2xl"
       >
-        <div className="window-title-bar flex h-10 shrink-0 cursor-move items-center justify-between bg-[#25272e] px-3 py-2">
-          <span className="flex items-center gap-2 text-sm font-medium">
-            {icon}
-            {title}
-          </span>
-          <div
-            onMouseDown={(e) => e.stopPropagation()}
-            className="flex items-center gap-1"
-          >
-            <button
-              onClick={onMinimizeToggle}
-              aria-label="Minimize"
-              className="flex h-5 w-6 items-center justify-center rounded hover:bg-white/10"
+        {!hideTitleBar && (
+          <div className="window-title-bar flex h-10 shrink-0 cursor-move items-center justify-between bg-[#25272e] px-3 py-2">
+            <span className="flex items-center gap-2 text-sm font-medium">
+              {icon}
+              {title}
+            </span>
+            <div
+              onMouseDown={(e) => e.stopPropagation()}
+              className="flex items-center gap-1"
             >
-              −
-            </button>
-            <button
-              onClick={toggleMaximize}
-              aria-label={isMaximized ? 'Restore' : 'Maximize'}
-              className="flex h-5 w-6 items-center justify-center rounded hover:bg-white/10"
-            >
-              {isMaximized ? '❐' : '□'}
-            </button>
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="flex h-5 w-6 items-center justify-center rounded hover:bg-red-500/80"
-            >
-              ×
-            </button>
+              <button
+                onClick={onMinimizeToggle}
+                aria-label="Minimize"
+                className="flex h-5 w-6 items-center justify-center rounded hover:bg-white/10"
+              >
+                −
+              </button>
+              <button
+                onClick={toggleMaximize}
+                aria-label={isMaximized ? 'Restore' : 'Maximize'}
+                className="flex h-5 w-6 items-center justify-center rounded hover:bg-white/10"
+              >
+                {isMaximized ? '❐' : '□'}
+              </button>
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="flex h-5 w-6 items-center justify-center rounded hover:bg-red-500/80"
+              >
+                ×
+              </button>
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex-1 overflow-auto">
           {children ?? (
             <div className="flex h-full items-center justify-center text-sm text-white/40">

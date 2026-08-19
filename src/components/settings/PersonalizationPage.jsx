@@ -1,6 +1,8 @@
 import { useSystemSettings } from '../../context/SystemSettingsContext.jsx'
 import { accentColors } from '../../data/accentColors.js'
+import { cursorStyles } from '../../data/cursorStyles.js'
 import { wallpapers } from '../../data/wallpapers.js'
+import { getCursorValue } from '../../utils/getCursorValue.js'
 
 function PersonalizationPage() {
   const {
@@ -10,7 +12,10 @@ function PersonalizationPage() {
     setThemeMode,
     accentColor,
     setAccentColor,
+    cursorStyle,
+    setCursorStyle,
   } = useSystemSettings()
+  const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
 
   return (
     <div className="space-y-6">
@@ -80,6 +85,31 @@ function PersonalizationPage() {
               />
             ))}
           </div>
+        </div>
+      </div>
+      <div>
+        <h3 className="mb-2 text-sm font-semibold text-white/70 uppercase">
+          Mouse cursor
+        </h3>
+        <div className="flex gap-3 rounded-lg border border-white/10 bg-[#181a20] p-4">
+          {cursorStyles.map((style) => (
+            <button
+              key={style.id}
+              type="button"
+              onClick={() => setCursorStyle(style.id)}
+              className={`flex flex-col items-center gap-2 rounded-lg border-2 p-3 text-xs ${
+                cursorStyle === style.id ? 'border-blue-500' : 'border-white/10'
+              }`}
+            >
+              <span
+                className="h-8 w-8"
+                style={{ cursor: getCursorValue(style.id, accentHex) }}
+              >
+                ➤
+              </span>
+              {style.label}
+            </button>
+          ))}
         </div>
       </div>
     </div>

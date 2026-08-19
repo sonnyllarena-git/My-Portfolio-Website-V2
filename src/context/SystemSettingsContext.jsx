@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 
 const SystemSettingsContext = createContext(null)
 const WALLPAPER_STORAGE_KEY = 'wallpaperId'
+const CURSOR_STORAGE_KEY = 'cursorStyle'
 
 export function SystemSettingsProvider({ children }) {
   const [brightness, setBrightness] = useState(100)
@@ -11,10 +12,17 @@ export function SystemSettingsProvider({ children }) {
   )
   const [themeMode, setThemeMode] = useState('dark')
   const [accentColor, setAccentColor] = useState('blue')
+  const [cursorStyle, setCursorStyle] = useState(
+    () => localStorage.getItem(CURSOR_STORAGE_KEY) || 'default',
+  )
 
   useEffect(() => {
     localStorage.setItem(WALLPAPER_STORAGE_KEY, wallpaperId)
   }, [wallpaperId])
+
+  useEffect(() => {
+    localStorage.setItem(CURSOR_STORAGE_KEY, cursorStyle)
+  }, [cursorStyle])
 
   return (
     <SystemSettingsContext.Provider
@@ -29,6 +37,8 @@ export function SystemSettingsProvider({ children }) {
         setThemeMode,
         accentColor,
         setAccentColor,
+        cursorStyle,
+        setCursorStyle,
       }}
     >
       {children}

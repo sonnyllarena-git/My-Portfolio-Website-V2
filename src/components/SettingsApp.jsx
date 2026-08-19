@@ -18,7 +18,7 @@ const TABS = [
   { id: 'support', label: 'Get Support', Icon: SupportIcon },
 ]
 
-function SettingsApp({ onOpenGmail }) {
+function SettingsApp({ onOpenGmail, onOpenZoomChat }) {
   const [activeTab, setActiveTab] = useState('system')
 
   return (
@@ -47,7 +47,10 @@ function SettingsApp({ onOpenGmail }) {
         {activeTab === 'contact' && <ContactPage />}
         {activeTab === 'privacy' && <PrivacySecurityPage />}
         {activeTab === 'support' && (
-          <GetSupportPage onOpenGmail={onOpenGmail} />
+          <GetSupportPage
+            onOpenGmail={onOpenGmail}
+            onOpenZoomChat={onOpenZoomChat}
+          />
         )}
       </div>
     </div>

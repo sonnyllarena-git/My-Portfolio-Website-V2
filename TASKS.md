@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 28 complete — awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-18 — `npm run verify` → PASS
+**Current task pointer:** `_(Phase 30 complete — awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-19 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
 ---
@@ -1126,6 +1126,41 @@ Collection text)._
       **Pass condition:** double-clicking "Zoom Chat" plays the loading screen then opens the real
       chat widget; every other non-special icon still opens the generic placeholder `Window`;
       `verify` passes.
+
+---
+
+## PHASE 29 — MOUSE CURSOR PERSONALIZATION
+
+- [x] **P129** — In `src/context/SystemSettingsContext.jsx`, add a `cursorStyle` state (default
+      `'default'`) persisted to `localStorage` the same way `wallpaperId` is. Create
+      `src/data/cursorStyles.js` exporting a small list of styles (`default`, `precision`,
+      `accent`) with a `label`. Create `src/utils/getCursorValue.js`: a pure helper
+      `getCursorValue(styleId, accentHex)` returning a CSS `cursor` value — `'auto'` for
+      `default`, a small black-arrow inline-SVG data URI for `precision`, and the same arrow
+      tinted with `accentHex` for `accent`. In `src/components/Desktop.jsx`, apply
+      `getCursorValue(cursorStyle, accentHex)` to the desktop root's inline `style.cursor`.
+      **Pass condition:** switching `cursorStyle` changes the cursor shown over the desktop;
+      reloading the page keeps the last chosen style; `verify` passes.
+
+- [x] **P130** — Add a "Mouse cursor" section to `src/components/settings/PersonalizationPage.jsx`
+      (below Colors), rendering one button per `cursorStyles` entry (label + a small preview using
+      `getCursorValue`), wired to `setCursorStyle`, with the active one highlighted like the
+      existing wallpaper/accent pickers.
+      **Pass condition:** clicking a cursor option highlights it and the desktop cursor visibly
+      changes; `verify` passes.
+
+---
+
+## PHASE 30 — GET SUPPORT: ZOOM CHAT BUTTON
+
+- [x] **P131** — In `src/components/settings/GetSupportPage.jsx`, replace the emoji Gmail button
+      with one using the real `gmail` icon from `src/assets/icons/index.js`, and add a second
+      button using the `zoom-chat` icon that calls a new `onOpenZoomChat` prop. Thread
+      `onOpenZoomChat` through `src/components/SettingsApp.jsx` and wire it in
+      `src/components/Desktop.jsx` (`onOpenZoomChat={() => handleIconOpen('zoom-chat')}`) at both
+      the real Settings window and the taskbar-preview stub.
+      **Pass condition:** Get Support shows an Email button and a Zoom Chat button, each showing
+      its real icon; clicking Zoom Chat opens the Zoom Chat window; `verify` passes.
 
 ---
 

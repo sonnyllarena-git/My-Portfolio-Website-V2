@@ -21,6 +21,8 @@ import ResumePage from './ResumePage.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { wallpapers } from '../data/wallpapers.js'
+import { accentColors } from '../data/accentColors.js'
+import { getCursorValue } from '../utils/getCursorValue.js'
 import {
   quickAccess as thisPcQuickAccess,
   thisPcDrives,
@@ -78,16 +80,19 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'paint') return <PaintApp onOpenGallery={() => {}} />
   if (w.id === 'visitor-arts') return <VisitorArtsApp onOpenPaint={() => {}} />
   if (w.id === 'memory-wall') return <MemoryWallApp />
-  if (w.id === 'settings') return <SettingsApp onOpenGmail={() => {}} />
+  if (w.id === 'settings')
+    return <SettingsApp onOpenGmail={() => {}} onOpenZoomChat={() => {}} />
   if (w.id === 'music-lab') return <MusicLabApp />
   if (w.id === 'zoom-chat') return <ZoomChatApp onOpenGmail={() => {}} />
   return null
 }
 
 function Desktop() {
-  const { brightness, wallpaperId } = useSystemSettings()
+  const { brightness, wallpaperId, cursorStyle, accentColor } =
+    useSystemSettings()
   const wallpaper =
     wallpapers.find((w) => w.id === wallpaperId) ?? wallpapers[0]
+  const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
   const [selectedIconIds, setSelectedIconIds] = useState([])
   const [openWindows, setOpenWindows] = useState([])
   const [iconMenu, setIconMenu] = useState(null)
@@ -271,7 +276,10 @@ function Desktop() {
         setDesktopMenu({ x: e.clientX, y: e.clientY })
       }}
       className="relative h-screen w-screen overflow-hidden text-white"
-      style={{ backgroundColor: wallpaper.baseColor }}
+      style={{
+        backgroundColor: wallpaper.baseColor,
+        cursor: getCursorValue(cursorStyle, accentHex),
+      }}
     >
       {wallpaper.layers.map((layer, index) => (
         <div
@@ -441,7 +449,10 @@ function Desktop() {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <SettingsApp onOpenGmail={() => handleIconOpen('gmail')} />
+                <SettingsApp
+                  onOpenGmail={() => handleIconOpen('gmail')}
+                  onOpenZoomChat={() => handleIconOpen('zoom-chat')}
+                />
               </Window>
             )
           }
@@ -464,8 +475,7 @@ function Desktop() {
               <Window
                 key={w.instanceId}
                 {...shared}
-                icon="📹"
-                title="Zoom Chat"
+                hideTitleBar
                 defaultWidth={400}
                 defaultHeight={600}
               >
