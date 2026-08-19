@@ -25,3 +25,4 @@ Planned production stack (documented, not yet implemented)
 
 Category: Software Dev
 Project Link: https://github.com/sonnyllarena-git/onboarding-app
+Tags: React, React Router, Vite, Node.js, Express, Tailwind CSS, node:sqlite, ESLint

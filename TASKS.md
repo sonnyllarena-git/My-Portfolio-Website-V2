@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 34 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 35 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-19 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -1478,6 +1478,86 @@ border-white/10 rounded-xl p-4`) at a fixed `w-72`/`min-w-[280px]`; prevent cate
       the now-conflicting `h-full` from the image/placeholder.
       **Pass condition:** with a tall text column (e.g. Onboarding App selected), the image stays at
       its locked 4:3 ratio instead of stretching to match the text height; `verify` passes.
+
+---
+
+## PHASE 35 — PROJECTS: FIXED-HEIGHT SCROLLABLE PANES, VERTICAL HERO, STICKY EDGES
+
+_Sonny supplied a second, more detailed design brief on 2026-08-19 that supersedes Phase 34's
+two-column hero card, then a reference screenshot of the finished hero card. Supersedes: the hero
+goes back to a vertical stack (full-width image on top, then title/description/tech-stack/link
+below it); both the category sidebar and the hero become independently-scrollable fixed-height
+cards (not stretching the page), each with a narrower 6px dark scrollbar than Phase 34's 8px
+`.scrollbar-dark`, plus sticky pinned edges (search input pinned to the sidebar's top, "View
+Project" link pinned to the hero's bottom); both card containers stay visibly rounded despite the
+internal scrolling/sticky content — achieved with a non-scrolling `overflow-hidden rounded-xl`
+outer wrapper around an inner `overflow-y-auto` scroll container, since a sticky element flush
+against a scrolling box's own edge doesn't inherit that box's rounding otherwise. Tech Stack: the
+screenshot's pill set (React, React Router, Vite, Node.js, Express, Tailwind CSS, node:sqlite,
+ESLint) is a curated short list that doesn't losslessly derive from the rich Frontend/Backend/
+Planned-production-stack write-up already in Onboarding App's `notes.txt` — rather than destroy or
+auto-mangle that content, Claude's call (flagged, easy to revisit): add a new short `Tags` notes.txt
+field (comma-separated) that drives the hero's pill badges specifically, while the existing rich
+`Tech Stack` field is untouched and keeps rendering in the "More Projects" card as before. Claude
+filled in Onboarding App's real `Tags` line reading the 8 names straight off the screenshot; the
+other 6 projects' `Tags` stay blank until Sonny adds them, same "coming soon" pattern as every other
+still-empty field._
+
+- [x] **P161** — Add a `.scrollbar-thin` utility class to `src/index.css` (6px width, transparent
+      track, `neutral-800` thumb, `neutral-700` on hover), alongside the existing 8px
+      `.scrollbar-dark` from Phase 34 (kept as-is for `ProjectsApp.jsx`'s outer page scroll).
+      **Pass condition:** the new class exists and compiles into the CSS bundle; `verify` passes.
+
+- [x] **P162** — Add a `Tags` field to the notes.txt convention: update
+      `src/utils/loadProjectsLibrary.js`'s `FIELD_LABELS`/output shape to parse and export `tags`
+      (comma-separated → array, same split/trim/filter logic the old `parseTechStack` used); add
+      `Tags: React, React Router, Vite, Node.js, Express, Tailwind CSS, node:sqlite, ESLint` to
+      `src/assets/developer-lab/projects/onboarding-app/notes.txt` (read off the reference
+      screenshot); leave the other 6 notepads' `Tags` blank.
+      **Pass condition:** importing `projectsLibrary.js` exposes Onboarding App's `tags` as an
+      8-item array matching the screenshot; every other project's `tags` is an empty array;
+      `verify` passes.
+
+- [x] **P163** — Rewrite `src/components/projects/ProjectsHero.jsx` as a vertical-stack card:
+      outer `h-[500px] overflow-hidden rounded-xl border border-white/10 bg-[#141414]` (non-scrolling,
+      guarantees the rounded corners), containing an inner `h-full overflow-y-auto scrollbar-thin`
+      scroll region with — a full-width `aspect-[16/9]` image frame flush with the card's top
+      (`<img>` with `object-cover object-center w-full h-full`, no gap so it shares the outer
+      corners), then padded content: title (`text-2xl font-bold text-white mt-4`), description
+      (`text-sm text-gray-400 mt-2 leading-relaxed`, no longer clamped now that the card scrolls
+      internally), a bold "Tech Stack" label (`text-sm font-bold text-white mt-6 mb-3`) with pill
+      badges from the new `tags` field (`flex flex-wrap gap-2`, each
+      `bg-white/10 text-gray-200 text-xs px-3 py-1.5 rounded-full border border-white/5
+font-medium`) — falling back to nothing when `tags` is empty (the old rich `techStack` text
+      no longer renders here, but keeps rendering as before in `ProjectsMoreList.jsx`'s card, so
+      Onboarding App's full write-up stays visible somewhere); "View Project ↗"
+      (`inline-flex items-center gap-1 text-sm font-semibold text-blue-400 hover:text-blue-300
+transition-colors`) pinned via `sticky bottom-0 bg-[#141414] border-t border-white/10 pt-4
+text-center`.
+      **Pass condition:** the hero renders as a single rounded fixed-height card, image on top full
+      width, pill badges for Onboarding App matching the reference screenshot; scrolling keeps
+      "View Project" pinned at the bottom without square corners appearing; every other project
+      (blank `tags`) shows no pill row; `verify` passes.
+
+- [x] **P164** — Update `src/components/projects/ProjectsCategorySidebar.jsx` with the same
+      rounded-corner-safe structure: outer `h-[500px] overflow-hidden rounded-xl border
+border-white/10 bg-[#141414]`, inner `h-full overflow-y-auto scrollbar-thin p-4` scroll
+      region: sticky search input pinned via `sticky top-0 z-10 bg-[#141414]` (with bottom margin
+      so it doesn't crowd the first category button while scrolled), Categories list unchanged.
+      **Pass condition:** expanding enough categories to overflow the fixed height scrolls
+      internally while the search input stays pinned at the top and the card's corners stay
+      visibly rounded; `verify` passes.
+
+- [x] **P165** — Fix a real-browser-caught bug in `src/components/projects/ProjectsHero.jsx`: the
+      brief actually offered `aspect-[16/9]` **or** a fixed height like `h-52`/`h-60` as
+      alternatives for the image frame, but P163 used `aspect-[16/9]` on top of the card's own fixed
+      `h-[500px]` — at this card's width, a 16:9 image computes to ~445–489px tall, consuming
+      nearly the entire card and squeezing title/description/pills down to a sliver (measured via
+      DOM rects: the image alone was 489px of the 498px visible area). Switch the image wrapper
+      from `aspect-[16/9]` to a fixed `h-56`, leaving real room for the content below.
+      **Pass condition:** with Onboarding App selected, the title/description/pills are visible
+      directly below the image without scrolling, verified via real DOM measurements (not just a
+      screenshot); `verify` passes.
 
 ---
 

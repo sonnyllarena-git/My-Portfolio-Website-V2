@@ -17,6 +17,7 @@ const FIELD_LABELS = [
   'tech stack',
   'category',
   'project link',
+  'tags',
 ]
 
 function parseNotes(raw) {
@@ -38,6 +39,14 @@ function parseNotes(raw) {
   return fields
 }
 
+function parseTags(text) {
+  if (!text) return []
+  return text
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 function findBySlug(files, slug) {
   const path = Object.keys(files).find((p) => slugFromPath(p) === slug)
   return path ? files[path] : null
@@ -55,6 +64,7 @@ export const projects = Object.keys(projectNotes)
       techStack: notes['tech stack'] ?? '',
       category: notes.category ?? '',
       projectLink: notes['project link'] ?? '',
+      tags: parseTags(notes.tags),
       photoSrc: findBySlug(projectPhotos, slug),
     }
   })
