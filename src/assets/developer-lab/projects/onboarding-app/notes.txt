@@ -2,7 +2,8 @@ Title: Onboarding App
 Description: A full-stack employee onboarding/offboarding portal built with a React 19 + Vite + Tailwind frontend and an Express/Node.js backend. It integrates with Azure AD and Microsoft Graph to automate account provisioning and deprovisioning across platforms, with role-based request workflows (onboarding, offboarding, reactivation), an audit log with sensitive-field redaction, and a SQLite-to-Azure-SQL migration path planned for production.
 
 Tech Stack:
-Frontend
+
+Frontend:
 -React 19
 -React Router 7
 -Vite 8
@@ -11,14 +12,14 @@ Frontend
 -JSX 
 -prop-types for prop validation
 
-Backend
+Backend:
 -Node.js
 -Express 4
 -node:sqlite (built-in SQLite, used for local dev DB)
 -dotenv, cors, uuid, isomorphic-fetch
 -nodemon
 
-Planned production stack (documented, not yet implemented)
+Planned production stack:
 -Azure SQL (replacing SQLite) via mssql
 -Azure Key Vault (replacing .env secrets)
 -Azure App Service (hosting, with managed identity + TLS)

@@ -4,39 +4,34 @@ Track your daily spending, manage budgets, schedule recurring expenses, and atta
 React Native + Expo mobile app. It uses local SQLite storage via Drizzle ORM (no backend, no network calls by design) and Zustand for state, covering expenses, income, budgets, wallets, loans, and recurring transactions, with chart-based reports and strict CI checks enforcing the offline-only constraint.
 
 Tech Stack:
-Framework / Platform
 
+Framework / Platform:
 React Native 0.86 + Expo SDK 57 (Expo Router for file-based navigation, expo-router/entry as app entry)
 TypeScript (strict mode)
 Offline-first mobile app — no backend, no network calls by design in Phase 1
 
-State & Data
-
+State & Data:
 Zustand 5 (state management, one store per entity: expenses, income, budgets, wallets, loans, recurring, categories, etc.)
 Drizzle ORM (SQLite dialect, expo driver) for the local database
 expo-sqlite for on-device storage
 Migrations generated via drizzle-kit and bundled into the app via babel-plugin-inline-import
 
-Expo modules used
-
+Expo modules used:
 expo-file-system, expo-image-picker, expo-linear-gradient, expo-linking, expo-notifications, expo-sharing, expo-splash-screen, expo-status-bar, expo-web-browser, expo-crypto, expo-constants, expo-font
 
-UI / Native libs
-
+UI / Native libs:
 react-native-reanimated 4 + react-native-worklets
 react-native-svg, react-native-gifted-charts (for reports/charts)
 react-native-screens, react-native-safe-area-context
 @expo/vector-icons
 
-Tooling / Quality
-
+Tooling / Quality:
 ESLint 9 (eslint-config-expo), Prettier 3
 Jest 29 + jest-expo for unit tests
 patch-package for dependency patches
 GitHub Actions CI running typecheck, lint, tests, format-check, plus a custom grep check ensuring no fetch/axios/XMLHttpRequest sneaks in (enforcing the offline-only constraint)
 
-Build/Deploy
-
+Build/Deploy:
 Native builds via Expo prebuild + Gradle/CMake (Android), EAS cloud builds for iOS (no local iOS build on Windows)
 Metro bundler (metro.config.js), Babel config for module resolution and SQL inlining
 

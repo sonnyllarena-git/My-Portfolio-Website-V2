@@ -1,9 +1,9 @@
 Title: Dental Clinic System
-Description: A production-grade dental practice management system, currently an offline-first React + TypeScript frontend (Vite, Zustand, React Hook Form + Zod, Radix UI components, Dexie/IndexedDB for local data) covering patient records, scheduling, treatment planning, billing, and inventory. It's architected for a Phase 2 Node.js + PostgreSQL backend, with the schema, architecture, and implementation plan already documented, and has the most mature engineering setup of the four (active CI with lint/build/test/seed-validation jobs, Vitest + Testing Library coverage).
+Description: A production-grade dental practice management system designed for both offline local resilience and full cloud deployment. Manages patient records, scheduling, treatment plans, billing, inventory, and analytics—operating seamlessly offline with local state or connected via Node.js and PostgreSQL in the cloud.
 
 Tech Stack:
-Frontend
 
+Frontend
 React 18.3 + TypeScript, built with Vite 5
 React Router 6
 Zustand 4 (state management, separate stores for workspace/scenario/session)
@@ -13,7 +13,6 @@ Tailwind CSS 3 + PostCSS/Autoprefixer, @fontsource self-hosted fonts (Inter, Int
 Dexie 4 (wrapper over IndexedDB) — offline-first local data layer with a repository pattern (localRepository.ts, repository.ts, seed data/scenarios)
 
 Tooling / quality
-
 pnpm (lockfile, CI uses pnpm 9)
 ESLint 9 + typescript-eslint + eslint-plugin-jsx-a11y + eslint-plugin-react-hooks
 Prettier 3
