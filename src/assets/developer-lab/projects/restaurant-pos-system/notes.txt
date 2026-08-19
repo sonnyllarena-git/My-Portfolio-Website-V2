@@ -1,0 +1,5 @@
+Title: Restaurant POS System
+Description: Details coming soon.
+Tech Stack:
+Category: IT & Systems Administration
+Project Link:

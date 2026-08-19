@@ -1,0 +1,5 @@
+Title: Jira Dashboard
+Description: Details coming soon.
+Tech Stack:
+Category: Atlassian & Workplace System
+Project Link:

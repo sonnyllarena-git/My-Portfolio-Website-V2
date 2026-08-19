@@ -10,6 +10,7 @@ function DeveloperLabWindow({
   isMinimized,
   onMinimizeToggle,
   onOpenNewWindow,
+  onOpenProjects,
   cascadeOffset,
   zIndex,
   onFocus,
@@ -31,6 +32,9 @@ function DeveloperLabWindow({
       cascadeOffset={cascadeOffset}
       zIndex={zIndex}
       onFocus={onFocus}
+      onOpenApp={(appId) =>
+        appId === 'projects-compilation' && onOpenProjects()
+      }
     />
   )
 }

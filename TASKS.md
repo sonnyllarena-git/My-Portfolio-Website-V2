@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 30 complete — awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 34 complete — awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-19 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -1161,6 +1161,323 @@ Collection text)._
       the real Settings window and the taskbar-preview stub.
       **Pass condition:** Get Support shows an Email button and a Zoom Chat button, each showing
       its real icon; clicking Zoom Chat opens the Zoom Chat window; `verify` passes.
+
+---
+
+## PHASE 31 — DEVELOPER LAB: PROJECTS FOLDER + COMPILATION APP
+
+_Requested by Sonny on 2026-08-19: Developer Lab's existing "Projects" folder (Phase 13) becomes
+a real browsable folder holding 7 named project subfolders (Onboarding App, Dental Clinic System,
+Expense Tracker Mobile App, Restaurant POS System, Jira Dashboard, SOP Site, AI Automations) plus
+an 8th tile, also named "Projects", that is not a normal folder — double-clicking it opens a
+compilation app: a searchable left project list + a right detail panel (header, thumbnail, title,
+description, tech stack, GitHub link) built from those project folders' content. Confirmed with
+Sonny: (1) the "Projects" tile inside the Projects folder is the one that opens the compilation
+screen (not the top-level Projects folder tile itself, which stays a normal browsable folder so
+more project folders can be dropped in later); (2) include a search box in the compilation app;
+(3) each project's notepad carries Title / Description / Tech Stack / GitHub Link. Mirrors the
+per-item asset-folder convention already used for Music Lab (Phase 25) — resolved at build time
+via `import.meta.glob`, no backend. Sonny will drop in real photos/notes over time; folders start
+with placeholder notes and no photo (falls back to the existing folder-icon convention). The
+shared explorer engine (Phase 13) currently has no concept of a folder with real nested content —
+every non-root location renders the same generic `EmptyFolderView` — so this phase first extends
+that engine generically (any folder can carry `children`, any tile can be an `app` tile), then
+builds Developer Lab's Projects content as config/data on top of it, leaving This PC and every
+other existing folder unchanged._
+
+- [x] **P132** — Extend `src/components/explorer/RootView.jsx` (tile open/context-menu callbacks
+      now receive the whole tile object, not just its label) and
+      `src/components/explorer/ExplorerBody.jsx` (a unified `openItem(item)` used by both the
+      root-level tiles and the tile-context-menu's "Open" action: an item with `kind: 'app'` pushes
+      an `{ type: 'app', label, appId }` location, everything else pushes `{ type: 'location',
+label, children: item.children }`; the content switch renders `RootView` again — reusing it,
+      not duplicating it — for a location carrying `children`, a new optional `renderApp(appId)`
+      prop for `type === 'app'` locations, and `EmptyFolderView` otherwise as before; the search box
+      is enabled whenever the current location has real tiles to filter, i.e. root or a
+      children-bearing folder). Thread the new `renderApp` prop through
+      `src/components/explorer/ExplorerWindow.jsx` (defaulting to a no-op).
+      **Pass condition:** This PC and every existing Developer Lab folder (Tech Stack, Resume)
+      still show "This folder is empty" exactly as before; `verify` passes.
+
+- [x] **P133** — In `src/data/developerLabLocations.js`, give the "Projects" folder entry a
+      `children` array: 7 folder tiles (Onboarding App, Dental Clinic System, Expense Tracker
+      Mobile App, Restaurant POS System, Jira Dashboard, SOP Site, AI Automations) plus an 8th tile
+      also labeled "Projects" (distinct icon, e.g. 🗃️) with `kind: 'app'`,
+      `appId: 'projects-compilation'`.
+      **Pass condition:** navigating Developer Lab > Projects shows all 8 tiles in a folder grid;
+      double-clicking any of the first 7 shows the standard empty-folder placeholder; `verify`
+      passes.
+
+- [x] **P134** — Create `src/assets/developer-lab/projects/<slug>/notes.txt` for each of the 7
+      projects (slugs: `onboarding-app`, `dental-clinic-system`, `expense-tracker-mobile-app`,
+      `restaurant-pos-system`, `jira-dashboard`, `sop-site`, `ai-automations`), each with
+      placeholder `Title:` / `Description:` / `Tech Stack:` / `GitHub Link:` lines (Title matching
+      the project name, Description a short "details coming soon"-style placeholder, Tech Stack
+      and GitHub Link blank) — no `photo.*` yet.
+      **Pass condition:** the folder tree matches the convention above with real placeholder
+      content in all 7; `verify` passes (nothing references them yet, so the build is unaffected).
+
+- [x] **P135** — Create `src/utils/loadProjectsLibrary.js`: `import.meta.glob` (eager, `?raw`) over
+      `../assets/developer-lab/projects/*/notes.txt` plus (eager, `?url`) `.../*/photo.*`, parse
+      each folder's notes into `{title, description, techStack, githubLink}` (Tech Stack split on
+      commas into an array), and export a `projects` array of `{id (slug), title, description,
+techStack, githubLink, photoSrc}` sorted by slug; create `src/data/projectsLibrary.js`
+      re-exporting `projects` from it (one source of truth, mirrors `musicLabLibrary.js`).
+      **Pass condition:** importing `projectsLibrary.js` exposes a well-formed `projects` array
+      built from the 7 real folders created in P134, with correctly parsed fields; `verify` passes.
+
+- [x] **P136** — Create `src/components/projects/ProjectsList.jsx`: a search input (filters by
+      title) above a list of entries from `projectsLibrary.js` (thumbnail-or-folder-icon fallback +
+      title), highlighting the currently selected entry, calling an `onSelect(id)` prop.
+      **Pass condition:** standalone render shows the search box and all 7 projects; typing narrows
+      the list by title; clicking an entry highlights it and fires `onSelect`; `verify` passes.
+
+- [x] **P137** — Create `src/components/projects/ProjectDetail.jsx`: renders the selected project's
+      header/title, thumbnail-or-fallback, description, tech-stack chips (one per `techStack`
+      entry), and a GitHub link button (hidden when `githubLink` is blank); shows a "Select a
+      project" empty state when nothing is selected.
+      **Pass condition:** standalone render with a sample project shows every field; rendering with
+      no project shows the empty-state message; `verify` passes.
+
+- [x] **P138** — Create `src/components/ProjectsApp.jsx`: composes `ProjectsList` + `ProjectDetail`,
+      owning `selectedId`/search state, defaulting to the first project in `projectsLibrary.js`
+      selected.
+      **Pass condition:** standalone render shows the first project's detail by default; clicking a
+      different project in the list swaps the detail panel; `verify` passes.
+
+- [x] **P139** — Wire `ProjectsApp` in `src/components/DeveloperLabWindow.jsx`: pass
+      `renderApp={(appId) => appId === 'projects-compilation' ? <ProjectsApp /> : null}` through to
+      `ExplorerWindow` (from P132).
+      **Pass condition:** inside Developer Lab, navigating into Projects then double-clicking the
+      "Projects" tile opens the compilation screen with the searchable list and detail panel; every
+      other tile/app is unaffected; `verify` passes.
+
+- [x] **P140** — Fix a layout bug caught while checking real photo dimensions for the compilation
+      app: `src/components/projects/ProjectDetail.jsx`'s root had no `flex-1`, so inside
+      `ProjectsApp.jsx`'s flex row it was shrinking to content width (~218px) instead of filling the
+      remaining window space, leaving ~580px of dead space at the default 1200×800 Developer Lab
+      size. Add `flex-1` to both the empty-state and populated-state root divs.
+      **Pass condition:** the detail panel's hero image/placeholder box now spans the full
+      remaining width beside the project list at the default window size; `verify` passes.
+
+---
+
+## PHASE 32 — PROJECTS APP REDESIGN (STANDALONE WINDOW, CATEGORIES, HERO + MORE-PROJECTS)
+
+_Requested by Sonny on 2026-08-19 from a reference screenshot of "Sonny Projects" — supersedes
+Phase 31's P132/P133/P139 compilation-app wiring, which embedded the app inline inside Developer
+Lab's explorer pane. Confirmed with Sonny: (1) "Projects" opens as its own standalone top-level
+window (title "Projects", own taskbar running-icon, minimize/maximize/close — matching
+Settings/Gmail's pattern), triggered by double-clicking the "Projects" tile inside Developer Lab >
+Projects (the 7 real project subfolders + folder browsing from Phase 31 are unchanged); (2) real
+categories, Sonny's own 7 names: Software Dev, Mobile Apps, AI & Smart System, Website and Portal,
+Atlassian & Workplace System, Workflow Automation, IT & Systems Administration — Sonny asked for a
+1:1 project→category mapping without dictating which project goes where beyond "use these
+categories," so Claude assigned one per project by best semantic fit (flagged here for Sonny to
+correct): Onboarding App → Workflow Automation, Dental Clinic System → Software Dev, Expense
+Tracker Mobile App → Mobile Apps, Restaurant POS System → IT & Systems Administration, Jira
+Dashboard → Atlassian & Workplace System, SOP Site → Website and Portal, AI Automations → AI &
+Smart System; (3) each project's notepad becomes Title / Description / Tech Stack / Category /
+Project Link (renamed from "GitHub Link" — broader than just GitHub), with Description now a
+multi-line field (everything until the next recognized label) so Sonny can paste a richer
+write-up like the reference's Core Purpose/Key Features-style copy instead of one sentence; (4)
+the header copy ("OFFICIAL PROJECTS" eyebrow / "SONNY PROJECTS" title / the AI-integration
+description paragraph) is used as-is from the reference; (5) clicking any project card promotes
+it to the hero slot at top (confirmed). One deviation from the reference, flagged: the
+reference's hero image has its project name baked into the photo itself as a designed graphic, so
+the hero area shows no separate text — since Sonny's real project photos won't reliably have text
+baked in, Claude's hero also shows the selected project's title/tech-stack chips/Project Link
+button beneath the image (Claude's call, easy to remove later if unwanted). The left sidebar's
+Categories are an accordion (selecting one expands its project titles inline and collapses the
+others) with live counts; the search box filters across every category regardless of which is
+expanded. Old `ProjectsList.jsx`/`ProjectDetail.jsx` are deleted, replaced by the category
+sidebar + hero + more-projects list below._
+
+- [x] **P141** — Recreate the 7 project notepads at
+      `src/assets/developer-lab/projects/<slug>/notes.txt` with the new field set — `Title:` /
+      `Description:` (placeholder "Details coming soon.") / `Tech Stack:` (blank) / `Category:`
+      (per the mapping above) / `Project Link:` (blank, replacing `GitHub Link:`).
+      **Pass condition:** all 7 notepads have the 5 new fields with the correct category assigned
+      to each; `verify` passes (nothing parses `Category`/`Project Link` yet, so the build is
+      unaffected).
+
+- [x] **P142** — Update `src/utils/loadProjectsLibrary.js`: parse `Description` as a multi-line
+      value (everything up to the next recognized `Title|Description|Tech Stack|Category|Project
+Link:` label, not just its own line), add `category` and rename `githubLink` → `projectLink`
+      in the exported `projects` shape.
+      **Pass condition:** importing `projectsLibrary.js` exposes `category`/`projectLink` per
+      project, correctly parsed from the 7 real notepads; `verify` passes.
+
+- [x] **P143** — Simplify the explorer engine's app-tile handling back down: in
+      `src/components/explorer/ExplorerBody.jsx`, `openItem(item)` now calls a new `onOpenApp(item.appId)`
+      prop directly for `kind: 'app'` tiles instead of pushing a `{ type: 'app' }` location; remove
+      the now-unused `type === 'app'`/`renderApp` content-switch branch (back to the simple
+      root/children/empty three-way from before P132's app support). Thread `onOpenApp` through
+      `src/components/explorer/ExplorerWindow.jsx` in place of `renderApp`.
+      **Pass condition:** double-clicking the "Projects" tile no longer navigates anywhere inside
+      the explorer (calls `onOpenApp` instead, currently a no-op until P144); This PC and every
+      folder without `kind: 'app'` tiles are unaffected; `verify` passes.
+
+- [x] **P144** — Wire `src/components/DeveloperLabWindow.jsx`: accept an `onOpenProjects` prop,
+      pass `onOpenApp={(appId) => appId === 'projects-compilation' && onOpenProjects()}` to
+      `ExplorerWindow` (from P143).
+      **Pass condition:** calling the wired callback (temporarily wired to a `console.log` or via
+      P145's real wiring) fires when the "Projects" tile is double-clicked; `verify` passes.
+
+- [x] **P145** — Wire `src/components/Desktop.jsx`: add a virtual `'projects'` app (no desktop
+      icon, matching the `'settings'` pattern) — a `[1200, 800]` entry in `WINDOW_PREVIEW_SIZES`, a
+      `renderPreviewBody` branch returning `<ProjectsApp />`, an `openWindows` render branch
+      (`<Window icon="🗃️" title="Projects" defaultWidth={1200} defaultHeight={800}><ProjectsApp
+/></Window>`), a taskbar label/icon fallback for `w.id === 'projects'` (label "Projects",
+      icon 🗃️, alongside the existing `'settings'` fallback), and
+      `onOpenProjects={() => handleIconOpen('projects')}` passed into `DeveloperLabWindow`.
+      **Pass condition:** double-clicking the "Projects" tile inside Developer Lab > Projects opens
+      a real standalone "Projects" window with its own taskbar running-icon,
+      minimize/maximize/close all working; every other window/icon unaffected; `verify` passes.
+
+- [x] **P146** — Create `src/data/projectCategories.js` exporting the fixed, ordered list of
+      Sonny's 7 category names (the single source of truth for which categories exist, so one
+      with zero projects still shows up rather than only deriving categories from whatever
+      `projectsLibrary.js` happens to contain). Create
+      `src/components/projects/ProjectsCategorySidebar.jsx`: a search input above an accordion
+      list of all 7 categories with live counts from `projectsLibrary.js` (a category with no
+      matching projects shows "0", per Sonny's explicit ask, instead of being hidden); selecting a
+      category expands its project titles inline beneath it and collapses any other expanded
+      category; calls `onSelectCategory(category)`/`onSelectProject(id)` props.
+      **Pass condition:** standalone render shows all 7 categories (including any with a 0 count)
+      with correct counts; clicking one expands its titles and collapses a previously expanded
+      one; typing in search still lets a category expand to its (filtered) matches; `verify`
+      passes.
+
+- [x] **P147** — Create `src/components/projects/ProjectsHero.jsx`: the selected project's photo
+      (or folder-icon fallback) as a large banner image, with its title, tech-stack chips, and a
+      Project Link button (hidden when blank) beneath it; an empty state when nothing is selected.
+      **Pass condition:** standalone render with a sample project shows the image, title, chips,
+      and link button; rendering with none selected shows the empty state; `verify` passes.
+
+- [x] **P148** — Create `src/components/projects/ProjectsMoreList.jsx`: a "More Projects" heading
+      with a live "`N` found" counter, then one card per filtered project (thumbnail-or-fallback,
+      title, description, tech-stack chips); clicking a card calls an `onSelect(id)` prop,
+      highlighting the currently selected card.
+      **Pass condition:** standalone render shows the heading/count and one card per project passed
+      in; clicking a card fires `onSelect` and highlights it; `verify` passes.
+
+- [x] **P149** — Rewrite `src/components/ProjectsApp.jsx`: the header (eyebrow "OFFICIAL PROJECTS"
+      / title "SONNY PROJECTS" / the AI-integration description paragraph from the reference),
+      then `ProjectsCategorySidebar` (left) + `ProjectsHero` and `ProjectsMoreList` stacked (right)
+      — owning `selectedCategory`/`selectedId`/search state, defaulting to the first project
+      selected; the more-projects list and category counts both respect the active
+      category/search filters.
+      **Pass condition:** standalone render shows the full header + sidebar + hero + more-projects
+      layout; picking a category filters the sidebar's expansion and the more-projects list;
+      clicking any card (sidebar or more-projects) promotes it to the hero; `verify` passes.
+
+- [x] **P150** — Delete the now-superseded `src/components/projects/ProjectsList.jsx` and
+      `src/components/projects/ProjectDetail.jsx` (replaced by P146–P148).
+      **Pass condition:** no remaining import references either file; `verify` passes.
+
+- [x] **P151** — Polish caught during a real-browser check of the finished Phase 32 flow: the
+      reference's "SONNY PROJECTS" title is a bold all-caps display style, but
+      `src/components/ProjectsApp.jsx`'s `<h1>` rendered plain title-case. Add `uppercase
+tracking-wide` to the title so it visually matches without needing a new font dependency
+      (none is approved in CLAUDE.md §2).
+      **Pass condition:** the title renders in bold uppercase in the browser; `verify` passes.
+
+---
+
+## PHASE 33 — REAL PROJECT CONTENT FIXES (ONBOARDING APP TRIAL)
+
+_Sonny dropped real content into `src/assets/developer-lab/projects/onboarding-app/` to try the
+convention end-to-end: an image saved as `onboarding app.jpg` (not the `photo.*` name the loader
+looks for) and a `notes.txt` rewrite with a real Description paragraph and a much richer Tech
+Stack section than assumed — multiple headed groups (Frontend/Backend/Planned production stack)
+with bullet lines, not the flat single-line comma list `loadProjectsLibrary.js`/`ProjectsHero.jsx`/
+`ProjectsMoreList.jsx` were built for. Two fixes needed before this real content will render
+correctly._
+
+- [x] **P152** — Rename `src/assets/developer-lab/projects/onboarding-app/onboarding app.jpg` to
+      `photo.jpg`, matching the convention the loader's `import.meta.glob` actually looks for.
+      **Pass condition:** the Onboarding App project shows its real photo instead of the folder-icon
+      fallback; `verify` passes.
+
+- [x] **P153** — Update `src/utils/loadProjectsLibrary.js`: stop comma-splitting `Tech Stack` into
+      a chip array (`parseTechStack`, now unused — delete it); export `techStack` as the raw
+      multi-line string instead, exactly like `description` already works, so a rich multi-section
+      write-up (headers + bullet lines) round-trips untouched instead of being mangled by a
+      comma-split.
+      **Pass condition:** importing `projectsLibrary.js` exposes Onboarding App's `techStack` as its
+      full multi-line text, unsplit; `verify` passes.
+
+- [x] **P154** — Update `src/components/projects/ProjectsHero.jsx` and
+      `ProjectsMoreList.jsx` to render `techStack` as preserved multi-line text (`whitespace-pre-line`)
+      under a "Tech Stack" label instead of the old comma-split pill chips, matching how
+      `description` is already displayed; keep it line-clamped in `ProjectsMoreList`'s compact card so
+      a long stack doesn't blow up the card height.
+      **Pass condition:** Onboarding App's rich Tech Stack section renders readably (line breaks
+      preserved) in both the hero and its more-projects card, without pill chips; every other
+      project (blank Tech Stack) shows nothing, as before; `verify` passes.
+
+---
+
+## PHASE 34 — PROJECTS WINDOW UI POLISH (SCROLLBAR, LAYOUT, SIDEBAR, HERO CARD)
+
+_Sonny supplied a detailed design-refactor brief on 2026-08-19 to bring the "Projects" window
+closer to the reference PouyaOS layout: a custom dark scrollbar, a divider under the header, a
+centered max-width content column, a card-styled category sidebar with non-wrapping labels, and a
+two-column hero card with a locked aspect-ratio image and a clamped description. No new
+dependency — the scrollbar is done with Tailwind v4's built-in arbitrary-variant pseudo-element
+support (`[&::-webkit-scrollbar]:...`) wrapped in one reusable class, not a plugin. One scope
+addition flagged: the hero card's spec calls for a clamped description, which Phase 32's original
+hero deliberately omitted (description lived only in the More Projects cards) — this phase adds it
+to the hero too, per Sonny's brief._
+
+- [x] **P155** — Add a reusable `.scrollbar-dark` utility class to `src/index.css` (narrow
+      thumb/track styling per Sonny's spec — transparent track, `#2a2a2a` thumb, `#3f3f46` on
+      hover, `8px`/rounded-full) using Tailwind v4's `@layer utilities` + arbitrary
+      `&::-webkit-scrollbar` variants; apply the class to `ProjectsApp.jsx`'s scrollable root.
+      **Pass condition:** the Projects window's scrollbar renders as a narrow dark thumb matching
+      the spec instead of the default browser scrollbar; `verify` passes.
+
+- [x] **P156** — Add a divider under the header in `src/components/ProjectsApp.jsx`: `border-b
+border-white/10 pb-6 mb-8` on the header block, cleanly separating the title/description area
+      from the sidebar + hero content below.
+      **Pass condition:** a visible horizontal rule with spacing sits between the description
+      paragraph and the categories/hero row; `verify` passes.
+
+- [x] **P157** — Wrap the sidebar+content row in `src/components/ProjectsApp.jsx` in a centered
+      max-width container (`max-w-6xl mx-auto px-6 w-full`) so content stops stretching edge-to-edge
+      on wide/full-screen windows; apply the same max-width to the header block for a consistent
+      column.
+      **Pass condition:** at the window's default 1200×800 size (and wider, via maximize), the
+      content sits in a centered column with visible side margins instead of spanning the full
+      window width; `verify` passes.
+
+- [x] **P158** — Restyle `src/components/projects/ProjectsCategorySidebar.jsx` into a card: replace
+      the flush `border-r` panel with a standalone rounded card (`bg-[#141414] border
+border-white/10 rounded-xl p-4`) at a fixed `w-72`/`min-w-[280px]`; prevent category labels
+      from wrapping (`truncate` on the label span, `shrink-0` on the count badge) so long names like
+      "Atlassian & Workplace System" stay on one line.
+      **Pass condition:** the sidebar renders as a bordered rounded card instead of a flush side
+      panel; every category name (including the longest one) stays on a single line at the
+      sidebar's fixed width; `verify` passes.
+
+- [x] **P159** — Rewrite `src/components/projects/ProjectsHero.jsx` as a two-column card
+      (`bg-[#141414] border border-white/10 rounded-xl p-6 grid grid-cols-1 md:grid-cols-12 gap-6`):
+      the image wrapper (`md:col-span-5`, `aspect-[4/3]`, `object-cover object-center w-full h-full`)
+      on one side, and the title/description (new, `line-clamp-3`)/tech-stack/project-link metadata
+      (`md:col-span-7`) on the other.
+      **Pass condition:** the hero renders as a bordered two-column card with a locked-aspect-ratio
+      image on one side and title/clamped-description/tech-stack/link on the other, both at the
+      default window size and when the window is maximized; `verify` passes.
+
+- [x] **P160** — Fix a real-browser-caught bug in `src/components/projects/ProjectsHero.jsx`: CSS
+      grid's default row-stretch plus `h-full` on the image was overriding `aspect-[4/3]` entirely
+      whenever the text column was tall (e.g. Onboarding App's long Tech Stack), stretching the
+      image far past its locked ratio instead of cropping it. Add `items-start` to the grid
+      container so columns size independently instead of stretching to match each other, and drop
+      the now-conflicting `h-full` from the image/placeholder.
+      **Pass condition:** with a tall text column (e.g. Onboarding App selected), the image stays at
+      its locked 4:3 ratio instead of stretching to match the text height; `verify` passes.
 
 ---
 

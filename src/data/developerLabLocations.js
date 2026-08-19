@@ -11,7 +11,25 @@ export const pcDrives = [
 ]
 
 export const folders = [
-  { label: 'Projects', icon: '📁' },
+  {
+    label: 'Projects',
+    icon: '📁',
+    children: [
+      { label: 'Onboarding App', icon: '📁' },
+      { label: 'Dental Clinic System', icon: '📁' },
+      { label: 'Expense Tracker Mobile App', icon: '📁' },
+      { label: 'Restaurant POS System', icon: '📁' },
+      { label: 'Jira Dashboard', icon: '📁' },
+      { label: 'SOP Site', icon: '📁' },
+      { label: 'AI Automations', icon: '📁' },
+      {
+        label: 'Projects',
+        icon: '🗃️',
+        kind: 'app',
+        appId: 'projects-compilation',
+      },
+    ],
+  },
   { label: 'Tech Stack', icon: '🧰', id: 'tech-stack' },
   { label: 'Resume', icon: 'pdf' },
 ]

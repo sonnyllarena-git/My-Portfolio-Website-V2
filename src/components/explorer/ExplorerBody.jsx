@@ -14,6 +14,7 @@ function ExplorerBody({
   devices,
   onOpenNewWindow,
   onClose,
+  onOpenApp = () => {},
 }) {
   const rootLocation = { type: 'root', label: rootLabel }
   const [history, setHistory] = useState([rootLocation])
@@ -27,6 +28,18 @@ function ExplorerBody({
   function navigateTo(location) {
     setHistory((prev) => [...prev.slice(0, historyIndex + 1), location])
     setHistoryIndex((prev) => prev + 1)
+  }
+
+  function openItem(item) {
+    if (item.kind === 'app') {
+      onOpenApp(item.appId)
+    } else {
+      navigateTo({
+        type: 'location',
+        label: item.label,
+        children: item.children,
+      })
+    }
   }
 
   function goBack() {
@@ -46,9 +59,9 @@ function ExplorerBody({
     setActiveRibbonTab(null)
   }
 
-  function tileMenuItems(location) {
+  function tileMenuItems(item) {
     return [
-      { label: 'Open', onClick: () => navigateTo(location) },
+      { label: 'Open', onClick: () => openItem(item) },
       { label: 'Rename', onClick: () => {} },
       { label: 'Delete', onClick: () => {} },
       { label: 'Properties', onClick: () => {} },
@@ -133,7 +146,7 @@ function ExplorerBody({
           placeholder="Search"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          disabled={current.type !== 'root'}
+          disabled={current.type !== 'root' && !current.children}
           className="w-32 rounded-full bg-[#2b2d31] px-3 py-1 text-xs placeholder-white/40 focus:outline-none disabled:opacity-40"
         />
       </div>
@@ -152,14 +165,8 @@ function ExplorerBody({
               key={item.label}
               isSelected={selectedTile === item.label}
               onSelect={() => setSelectedTile(item.label)}
-              onOpen={() => navigateTo({ type: 'location', label: item.label })}
-              onContextMenu={(x, y) =>
-                setTileMenu({
-                  x,
-                  y,
-                  location: { type: 'location', label: item.label },
-                })
-              }
+              onOpen={() => openItem(item)}
+              onContextMenu={(x, y) => setTileMenu({ x, y, item })}
               className="flex cursor-pointer items-center gap-2 px-3 py-1.5"
             >
               <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
@@ -172,14 +179,8 @@ function ExplorerBody({
               key={item.label}
               isSelected={selectedTile === item.label}
               onSelect={() => setSelectedTile(item.label)}
-              onOpen={() => navigateTo({ type: 'location', label: item.label })}
-              onContextMenu={(x, y) =>
-                setTileMenu({
-                  x,
-                  y,
-                  location: { type: 'location', label: item.label },
-                })
-              }
+              onOpen={() => openItem(item)}
+              onContextMenu={(x, y) => setTileMenu({ x, y, item })}
               className="flex cursor-pointer items-center gap-2 px-3 py-1.5"
             >
               <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
@@ -188,16 +189,14 @@ function ExplorerBody({
           ))}
         </div>
         <div className="flex-1 p-3 text-xs text-white/80">
-          {current.type === 'root' ? (
+          {current.type === 'root' || current.children ? (
             <RootView
-              folders={folders}
-              devices={devices}
+              folders={current.type === 'root' ? folders : current.children}
+              devices={current.type === 'root' ? devices : undefined}
               selectedTile={selectedTile}
               onSelectTile={setSelectedTile}
-              onOpenTile={(label) => navigateTo({ type: 'location', label })}
-              onTileContextMenu={(x, y, label) =>
-                setTileMenu({ x, y, location: { type: 'location', label } })
-              }
+              onOpenTile={openItem}
+              onTileContextMenu={(x, y, item) => setTileMenu({ x, y, item })}
               searchTerm={searchTerm}
             />
           ) : (
@@ -210,7 +209,7 @@ function ExplorerBody({
           x={tileMenu.x}
           y={tileMenu.y}
           onClose={() => setTileMenu(null)}
-          items={tileMenuItems(tileMenu.location)}
+          items={tileMenuItems(tileMenu.item)}
         />
       )}
     </div>

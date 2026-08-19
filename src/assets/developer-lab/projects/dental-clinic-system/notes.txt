@@ -1,0 +1,5 @@
+Title: Dental Clinic System
+Description: Details coming soon.
+Tech Stack:
+Category: Software Dev
+Project Link:

@@ -1,0 +1,5 @@
+Title: Expense Tracker Mobile App
+Description: Details coming soon.
+Tech Stack:
+Category: Mobile Apps
+Project Link:

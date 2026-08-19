@@ -42,8 +42,8 @@ function RootView({
             key={item.label}
             isSelected={selectedTile === item.label}
             onSelect={() => onSelectTile(item.label)}
-            onOpen={() => onOpenTile(item.label)}
-            onContextMenu={(x, y) => onTileContextMenu(x, y, item.label)}
+            onOpen={() => onOpenTile(item)}
+            onContextMenu={(x, y) => onTileContextMenu(x, y, item)}
             className="flex cursor-pointer flex-col items-center gap-1 rounded p-2"
           >
             <ItemIcon
@@ -65,8 +65,8 @@ function RootView({
                 key={drive.label}
                 isSelected={selectedTile === drive.label}
                 onSelect={() => onSelectTile(drive.label)}
-                onOpen={() => onOpenTile(drive.label)}
-                onContextMenu={(x, y) => onTileContextMenu(x, y, drive.label)}
+                onOpen={() => onOpenTile(drive)}
+                onContextMenu={(x, y) => onTileContextMenu(x, y, drive)}
                 className="rounded-lg border border-white/10 p-3"
               >
                 <div className="flex items-center gap-2">

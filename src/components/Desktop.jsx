@@ -14,6 +14,7 @@ import MemoryWallApp from './MemoryWallApp.jsx'
 import SettingsApp from './SettingsApp.jsx'
 import MusicLabApp from './MusicLabApp.jsx'
 import ZoomChatApp from './ZoomChatApp.jsx'
+import ProjectsApp from './ProjectsApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
@@ -47,6 +48,7 @@ const WINDOW_PREVIEW_SIZES = {
   'zoom-chat': [400, 600],
   'this-pc': [1200, 800],
   'developer-lab': [1200, 800],
+  projects: [1200, 800],
   resume: [420, 560],
 }
 
@@ -84,6 +86,7 @@ function renderPreviewBody(w, gmailGuest) {
     return <SettingsApp onOpenGmail={() => {}} onOpenZoomChat={() => {}} />
   if (w.id === 'music-lab') return <MusicLabApp />
   if (w.id === 'zoom-chat') return <ZoomChatApp onOpenGmail={() => {}} />
+  if (w.id === 'projects') return <ProjectsApp />
   return null
 }
 
@@ -365,8 +368,23 @@ function Desktop() {
                 {...shared}
                 cascadeOffset={cascadeOffset}
                 onOpenNewWindow={() => openNewInstance('developer-lab')}
+                onOpenProjects={() => handleIconOpen('projects')}
               />
             )
+          if (w.id === 'projects') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🗃️"
+                title="Projects"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <ProjectsApp />
+              </Window>
+            )
+          }
           if (w.id === 'gmail') {
             return (
               <Window
@@ -543,8 +561,17 @@ function Desktop() {
           return {
             id: w.id,
             instanceId: w.instanceId,
-            label: icon?.label ?? (w.id === 'settings' ? 'Settings' : w.id),
-            icon: icon?.icon === 'pdf' ? '📄' : icon?.icon,
+            label:
+              icon?.label ??
+              (w.id === 'settings'
+                ? 'Settings'
+                : w.id === 'projects'
+                  ? 'Projects'
+                  : w.id),
+            icon:
+              icon?.icon === 'pdf'
+                ? '📄'
+                : (icon?.icon ?? (w.id === 'projects' ? '🗃️' : undefined)),
             isMinimized: w.isMinimized,
             preview: renderPreviewBody(w, gmailGuest),
             naturalWidth,

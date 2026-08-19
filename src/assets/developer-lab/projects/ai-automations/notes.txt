@@ -1,0 +1,5 @@
+Title: AI Automations
+Description: Details coming soon.
+Tech Stack:
+Category: AI & Smart System
+Project Link:

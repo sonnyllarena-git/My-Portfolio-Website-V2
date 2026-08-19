@@ -18,6 +18,7 @@ function ExplorerWindow({
   cascadeOffset,
   zIndex,
   onFocus,
+  onOpenApp,
 }) {
   return (
     <Window
@@ -40,6 +41,7 @@ function ExplorerWindow({
         devices={devices}
         onOpenNewWindow={onOpenNewWindow}
         onClose={onClose}
+        onOpenApp={onOpenApp}
       />
     </Window>
   )
