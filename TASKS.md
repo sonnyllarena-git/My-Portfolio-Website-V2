@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 43 complete — Typing Game overlay + sound finished, awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 44 complete — game-over score styling finished, awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-20 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -2018,6 +2018,31 @@ comment describes), not eyeballed:_
       view stays open, regardless of phase.
       **Pass condition:** opening the game starts the music; navigating back to the arcade hub (or
       closing the Games window) stops it; `verify` passes.
+
+---
+
+## PHASE 44 — TYPING GAME-OVER CARD: BIGGER/BOLDER SCORE, REPOSITIONED
+
+_Requested by Sonny on 2026-08-20 from an annotated reference screenshot of the card: the small
+`SCORE`/`LEVEL` inline numbers from Phase 43 (P214) were hard to read; move to one large, bold,
+outlined number in the blank keycap row directly below "LEVEL" (row 3), replacing both old slots.
+Measured directly off the real 600×600 asset (same pixel-scan technique as before): row 3's blank
+keycaps run y≈344–372 (vertical center y≈358), centered under "LEVEL" at x≈308 — same x Sonny's
+reference screenshot shows the number sitting at. The outline uses a layered `text-shadow` (not
+`-webkit-text-stroke`, which Firefox doesn't support) so it renders consistently everywhere._
+
+- [x] **P218** — In `src/components/games/typing/TypingGameOverOverlay.jsx`: remove the
+      `SCORE_SLOT`/`LEVEL_SLOT` constants and their two `<span>` overlays; add a single
+      `SCORE_VALUE_SLOT = { x: 308, y: 358 }` rendering the `score` prop at `text-5xl font-black
+text-yellow-400` with an 8-direction black `textShadow` outline (drop the now-unused `level`
+      prop).
+      **Pass condition:** standalone render shows one big, bold, black-outlined yellow number
+      centered in row 3 below "LEVEL", matching Sonny's reference screenshot; `verify` passes.
+
+- [x] **P219** — Update `src/components/games/typing/TypingSpeedGame.jsx`'s
+      `<TypingGameOverOverlay>` call to drop the now-removed `level` prop (keep `score`).
+      **Pass condition:** reaching game-over in the browser shows the new large styled number in
+      its new position with no console errors; `verify` passes.
 
 ---
 

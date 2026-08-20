@@ -107,7 +107,6 @@ export default function TypingSpeedGame({ onExit }) {
       {phase === 'game-over' && (
         <TypingGameOverOverlay
           score={completedLevels}
-          level={Math.min(level, 100)}
           onReplay={handlePlayAgain}
           onExit={() => onExit?.()}
         />
