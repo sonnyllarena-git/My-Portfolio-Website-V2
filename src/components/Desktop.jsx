@@ -8,6 +8,7 @@ import DeveloperLabWindow from './DeveloperLabWindow.jsx'
 import ContactInfoApp from './ContactInfoApp.jsx'
 import GmailGuestGate from './GmailGuestGate.jsx'
 import GamesNameGate from './games/GamesNameGate.jsx'
+import GamesLoadingScreen from './games/GamesLoadingScreen.jsx'
 import { useGames } from '../context/GamesContext.jsx'
 import GmailComposeApp from './GmailComposeApp.jsx'
 import PaintApp from './PaintApp.jsx'
@@ -111,6 +112,7 @@ function Desktop() {
   const [gmailGateOpen, setGmailGateOpen] = useState(false)
   const [gmailGuest, setGmailGuest] = useState(null)
   const [gamesGateOpen, setGamesGateOpen] = useState(false)
+  const [gamesLoadingName, setGamesLoadingName] = useState(null)
   const { visitorName, setVisitorName, logout } = useGames()
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
   const column2 = desktopIcons.filter((icon) => icon.column === 2)
@@ -267,7 +269,7 @@ function Desktop() {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Enter' && selectedIconIds.length === 1) {
-        openApp(selectedIconIds[0])
+        handleIconOpen(selectedIconIds[0])
       } else if (e.key === 'Escape') {
         setSelectedIconIds([])
       }
@@ -647,13 +649,24 @@ function Desktop() {
       )}
       {gamesGateOpen && (
         <GamesNameGate
-          onSubmit={(name) => {
-            setVisitorName(name)
+          isLoading={gamesLoadingName !== null}
+          onSubmit={(name) => setGamesLoadingName(name)}
+          onCancel={() => {
             setGamesGateOpen(false)
-            openApp('games')
+            setGamesLoadingName(null)
           }}
-          onCancel={() => setGamesGateOpen(false)}
-        />
+        >
+          {gamesLoadingName !== null && (
+            <GamesLoadingScreen
+              onDone={() => {
+                setVisitorName(gamesLoadingName)
+                setGamesGateOpen(false)
+                setGamesLoadingName(null)
+                openApp('games')
+              }}
+            />
+          )}
+        </GamesNameGate>
       )}
       {marqueeBox && (
         <div

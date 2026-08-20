@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 51 complete — mobile-adapted layout: breakpoint hook, full-screen windows, mobile icon list, tap-triggered menus, and per-app mobile layouts across every existing app, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-20 — `npm run verify` → PASS (0 errors, 4 pre-existing warnings, 33 tests); manually driven at a real 390×844 mobile viewport via headless Chromium — icon list, taskbar, This PC, Developer Lab, Visitor Arts, Memory Wall, Music Lab, Projects, Paint, Contact Info, Resume, and Games (Flappy Bird played to game-over twice, Exit hit-box confirmed working) all confirmed full-width with zero overflow and zero console errors
+**Current task pointer:** `_(Phase 53.1 complete — Gmail guest gate's invalid-email message repositioned below the Next button, and the close ("X") hitbox now shows a pointer cursor + hover highlight, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-20 — `npm run verify` → PASS (0 errors, 4 pre-existing warnings, 33 tests)
 **Verify command:** `npm run verify`
 
 ---
@@ -2645,6 +2645,105 @@ max-w-[400px] max-h-full` instead of independently-clamped fixed `w-[400px] h-[6
       with zero horizontal overflow and zero console errors. Minor, out-of-scope cosmetic-only
       wrapping noticed but not fixed since no task covered it: Memory Wall's header row and Contact
       Info's status bar wrap a little awkwardly on narrow screens — nothing clipped or unusable.)_
+
+---
+
+## PHASE 52 — ARCADE LOGIN ARTWORK + LOADING SCREEN
+
+_Requested by Sonny on 2026-08-20: use `src/components/games/login ui.jpg` (a "World of Sonny"
+fantasy-styled login card, 1024×629) as the real Games login UI, and add a 2-second loading modal
+between clicking Log In and the arcade actually opening, themed to the login art's dark
+navy/amber-orange colors._
+
+- [x] **P292** — Rewrite `src/components/games/GamesNameGate.jsx`: replace the plain modal with the
+      `login ui.jpg` background (`aspectRatio: '1024 / 629'`, `bg-cover`), a transparent name input
+      absolutely positioned (in `%`) over the art's "YOUR NAME" box, and a transparent submit button
+      absolutely positioned over the art's "LOG IN" button (dimmed via a semi-transparent overlay
+      while empty, a warm glow on hover once a name is entered); same `onSubmit`/`onCancel` contract
+      as before.
+      **Pass condition:** double-clicking Games with no stored name shows the art-based login with
+      the input and button visually aligned to the art; typing a name and clicking Log In (or
+      pressing Enter) still calls `onSubmit(trimmedName)`; `verify` passes.
+
+- [x] **P293** — Create `src/components/games/GamesLoadingScreen.jsx`: a full-screen modal (dark
+      navy gradient background, amber "LOADING" label, an amber/orange bar that fills 0%→100% over
+      2000ms via a CSS width transition) that calls `onDone` once the 2s elapses. Wire
+      `src/components/Desktop.jsx`: add `gamesLoadingName` state; `GamesNameGate`'s `onSubmit` now
+      closes the gate and sets `gamesLoadingName` instead of opening Games directly; rendering
+      `GamesLoadingScreen` while `gamesLoadingName` is set, whose `onDone` calls `setVisitorName`,
+      clears `gamesLoadingName`, and opens the `games` app.
+      **Pass condition:** clicking Log In shows the 2s loading screen (matching the login art's
+      color scheme) before the arcade hub appears, logged in under the entered name; `verify`
+      passes.
+      _(Verified via a real headless-Chromium pass against the dev server: login screen renders
+      with input/button aligned to the art, submitting shows the loading screen mid-fill at ~900ms,
+      then the arcade hub opens showing "Logged in as Sonny" — zero console errors throughout.)_
+
+---
+
+## PHASE 53 — GMAIL LOGIN ARTWORK + ENTER-KEY GATE BYPASS FIX
+
+_Requested by Sonny on 2026-08-20: use the new "Google" login art at
+`src/assets/login ui/gmail login ui.png` for the Gmail guest gate (mirroring Phase 52's approach
+for Games), and make sure the Gmail inbox can only ever appear once both an email and a name have
+been provided, with the gate closing the instant Login is submitted on the name step._
+
+- [x] **P294** — Rewrite `src/components/GmailGuestGate.jsx`: replace the hand-coded Google card
+      with `gmail login ui.png` as the background (`aspectRatio: '500 / 889'`, `bg-cover`); overlay
+      a transparent hitbox over the art's baked "X" for `onCancel`; on the email step, a real email
+      input (`noValidate` + custom `EMAIL_PATTERN` check restored) sits over the art's email box
+      and a transparent submit hitbox sits over the art's "Next" button; on the name step, a "back
+      to email" chip, a real name input, and a solid redrawn "Login" button (the art has no baked
+      art for this step) replace that same region — the redrawn button uses an opaque muted-gray
+      fill while disabled instead of CSS `opacity`, since a translucent overlay let the baked
+      "Next" text ghost through underneath.
+      **Pass condition:** the email step visually matches the new art with the input/button
+      aligned to it; an invalid email shows the existing inline error without advancing; a valid
+      email advances to a name step whose Login button is solid (no ghosted "Next" text) and
+      disabled until a name is entered; `verify` passes.
+
+- [x] **P295** — Fix `src/components/Desktop.jsx`: the global `keydown` handler's Enter-key
+      shortcut (open the single selected icon) called `openApp(id)` directly instead of
+      `handleIconOpen(id)`, letting a keyboard user open Gmail or Games by selecting the icon and
+      pressing Enter without ever passing through `GmailGuestGate`/`GamesNameGate` — changed the
+      call to `handleIconOpen(id)` so the same gating applies regardless of input method.
+      **Pass condition:** selecting the Gmail icon (single click) and pressing Enter opens the
+      login gate, not the inbox; the same is true for Games; double-click behavior is unchanged;
+      `verify` passes.
+      _(Verified via a real headless-Chromium pass against the dev server: Enter-key-on-selected
+      icon opens the gate instead of bypassing it, the full email→name→submit flow works with the
+      new art, and the login UI unmounts immediately on submit — zero console errors throughout.)_
+
+- [x] **P296** — Fix `src/components/GmailGuestGate.jsx`'s name step, per Sonny's 2026-08-20
+      screenshot: removed the "back to email" chip entirely — its `rounded-full` pill was shorter
+      than the art's baked avatar circle, leaving a sliver of the gray avatar poking out below it;
+      the art's avatar now just shows through untouched on both steps instead. Also widened the
+      redrawn Login/Next button overlay from `w-[42.4%]`/`h-[4.3%]` to `w-[43.2%]`/`h-[4.6%]`
+      (left/top nudged to `32%`/`60.5%` to stay centered) — the old size was flush with the baked
+      "Next" button's own edge, and sub-pixel rounding left a 1-2px sliver of its blue visible
+      past the redrawn Login button's right edge; the extra margin fully covers it now.
+      **Pass condition:** the name step shows no gray avatar sliver and no blue sliver beside
+      Login, at both the disabled (empty name) and enabled (name filled) states; `verify` passes.
+      _(Verified via a headless-Chromium pixel-level pass reproducing Sonny's exact screenshot
+      (email `sonny@yahoo.com`, name left empty) — both artifacts confirmed present before the fix
+      and gone after, via direct pixel sampling of the rendered screenshot, not just visual
+      inspection.)_
+
+---
+
+## PHASE 53.1 — GMAIL GATE POLISH
+
+_Requested by Sonny on 2026-08-20 from a screenshot: the invalid-email error text was floating far
+below the card (past the card's bottom edge, well past the "Next" button), and the close ("X")
+hitbox gave no hover feedback._
+
+- [x] **P297** — Fix `src/components/GmailGuestGate.jsx`: moved the "Enter a valid email address."
+      message from `top-full` (below the whole card) to sit directly under the Next button
+      (`top-[66%]`, same `left`/`width` band as the button); added `cursor-pointer` and a
+      `hover:bg-black/5` circular highlight to the close ("X") hitbox.
+      **Pass condition:** an invalid email shows the error message immediately below Next, not
+      below the card; hovering the close hitbox shows a pointer cursor and a faint highlight;
+      `verify` passes.
 
 ---
 
