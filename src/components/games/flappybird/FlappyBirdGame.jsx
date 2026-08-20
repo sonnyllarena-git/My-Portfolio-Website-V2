@@ -89,7 +89,7 @@ export default function FlappyBirdGame({ onExit }) {
   return (
     <div
       key={runKey}
-      className="relative flex h-full items-center justify-center bg-[#0d0d0d]"
+      className="relative h-full w-full overflow-hidden bg-[#0d0d0d]"
     >
       <FlappyBirdCanvas
         paused={phase === 'start'}
@@ -103,13 +103,13 @@ export default function FlappyBirdGame({ onExit }) {
           <img
             src={startPrompt}
             alt="Tap the screen to play"
-            className="h-[600px] w-[400px]"
+            className="h-[600px] w-[400px] max-h-full max-w-full object-contain"
           />
         </div>
       )}
       {phase === 'game-over' && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-          <div className="relative h-[600px] w-[400px]">
+          <div className="relative h-[600px] w-[400px] max-h-full max-w-full">
             <img
               src={gameOverCard}
               alt="Game Over"

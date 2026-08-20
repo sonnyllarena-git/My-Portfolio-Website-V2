@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import {
   applyGravity,
   jump,
@@ -7,17 +7,17 @@ import {
   checkCollision,
   PIPE_WIDTH,
 } from '../../../utils/games/flappyBirdPhysics.js'
-import flappyPlayerSprite from './assets/components/flappy player.png'
-import flappyMapBackground from './assets/components/map.png'
+import flappyPlayerSprite from './assets/components/flappy spiderman.png'
+import flappyMapBackground from './assets/components/flappy spiderman map.jpg'
 import flappyPipeSprite from './assets/components/pipe.png'
 import jumpSound from './assets/audio/jump.mp3'
 
-const CANVAS_WIDTH = 400
-const CANVAS_HEIGHT = 600
 const PIPE_SPEED = 120
+const MAP_SCROLL_SPEED = PIPE_SPEED * 0.1
 const PIPE_GAP_SIZE = 150
 const PIPE_SPAWN_INTERVAL = 1.6
 const BIRD_SPRITE_SIZE = 32
+const BIRD_START_X = 80
 
 // pipe.png is a single "hangs from ceiling, cap at bottom" sprite; the shaft
 // and cap are cropped from it and the whole thing is mirrored vertically to
@@ -59,10 +59,10 @@ function drawTopPipe(ctx, x, gapTop) {
   )
 }
 
-function drawBottomPipe(ctx, x, gapBottom) {
-  const shaftHeight = Math.max(0, CANVAS_HEIGHT - gapBottom - PIPE_CAP_HEIGHT)
+function drawBottomPipe(ctx, x, gapBottom, canvasHeight) {
+  const shaftHeight = Math.max(0, canvasHeight - gapBottom - PIPE_CAP_HEIGHT)
   ctx.save()
-  ctx.translate(0, CANVAS_HEIGHT)
+  ctx.translate(0, canvasHeight)
   ctx.scale(1, -1)
   if (shaftHeight > 0) {
     const s = PIPE_SHAFT_SRC
@@ -83,12 +83,14 @@ function drawBottomPipe(ctx, x, gapBottom) {
   ctx.restore()
 }
 
-function draw(ctx, bird, pipes, score) {
+function draw(ctx, bird, pipes, score, width, height, mapOffset) {
   if (mapImage.complete) {
-    ctx.drawImage(mapImage, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    const offset = ((mapOffset % width) + width) % width
+    ctx.drawImage(mapImage, -offset, 0, width, height)
+    ctx.drawImage(mapImage, width - offset, 0, width, height)
   } else {
     ctx.fillStyle = '#0d0d0d'
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    ctx.fillRect(0, 0, width, height)
   }
 
   for (const pipe of pipes) {
@@ -96,11 +98,11 @@ function draw(ctx, bird, pipes, score) {
     const gapBottom = pipe.gapCenter + pipe.gapSize / 2
     if (pipeImage.complete) {
       drawTopPipe(ctx, pipe.x, gapTop)
-      drawBottomPipe(ctx, pipe.x, gapBottom)
+      drawBottomPipe(ctx, pipe.x, gapBottom, height)
     } else {
       ctx.fillStyle = '#22c55e'
       ctx.fillRect(pipe.x, 0, PIPE_WIDTH, gapTop)
-      ctx.fillRect(pipe.x, gapBottom, PIPE_WIDTH, CANVAS_HEIGHT - gapBottom)
+      ctx.fillRect(pipe.x, gapBottom, PIPE_WIDTH, height - gapBottom)
     }
   }
 
@@ -121,12 +123,16 @@ function draw(ctx, bird, pipes, score) {
 
   ctx.fillStyle = '#ffffff'
   ctx.font = 'bold 24px sans-serif'
-  ctx.fillText(String(score), CANVAS_WIDTH / 2 - 8, 40)
+  ctx.fillText(String(score), width / 2 - 8, 40)
 }
 
 export default function FlappyBirdCanvas({ paused, onGameOver }) {
+  const containerRef = useRef(null)
   const canvasRef = useRef(null)
-  const birdRef = useRef({ x: 80, y: CANVAS_HEIGHT / 2, velocity: 0 })
+  const dimsRef = useRef({ width: 400, height: 600 })
+  const mapOffsetRef = useRef(0)
+  const birdCenteredRef = useRef(false)
+  const birdRef = useRef({ x: BIRD_START_X, y: 300, velocity: 0 })
   const pipesRef = useRef([])
   const scoreRef = useRef(0)
   const spawnTimerRef = useRef(0)
@@ -147,11 +153,74 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
     jumpAudioRef.current = new Audio(jumpSound)
   }, [])
 
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    const canvas = canvasRef.current
+
+    function resize() {
+      const width = Math.round(container.clientWidth)
+      const height = Math.round(container.clientHeight)
+      dimsRef.current = { width, height }
+      canvas.width = width
+      canvas.height = height
+      if (!birdCenteredRef.current) {
+        birdCenteredRef.current = true
+        birdRef.current = { ...birdRef.current, y: height / 2 }
+      }
+      // setting canvas.width/height wipes the bitmap, and nothing else
+      // repaints while paused, so redraw immediately with whatever's ready.
+      draw(
+        canvas.getContext('2d'),
+        birdRef.current,
+        pipesRef.current,
+        scoreRef.current,
+        width,
+        height,
+        mapOffsetRef.current,
+      )
+    }
+
+    resize()
+    const observer = new ResizeObserver(resize)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!paused) return
+    const ctx = canvasRef.current.getContext('2d')
+    const redraw = () => {
+      const { width, height } = dimsRef.current
+      draw(
+        ctx,
+        birdRef.current,
+        pipesRef.current,
+        scoreRef.current,
+        width,
+        height,
+        mapOffsetRef.current,
+      )
+    }
+    const images = [mapImage, pipeImage, playerImage]
+    images.forEach((image) => image.addEventListener('load', redraw))
+    return () =>
+      images.forEach((image) => image.removeEventListener('load', redraw))
+  }, [paused])
+
   useEffect(() => {
     const ctx = canvasRef.current.getContext('2d')
+    const { width, height } = dimsRef.current
 
     if (paused) {
-      draw(ctx, birdRef.current, pipesRef.current, scoreRef.current)
+      draw(
+        ctx,
+        birdRef.current,
+        pipesRef.current,
+        scoreRef.current,
+        width,
+        height,
+        mapOffsetRef.current,
+      )
       return
     }
 
@@ -161,6 +230,7 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
     function loop(time) {
       const dt = Math.min((time - lastTime) / 1000, 0.05)
       lastTime = time
+      const { width, height } = dimsRef.current
 
       birdRef.current = applyGravity(birdRef.current, dt)
 
@@ -169,11 +239,13 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
         spawnTimerRef.current = 0
         pipesRef.current = spawnPipe(
           pipesRef.current,
-          CANVAS_HEIGHT,
+          width,
+          height,
           PIPE_GAP_SIZE,
         )
       }
       pipesRef.current = movePipes(pipesRef.current, dt, PIPE_SPEED)
+      mapOffsetRef.current += MAP_SCROLL_SPEED * dt
 
       for (const pipe of pipesRef.current) {
         if (!pipe.passed && pipe.x + PIPE_WIDTH < birdRef.current.x) {
@@ -182,13 +254,17 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
         }
       }
 
-      draw(ctx, birdRef.current, pipesRef.current, scoreRef.current)
-
-      const collided = checkCollision(
+      draw(
+        ctx,
         birdRef.current,
         pipesRef.current,
-        CANVAS_HEIGHT,
+        scoreRef.current,
+        width,
+        height,
+        mapOffsetRef.current,
       )
+
+      const collided = checkCollision(birdRef.current, pipesRef.current, height)
       if (collided) {
         isRunningRef.current = false
         onGameOverRef.current?.(scoreRef.current)
@@ -223,12 +299,12 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
   }, [])
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={CANVAS_WIDTH}
-      height={CANVAS_HEIGHT}
-      onClick={handleJump}
-      className="cursor-pointer rounded-lg border border-white/10"
-    />
+    <div ref={containerRef} className="h-full w-full">
+      <canvas
+        ref={canvasRef}
+        onClick={handleJump}
+        className="block h-full w-full cursor-pointer"
+      />
+    </div>
   )
 }

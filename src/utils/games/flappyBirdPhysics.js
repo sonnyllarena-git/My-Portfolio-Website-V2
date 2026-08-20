@@ -18,11 +18,11 @@ export function movePipes(pipes, dt, speed) {
     .filter((pipe) => pipe.x + PIPE_WIDTH > 0)
 }
 
-export function spawnPipe(pipes, canvasHeight, gapSize) {
+export function spawnPipe(pipes, canvasWidth, canvasHeight, gapSize) {
   const margin = 60
   const gapCenter =
     margin + Math.random() * (canvasHeight - margin * 2 - gapSize) + gapSize / 2
-  return [...pipes, { x: 400, gapCenter, gapSize, passed: false }]
+  return [...pipes, { x: canvasWidth, gapCenter, gapSize, passed: false }]
 }
 
 export function checkCollision(bird, pipes, canvasHeight) {
