@@ -1,39 +1,30 @@
-const MAX_LIVES = 5
+import headerArt from './assets/components/header.png'
+import lifeIcon from './assets/components/life.png'
 
-export default function MemoryHud({
-  level,
-  lives,
-  moves,
-  elapsedMs,
-  bestScore,
-  totalPlays,
-}) {
+export default function MemoryHud({ level, lives, maxLives }) {
   return (
-    <div className="flex w-full max-w-md flex-col gap-2 rounded-xl bg-black/60 p-3 text-white backdrop-blur-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold">Memory Flip</h2>
-          <span className="rounded bg-white/10 px-2 py-1 text-xs font-semibold text-gray-200">
-            Level {level}
-          </span>
+    <div className="w-full max-w-lg rounded-xl bg-black/20 p-3 text-white backdrop-blur-sm">
+      <div className="relative w-full" style={{ aspectRatio: '1640 / 400' }}>
+        <img src={headerArt} alt="Memory Flip" className="h-full w-full" />
+        <span
+          className="absolute -translate-x-1/2 text-lg font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+          style={{ left: '50%', top: '38%' }}
+        >
+          {level}
+        </span>
+        <div
+          className="absolute grid -translate-x-1/2 grid-cols-5 gap-0.5"
+          style={{ left: '84%', top: '51%' }}
+        >
+          {Array.from({ length: maxLives }, (_, i) => (
+            <img
+              key={i}
+              src={lifeIcon}
+              alt=""
+              className={`h-6 w-auto ${i < lives ? '' : 'opacity-20 grayscale'}`}
+            />
+          ))}
         </div>
-        <span className="text-sm text-gray-300">
-          {Array.from({ length: MAX_LIVES }, (_, i) =>
-            i < lives ? '❤️' : '🖤',
-          ).join('')}
-        </span>
-      </div>
-      <div className="flex items-center justify-between text-xs text-gray-400">
-        <span>
-          Best Score:{' '}
-          <span className="font-semibold text-white">{bestScore ?? '—'}</span>
-        </span>
-        <span>
-          Total Plays:{' '}
-          <span className="font-semibold text-white">{totalPlays}</span>
-        </span>
-        <span>Moves: {moves}</span>
-        <span>Time: {(elapsedMs / 1000).toFixed(1)}s</span>
       </div>
     </div>
   )

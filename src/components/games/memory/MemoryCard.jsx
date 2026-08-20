@@ -26,7 +26,7 @@ export default function MemoryCard({ card, onFlip }) {
             card.isMatched
               ? 'border-emerald-400/60 bg-emerald-400/10'
               : 'border-white/20 bg-white/10'
-          }`}
+          } ${card.isBonus ? 'ring-2 ring-amber-400' : ''}`}
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
           <img
