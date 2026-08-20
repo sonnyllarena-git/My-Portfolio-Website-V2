@@ -1,6 +1,7 @@
 import flappyBirdIcon from '../components/games/flappybird/assets/icon/flappy bird icon.png'
 import flappyBirdThumbnail from '../components/games/flappybird/assets/components/flappy thumbnail.png'
 import typingSpeedThumbnail from '../components/games/typing/assets/components/typing speed test thumbnail.png'
+import memoryFlipThumbnail from '../components/games/memory/assets/components/youtuber memory flip thumbnail.png'
 
 export const gamesCatalog = [
   {
@@ -11,24 +12,6 @@ export const gamesCatalog = [
     iconImage: flappyBirdIcon,
     thumbnail: flappyBirdThumbnail,
     scoreLabel: 'Best Score',
-    sortOrder: 'desc',
-    status: 'ready',
-  },
-  {
-    id: '2048',
-    title: '2048',
-    tagline: 'Merge tiles to reach 2048.',
-    icon: '🔢',
-    scoreLabel: 'Best Score',
-    sortOrder: 'desc',
-    status: 'ready',
-  },
-  {
-    id: 'endless-runner',
-    title: 'Endless Runner',
-    tagline: 'Run, jump, survive as long as you can.',
-    icon: '🏃',
-    scoreLabel: 'Best Distance',
     sortOrder: 'desc',
     status: 'ready',
   },
@@ -45,10 +28,11 @@ export const gamesCatalog = [
   {
     id: 'memory-flip',
     title: 'Memory Flip Card',
-    tagline: 'Match every pair in the fastest time.',
+    tagline: 'Climb as many levels as your memory (and lives) allow.',
     icon: '🧠',
-    scoreLabel: 'Fastest Time',
-    sortOrder: 'asc',
+    thumbnail: memoryFlipThumbnail,
+    scoreLabel: 'Highest Level',
+    sortOrder: 'desc',
     status: 'ready',
   },
 ]

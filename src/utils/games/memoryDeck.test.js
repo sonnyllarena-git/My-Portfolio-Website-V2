@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildShuffledDeck } from './memoryDeck.js'
+import { buildShuffledDeck, pickRandomIcons } from './memoryDeck.js'
 
 describe('buildShuffledDeck', () => {
   it('produces a deck twice the icon count with each icon appearing exactly twice', () => {
@@ -14,6 +14,19 @@ describe('buildShuffledDeck', () => {
     }
     for (const icon of icons) {
       expect(counts[icon]).toBe(2)
+    }
+  })
+})
+
+describe('pickRandomIcons', () => {
+  it('returns the requested count of unique icons drawn from the pool', () => {
+    const pool = ['a', 'b', 'c', 'd', 'e']
+    const picked = pickRandomIcons(pool, 3)
+
+    expect(picked).toHaveLength(3)
+    expect(new Set(picked).size).toBe(3)
+    for (const icon of picked) {
+      expect(pool).toContain(icon)
     }
   })
 })

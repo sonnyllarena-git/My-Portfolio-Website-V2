@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 44 complete — game-over score styling finished, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-20 — `npm run verify` → PASS
+**Current task pointer:** `_(Phase 46 complete — trimmed to 3 games, Memory Flip has real icons/thumbnail/flip animation/stats, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-20 — `npm run verify` → PASS (also manually tested in-browser with Sonny's real uploaded icons: 3-game hub, real thumbnail + Best Score/Total Plays tile, 3D flip animation confirmed mid-transition, in-game HUD stats)
 **Verify command:** `npm run verify`
 
 ---
@@ -2043,6 +2043,134 @@ text-yellow-400` with an 8-direction black `textShadow` outline (drop the now-un
       `<TypingGameOverOverlay>` call to drop the now-removed `level` prop (keep `score`).
       **Pass condition:** reaching game-over in the browser shows the new large styled number in
       its new position with no console errors; `verify` passes.
+
+---
+
+## PHASE 45 — MEMORY FLIP CARD REDESIGN (LEVEL/LIVES SURVIVAL CLIMB)
+
+_Requested by Sonny on 2026-08-20: turn the single-board speed-run into a leveling survival climb,
+mirroring the Typing Speed Test's Phase 42 redesign. Confirmed with Sonny across a design Q&A:_
+
+1. _Board size: `tiles(n) = 4n`, `pairs(n) = 2n` for level `n` (level 1 = 4 tiles/2 pairs, +4 tiles
+   every level after). Once a level's pair requirement would exceed the icon pool size (or a
+   32-pair/64-tile practical ceiling — comfortably fits the existing 1200×800 Games window,
+   whichever is smaller), the board holds steady at that pair count for every level after instead
+   of growing further._
+2. _Icons: every board build (including level 1 on every replay) draws a fresh random subset of
+   that level's required pair-count from `memoryCardIcons.js`, not a fixed set — so no two runs
+   show the same icons. Sonny is expanding `memoryCardIcons.js` with real uploaded icon assets
+   (SVG preferred, 256×256 PNG fallback, matching the icon-asset convention in CLAUDE.md §3)._
+3. _Lives replace the old plain move-counter as the fail condition: one shared pool of 5 lives for
+   the whole climb, never replenished or reset per level. Every mismatched pair costs 1 life;
+   reaching 0 ends the run immediately, regardless of which level it happens on. The existing move
+   counter stays visible as a stat but no longer gates anything — moves are unlimited._
+4. _Scoring pivot: since this is no longer a single-board speed run, the leaderboard flips from
+   `scoreLabel: 'Fastest Time'` / `sortOrder: 'asc'` to `scoreLabel: 'Highest Level'` /
+   `sortOrder: 'desc'`, reporting fully-completed levels (0 if level 1 is never finished) — same
+   convention already used for the Typing Speed Test's Phase 42 pivot._
+5. _`buildShuffledDeck(icons)` in `memoryDeck.js` is untouched (it already accepts a plain icon
+   array) — a new pure helper picks the random subset before calling it._
+
+- [x] **P220** — Create `src/utils/games/memoryLevels.js`: pure functions `pairsForLevel(level)`
+      (`2 * level`) and `boardPairsForLevel(level, iconPoolSize, maxPairs = 32)` (the smallest of
+      `pairsForLevel(level)`, `iconPoolSize`, and `maxPairs` — the real pair count a given level's
+      board should use). Co-located `memoryLevels.test.js` covering a below-cap level and an
+      above-cap level.
+      **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
+
+- [x] **P221** — Add `pickRandomIcons(pool, count)` to `src/utils/games/memoryDeck.js`: Fisher-Yates
+      shuffle the pool (reusing the existing internal `shuffle` helper) and return the first
+      `count` entries. Add a case to `memoryDeck.test.js` asserting the result has `count` unique
+      entries all drawn from `pool`.
+      **Pass condition:** `npm run test` shows the new case passing; `verify` passes.
+
+- [x] **P222** — Create `src/components/games/memory/MemoryHud.jsx`: presentational header row
+      showing a Level badge, a life-icon row (❤️ for remaining lives, 🖤 for lost ones, count from
+      a `lives` prop), Moves, and Time — replacing the plain `<h2>`/stats line currently inline in
+      `MemoryFlipGame.jsx`.
+      **Pass condition:** standalone render with sample `level`/`lives`/`moves`/`elapsedMs` props
+      shows all four correctly; `verify` passes.
+
+- [x] **P223** — Rewrite the core loop in `src/components/games/memory/MemoryFlipGame.jsx`: add
+      `level` (starts 1) and `lives` (starts 5) state; build each board via
+      `pickRandomIcons(memoryCardIcons, boardPairsForLevel(level, memoryCardIcons.length))` then
+      `buildShuffledDeck`, rebuilding whenever `level` changes (including first mount); on a
+      mismatch, decrement `lives` instead of only counting the move; when `lives` reaches 0, enter
+      a `'game-over'` phase; when a board is fully matched, advance to `level + 1` (new board,
+      lives carry over, per-level move/timer state resets) instead of ending the run.
+      **Pass condition:** losing all 5 lives (across any number of levels) ends the run; clearing a
+      board with lives remaining advances to a harder level with a freshly randomized icon set;
+      `verify` passes.
+
+- [x] **P224** — Wire the game-over overlay in `MemoryFlipGame.jsx`: show the level reached, submit
+      `submitScore('memory-flip', { value: level - 1, sortOrder: 'desc' })`, and "Play Again" resets
+      `level` to 1 and `lives` to 5 with a fresh random board. Update `src/data/gamesCatalog.js`'s
+      `memory-flip` entry: `scoreLabel: 'Highest Level'`, `sortOrder: 'desc'`, tagline reflecting the
+      survival-climb format.
+      **Pass condition:** running out of lives shows the level reached and an updated "Highest
+      Level" leaderboard; Play Again restarts a fresh climb from level 1; `verify` passes.
+
+- [x] **P225** — Make the board grid in `MemoryFlipGame.jsx` responsive to tile count: derive a
+      column count from the current level's tile total (capped at 8 columns) instead of the fixed
+      `grid-cols-4`/`max-w-md`, so boards from 4 tiles up to the 64-tile cap all lay out sensibly
+      inside the 1200×800 Games window.
+      **Pass condition:** level 1 shows a small centered 2×2 board, a high level near the cap shows
+      an 8-wide board that still fits on screen without scrolling; `verify` passes.
+
+---
+
+## PHASE 46 — TRIM TO 3 GAMES, MEMORY FLIP: REAL ICONS + THUMBNAIL + FLIP ANIMATION + STATS
+
+_Requested by Sonny on 2026-08-20: drop Endless Runner and 2048 from the arcade (keep Flappy Bird,
+Typing Speed Test, Memory Flip Card), give Memory Flip Card a real hub thumbnail
+(`youtuber memory flip thumbnail.png`, already dropped into
+`src/components/games/memory/assets/components/`), swap its emoji card faces for real icon
+images from `src/components/games/memory/assets/flip/` (empty right now — Sonny is dropping
+files in; wired via Vite's `import.meta.glob` so any file added there is picked up automatically,
+no code change needed per icon), add a real 3D flip animation for cards appearing/disappearing,
+and surface Best Score + Total Plays (already tracked by `GamesContext`/`gameScores.js` for every
+game, just not shown inside Memory Flip's own HUD yet)._
+
+- [x] **P226** — Remove Endless Runner and 2048 from the arcade: delete
+      `src/components/games/runner/`, `src/components/games/twenty48/`,
+      `src/utils/games/runnerPhysics.js` (+test), `src/utils/games/twenty48Logic.js` (+test);
+      remove their entries from `src/data/gamesCatalog.js`; remove their imports/`GAME_COMPONENTS`
+      entries from `src/components/GamesApp.jsx`.
+      **Pass condition:** the arcade hub shows exactly 3 games (Flappy Bird, Typing Speed Test,
+      Memory Flip Card); `verify` passes with no dangling-import errors.
+
+- [x] **P227** — Wire Memory Flip Card's real thumbnail in `src/data/gamesCatalog.js`: import
+      `youtuber memory flip thumbnail.png` from
+      `src/components/games/memory/assets/components/` (matching the `flappy-bird`/`typing-speed`
+      `thumbnail` pattern) and add it to the `memory-flip` entry.
+      **Pass condition:** the arcade hub renders Memory Flip Card as a featured tile with the real
+      thumbnail image, Best Score, and Total Plays — matching Flappy Bird's/Typing Speed Test's
+      tile; `verify` passes.
+
+- [x] **P228** — Replace `src/data/memoryCardIcons.js`'s emoji list with real images: use
+      `import.meta.glob('./flip/*.{png,jpg,jpeg,svg,webp}', { eager: true, import: 'default' })`
+      against `src/components/games/memory/assets/flip/` to build the icon pool at build time (so
+      any file Sonny drops in that folder is picked up automatically); update
+      `src/components/games/memory/MemoryCard.jsx` to render the revealed icon as an `<img>`
+      instead of raw emoji text.
+      **Pass condition:** with at least one image file in `assets/flip/`, the board renders that
+      image on flipped/matched cards; `verify` passes. (Flagged to Sonny: the folder is empty right
+      now, so the game has zero icons to deal until real files land there.)
+
+- [x] **P229** — Add a real 3D flip animation to `MemoryCard.jsx` via `framer-motion`: a
+      `perspective`-wrapped container with a front face (icon) and back face (blank card back),
+      each `backface-visibility: hidden`, animated by rotating the inner element 0↔180deg on
+      `isRevealed` change.
+      **Pass condition:** flipping a card in the browser visibly rotates it in 3D to reveal the
+      icon, and flipping back (mismatch) rotates it back to the blank face, instead of an instant
+      swap; `verify` passes.
+
+- [x] **P230** — Add Best Score and Total Plays to `src/components/games/memory/MemoryHud.jsx`
+      (new `bestScore`/`totalPlays` props, a second stats row) wired from
+      `useGames().getTopScores('memory-flip')`/`getTotalPlays('memory-flip')` in
+      `MemoryFlipGame.jsx`.
+      **Pass condition:** the in-game HUD shows the current Best Score and Total Plays alongside
+      Level/Lives/Moves/Time, updating after each completed run; `verify` passes.
 
 ---
 

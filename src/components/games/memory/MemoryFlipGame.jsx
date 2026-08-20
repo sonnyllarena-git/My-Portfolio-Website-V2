@@ -1,16 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
 import MemoryCard from './MemoryCard.jsx'
+import MemoryHud from './MemoryHud.jsx'
 import GameLeaderboard from '../GameLeaderboard.jsx'
 import { useGames } from '../../../context/GamesContext.jsx'
-import { buildShuffledDeck } from '../../../utils/games/memoryDeck.js'
+import {
+  buildShuffledDeck,
+  pickRandomIcons,
+} from '../../../utils/games/memoryDeck.js'
+import { boardPairsForLevel } from '../../../utils/games/memoryLevels.js'
 import { memoryCardIcons } from '../../../data/memoryCardIcons.js'
 
 const GAME_ID = 'memory-flip'
 const MISMATCH_DELAY_MS = 800
+const STARTING_LIVES = 5
+
+function buildLevelDeck(level) {
+  const pairCount = boardPairsForLevel(level, memoryCardIcons.length)
+  return buildShuffledDeck(pickRandomIcons(memoryCardIcons, pairCount))
+}
 
 export default function MemoryFlipGame() {
-  const { submitScore } = useGames()
-  const [deck, setDeck] = useState(() => buildShuffledDeck(memoryCardIcons))
+  const { submitScore, getTopScores, getTotalPlays } = useGames()
+  const [level, setLevel] = useState(1)
+  const [lives, setLives] = useState(STARTING_LIVES)
+  const [deck, setDeck] = useState(() => buildLevelDeck(1))
   const [flippedIds, setFlippedIds] = useState([])
   const [moves, setMoves] = useState(0)
   const [startTime, setStartTime] = useState(null)
@@ -18,14 +31,16 @@ export default function MemoryFlipGame() {
   const timeoutRef = useRef(null)
 
   const isComplete = deck.every((card) => card.isMatched)
+  const isGameOver = lives <= 0
+  const columns = Math.min(8, Math.max(2, Math.round(Math.sqrt(deck.length))))
 
   useEffect(() => {
-    if (startTime === null || isComplete) return
+    if (startTime === null || isComplete || isGameOver) return
     const interval = setInterval(() => {
       setElapsedMs(Date.now() - startTime)
     }, 100)
     return () => clearInterval(interval)
-  }, [startTime, isComplete])
+  }, [startTime, isComplete, isGameOver])
 
   useEffect(() => {
     return () => clearTimeout(timeoutRef.current)
@@ -59,15 +74,17 @@ export default function MemoryFlipGame() {
       setFlippedIds([])
 
       if (matchedDeck.every((card) => card.isMatched)) {
-        const finalElapsedMs = Date.now() - startTime
-        setElapsedMs(finalElapsedMs)
-        submitScore(GAME_ID, {
-          value: Math.round(finalElapsedMs / 1000),
-          sortOrder: 'asc',
-        })
+        const nextLevel = level + 1
+        setLevel(nextLevel)
+        setDeck(buildLevelDeck(nextLevel))
+        setMoves(0)
+        setStartTime(null)
+        setElapsedMs(0)
       }
     } else {
       timeoutRef.current = setTimeout(() => {
+        const nextLives = lives - 1
+        setLives(nextLives)
         setDeck((prev) =>
           prev.map((card) =>
             card.id === firstId || card.id === secondId
@@ -76,26 +93,30 @@ export default function MemoryFlipGame() {
           ),
         )
         setFlippedIds([])
+
+        if (nextLives <= 0) {
+          submitScore(GAME_ID, { value: level - 1, sortOrder: 'desc' })
+        }
       }, MISMATCH_DELAY_MS)
     }
   }
 
   function handlePlayAgain() {
-    setDeck(buildShuffledDeck(memoryCardIcons))
+    setLevel(1)
+    setLives(STARTING_LIVES)
+    setDeck(buildLevelDeck(1))
     setFlippedIds([])
     setMoves(0)
     setStartTime(null)
     setElapsedMs(0)
   }
 
-  if (isComplete) {
+  if (isGameOver) {
     return (
       <div className="flex h-full flex-col items-center gap-4 overflow-y-auto bg-[#0d0d0d] p-6 text-center">
-        <h2 className="text-xl font-bold text-white">Solved!</h2>
-        <p className="text-3xl font-bold text-white">
-          {(elapsedMs / 1000).toFixed(1)}s
-        </p>
-        <p className="text-sm text-gray-400">{moves} moves</p>
+        <h2 className="text-xl font-bold text-white">Game Over</h2>
+        <p className="text-3xl font-bold text-white">{level - 1}</p>
+        <p className="text-sm text-gray-400">levels cleared</p>
         <button
           type="button"
           onClick={handlePlayAgain}
@@ -106,8 +127,8 @@ export default function MemoryFlipGame() {
         <div className="w-full max-w-xs">
           <GameLeaderboard
             gameId={GAME_ID}
-            scoreLabel="Fastest Time"
-            sortOrder="asc"
+            scoreLabel="Highest Level"
+            sortOrder="desc"
           />
         </div>
       </div>
@@ -116,14 +137,22 @@ export default function MemoryFlipGame() {
 
   return (
     <div className="flex h-full flex-col items-center gap-4 bg-[#0d0d0d] p-6">
-      <div className="flex w-full max-w-md items-center justify-between text-white">
-        <h2 className="text-xl font-bold">Memory Flip</h2>
-        <div className="flex gap-4 text-sm text-gray-300">
-          <span>Moves: {moves}</span>
-          <span>Time: {(elapsedMs / 1000).toFixed(1)}s</span>
-        </div>
-      </div>
-      <div className="grid w-full max-w-md grid-cols-4 gap-3">
+      <MemoryHud
+        level={level}
+        lives={lives}
+        moves={moves}
+        elapsedMs={elapsedMs}
+        bestScore={getTopScores(GAME_ID)[0]?.value}
+        totalPlays={getTotalPlays(GAME_ID)}
+      />
+      <div
+        className="grid gap-3"
+        style={{
+          gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+          width: `${columns * 100}px`,
+          maxWidth: '100%',
+        }}
+      >
         {deck.map((card) => (
           <MemoryCard key={card.id} card={card} onFlip={handleFlip} />
         ))}

@@ -7,6 +7,10 @@ function shuffle(array) {
   return result
 }
 
+export function pickRandomIcons(pool, count) {
+  return shuffle(pool).slice(0, count)
+}
+
 export function buildShuffledDeck(icons) {
   const pairs = icons.flatMap((icon, index) => [
     { id: `${index}-a`, icon, isFlipped: false, isMatched: false },
