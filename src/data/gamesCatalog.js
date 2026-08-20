@@ -1,5 +1,6 @@
 import flappyBirdIcon from '../components/games/flappybird/assets/icon/flappy bird icon.png'
 import flappyBirdThumbnail from '../components/games/flappybird/assets/components/flappy thumbnail.png'
+import typingSpeedThumbnail from '../components/games/typing/assets/components/typing speed test thumbnail.png'
 
 export const gamesCatalog = [
   {
@@ -34,9 +35,10 @@ export const gamesCatalog = [
   {
     id: 'typing-speed',
     title: 'Typing Speed Test',
-    tagline: 'Type fast and accurately to top the board.',
+    tagline: 'Climb through 100 escalating levels before the clock runs out.',
     icon: '⌨️',
-    scoreLabel: 'Best WPM',
+    thumbnail: typingSpeedThumbnail,
+    scoreLabel: 'Highest Level',
     sortOrder: 'desc',
     status: 'ready',
   },

@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 41 complete — Games Arcade finished, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-19 — `npm run verify` → PASS
+**Current task pointer:** `_(Phase 42 complete — Typing Speed Test redesign finished, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-20 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
 ---
@@ -1820,6 +1820,146 @@ Plugs into Phase 36's shared hub/leaderboard._
       `status` to `'ready'` in `gamesCatalog.js`.
       **Pass condition:** selecting it from the hub plays the real game; every one of the 5 arcade
       tiles is now a real playable game with a working local leaderboard; `verify` passes.
+
+---
+
+## PHASE 42 — TYPING SPEED TEST REDESIGN (LEVEL/TIER SYSTEM + CLASSROOM ART)
+
+_Requested by Sonny on 2026-08-19 from a reference mockup (classroom scene: a keyboard rack up
+top, a whiteboard below, a LEVEL badge and stopwatch HUD) plus a full game-design brief: 100
+levels grouped into 10 named tiers of 10 sentences each, a 20-second-per-level timer, a warning
+pop-up before every tier change, tap-to-start → countdown → play, live per-key lighting on a
+virtual keyboard as the player types, and a leaderboard that tracks highest level reached instead
+of WPM. Sonny already dropped `keyboard.png`, `map.avif`, and the mockup itself into
+`src/components/games/typing/assets/components/`. Design decisions made to turn the brief into
+buildable tasks (flagged here, easy to revisit):_
+
+1. _`map.avif` is used as the real classroom background behind the play area. `keyboard.png` has
+   no letter labels on its keys (it's a decorative flat graphic), so real per-key lighting is
+   built as an actual QWERTY `VirtualKeyboard.jsx` component styled to match its look (dark navy
+   bezel, rounded keys, colored per-row borders, red corner dots) instead of overlaying hit-zones
+   on the PNG — `keyboard.png`/the mockup stay as design references only, not imported assets._
+2. _Scoring: a run is a single continuous climb through levels 1→100 with no lives — a level's
+   20-second timer expiring before the sentence is fully & correctly typed ends the run
+   immediately. The leaderboard value is the count of **fully completed** levels (0 if level 1
+   is never finished); its label is the name of the tier reached, e.g. "Tier 3 — Capitals". This
+   is the "count highest level" rule Sonny gave._
+3. _WPM/accuracy are dropped entirely — Sonny's spec for this redesign is level-only scoring, so
+   `typingStats.js`'s WPM/accuracy calculators (and the old single-snippet `typingSnippets.js`)
+   are deleted rather than kept as unused dual metrics, per CLAUDE.md §5's "don't build for a
+   feature you don't have."_
+4. _Sonny's rule 5 ("put in the database the sentence to type") is satisfied by the
+   `typingTiers.js` data file — no real database exists anywhere in this project (CLAUDE.md §2
+   bans one), same pattern as every other data-driven app already built
+   (`contactInfo.js`/`memoryWallNotes.js`/etc.)._
+5. _The tier-change warning fires once, right before the first level of every tier after Tier 1
+   (i.e. before levels 11/21/.../91), showing a random line from a small curated warning pool —
+   satisfies "before the tier change, pop up something like 'Hard words incoming!'"._
+6. _`typingTiers.js`'s 100-sentence data file will exceed the ≤50-line guideline — kept as one
+   task anyway since it's a single cohesive data unit that can't be meaningfully split, the same
+   call already logged for `PaintToolbar.jsx` in LESSONS.md._
+
+- [x] **P201** — Create `src/data/typingTiers.js`: export `typingTiers`, an ordered array of 10
+      tier objects `{ name, levelStart, levelEnd, sentences }` using Sonny's exact 100 sentences
+      (Tier 1 "Warm-Up" levels 1–10 ... Tier 10 "Master Level" levels 91–100, verbatim text and
+      order); export `TIER_WARNINGS`, a pool of 5 short "hard words incoming"-style warning
+      strings for the tier-change pop-up.
+      **Pass condition:** the array has 10 tiers totalling exactly 100 sentences in the right
+      order/text; `verify` passes.
+
+- [x] **P202** — Create `src/utils/games/typingLevels.js`: pure functions — `getLevelInfo(level)`
+      (locates the tier whose `levelStart..levelEnd` contains `level`, returns
+      `{ level, tierIndex, tierName, sentence }`), `isTierStart(level)` (true when `level` equals
+      a tier's `levelStart` and `level > 1`), `pickWarning()` (random pick from `TIER_WARNINGS`).
+      Co-located `typingLevels.test.js` covering a known level→sentence lookup and a tier-start
+      boundary case.
+      **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
+
+- [x] **P203** — Create `src/components/games/typing/TypingHud.jsx`: the LEVEL badge (orange
+      ribbon style, current level number) and a stopwatch-style countdown readout (seconds
+      remaining, clock icon), matching the reference mockup's top-of-screen HUD. Pure
+      presentational, props `level`/`secondsLeft`.
+      **Pass condition:** standalone render shows both the level badge and the countdown number;
+      `verify` passes.
+
+- [x] **P204** — Create `src/components/games/typing/VirtualKeyboard.jsx`: a full QWERTY layout
+      (number row, QWERTYUIOP, ASDFGHJKL + wide end keys, ZXCVBNM + spacebar, plus the common
+      punctuation keys sentences 41–100 need: `. , ' " ; : ! ?`) styled like the reference —
+      dark navy rounded bezel, red corner dots, rounded keys, a distinct border color per row —
+      accepting `activeKey`/`activeStatus` (`'correct' | 'incorrect'`) props that tint the
+      matching key green/red.
+      **Pass condition:** standalone render shows the full keyboard; passing
+      `activeKey="a" activeStatus="correct"` highlights the A key green; `verify` passes.
+
+- [x] **P205** — Create `src/components/games/typing/TypingWhiteboard.jsx`: a whiteboard-styled
+      panel (white board face + wood-tone frame, per the reference) rendering a `sentence` prop
+      with per-character correct/incorrect/untyped coloring against a `typed` prop (logic moved
+      out of the current `TypingTestArea.jsx` paragraph).
+      **Pass condition:** standalone render with a sample sentence/typed pair shows the whiteboard
+      styling with correctly colored characters; `verify` passes.
+
+- [x] **P206** — Rewrite `src/components/games/typing/TypingTestArea.jsx`: replace the one-shot
+      `snippet`/`onComplete` props with `level`/`durationMs`/`onLevelComplete({ level, elapsedMs })`/
+      `onTimeout()`; look up the sentence via `getLevelInfo(level)`; run a `setInterval` countdown
+      from `durationMs` (cleared on unmount/level change) calling `onTimeout()` at zero; render the
+      sentence through `TypingWhiteboard` and the countdown through `TypingHud`.
+      **Pass condition:** mounting with a level shows its real sentence and a ticking countdown;
+      finishing it before time's up calls `onLevelComplete`; letting it hit zero calls `onTimeout`;
+      `verify` passes.
+
+- [x] **P207** — Add key-lighting to `TypingTestArea.jsx`: on each keystroke, compare the typed
+      character to the expected next character, hold `{ activeKey, activeStatus }` in state and
+      clear it after ~150ms via `setTimeout` (cleanup on unmount/re-key, per the existing
+      `react-hooks/refs` constraint in LESSONS.md), passed into `VirtualKeyboard` from P204.
+      **Pass condition:** typing a correct character flashes that physical key green in the
+      browser, an incorrect one flashes red; `verify` passes.
+
+- [x] **P208** — Create `src/components/games/typing/TierWarningBanner.jsx`: an overlay showing a
+      random line from `pickWarning()` over the classroom backdrop, auto-dismissing after ~2.5s via
+      a cleaned-up `setTimeout` and calling `onDismiss()`.
+      **Pass condition:** standalone render shows the warning text and calls `onDismiss` after the
+      delay; `verify` passes.
+
+- [x] **P209** — Create `src/components/games/typing/TypingStartScreen.jsx`: a "Tap to Start" idle
+      screen over the classroom background (`map.avif`); tapping/clicking begins a 3-2-1 countdown
+      overlay that calls `onStart()` once it reaches zero.
+      **Pass condition:** standalone render shows tap-to-start; tapping runs the countdown and
+      calls `onStart` at the end; `verify` passes.
+
+- [x] **P210** — Rewrite `src/components/games/typing/TypingSpeedGame.jsx`: own a `phase` state
+      machine (`'start' | 'tier-warning' | 'playing' | 'game-over'`) and `level` (starts at 1),
+      composed over the `map.avif` classroom background scaled to fit the games window; render
+      `TypingStartScreen` for `'start'`, `TierWarningBanner` (per `isTierStart`) before showing
+      `TypingTestArea` for a tier's first level, `TypingTestArea` for `'playing'` (advancing
+      `level` on `onLevelComplete`, re-checking `isTierStart` for the next level, moving to
+      `'game-over'` on `onTimeout`).
+      **Pass condition:** completing level 10 shows the tier warning before level 11's timer
+      starts; letting any level time out moves to the game-over phase; `verify` passes.
+
+- [x] **P211** — Wire the game-over screen in `TypingSpeedGame.jsx`: show the number of fully
+      completed levels and the tier name reached as the headline stats, `GameLeaderboard` for
+      `'typing-speed'`, and "Play Again" (resets to `level: 1`, phase `'start'`); submit via
+      `useGames().submitScore('typing-speed', { value: levelsCompleted, label: tierName, sortOrder:
+'desc' })`.
+      **Pass condition:** timing out at level N shows N-1 as levels completed plus an updated
+      leaderboard; Play Again resets to the start screen; a full tap-to-start → play → tier warning
+      → game-over → replay loop works end-to-end in the browser; `verify` passes.
+
+- [x] **P212** — Update `src/data/gamesCatalog.js`: change the `typing-speed` entry's `scoreLabel`
+      from `'Best WPM'` to `'Highest Level'` (and its `tagline` to reflect the new survival-climb
+      format) to match the new scoring; import and wire Sonny's new
+      `assets/components/typing speed test thumbnail.png` as its `thumbnail` field, matching the
+      `flappy-bird` entry's existing `thumbnail` pattern (promotes it to the hub's bigger featured
+      tile).
+      **Pass condition:** the arcade hub tile and the in-game leaderboard header both read
+      "Highest Level"; the Typing Speed Test tile renders as a featured tile with the new thumbnail
+      image, matching Flappy Bird's; `verify` passes.
+
+- [x] **P213** — Delete `src/data/typingSnippets.js` and `src/utils/games/typingStats.js` (+ its
+      co-located test), superseded by `typingTiers.js`/the level system per design decision 3
+      above; confirm no remaining imports of either.
+      **Pass condition:** both files are gone and `verify` still passes with no dangling-import
+      errors.
 
 ---
 

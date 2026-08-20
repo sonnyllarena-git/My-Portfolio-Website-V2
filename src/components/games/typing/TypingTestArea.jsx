@@ -1,53 +1,78 @@
-import { useRef, useState } from 'react'
-import {
-  calculateWPM,
-  calculateAccuracy,
-} from '../../../utils/games/typingStats.js'
+import { useEffect, useRef, useState } from 'react'
+import TypingWhiteboard from './TypingWhiteboard.jsx'
+import TypingHud from './TypingHud.jsx'
+import VirtualKeyboard from './VirtualKeyboard.jsx'
+import { getLevelInfo } from '../../../utils/games/typingLevels.js'
+import { resolvePhysicalKey } from '../../../utils/games/keyboardLayout.js'
 
-export default function TypingTestArea({ snippet, onComplete }) {
+const KEY_FLASH_MS = 150
+
+export default function TypingTestArea({
+  level,
+  durationMs,
+  onLevelComplete,
+  onTimeout,
+}) {
+  const { sentence } = getLevelInfo(level)
   const [typed, setTyped] = useState('')
+  const [secondsLeft, setSecondsLeft] = useState(Math.ceil(durationMs / 1000))
+  const [activeKey, setActiveKey] = useState(null)
+  const [activeStatus, setActiveStatus] = useState(null)
   const startTimeRef = useRef(null)
+  const flashTimeoutRef = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    startTimeRef.current = performance.now()
+    const interval = setInterval(() => {
+      const elapsed = performance.now() - startTimeRef.current
+      const remainingMs = durationMs - elapsed
+      if (remainingMs <= 0) {
+        setSecondsLeft(0)
+        clearInterval(interval)
+        onTimeout()
+        return
+      }
+      setSecondsLeft(Math.ceil(remainingMs / 1000))
+    }, 250)
+
+    return () => clearInterval(interval)
+  }, [durationMs, onTimeout])
 
   function handleChange(event) {
     const value = event.target.value
-    if (value.length > snippet.length) return
+    if (value.length > sentence.length) return
 
-    if (startTimeRef.current === null && value.length > 0) {
-      startTimeRef.current = performance.now()
+    if (value.length > typed.length) {
+      const typedChar = value[value.length - 1]
+      const expectedChar = sentence[value.length - 1]
+      setActiveKey(resolvePhysicalKey(typedChar))
+      setActiveStatus(typedChar === expectedChar ? 'correct' : 'incorrect')
+      if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
+      flashTimeoutRef.current = setTimeout(() => {
+        setActiveKey(null)
+        setActiveStatus(null)
+      }, KEY_FLASH_MS)
     }
+
     setTyped(value)
 
-    if (value.length === snippet.length) {
+    if (value.length === sentence.length) {
       const elapsedMs = performance.now() - startTimeRef.current
-      let correctChars = 0
-      for (let i = 0; i < snippet.length; i += 1) {
-        if (value[i] === snippet[i]) correctChars += 1
-      }
-      onComplete({
-        wpm: calculateWPM(snippet.length, elapsedMs),
-        accuracy: calculateAccuracy(correctChars, snippet.length),
-      })
+      onLevelComplete({ level, elapsedMs })
     }
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="rounded-lg bg-white/5 p-4 font-mono text-lg leading-relaxed">
-        {snippet.split('').map((char, index) => {
-          let className = 'text-gray-500'
-          if (index < typed.length) {
-            className =
-              typed[index] === char
-                ? 'text-green-400'
-                : 'text-red-400 underline'
-          }
-          return (
-            <span key={index} className={className}>
-              {char}
-            </span>
-          )
-        })}
-      </p>
+    <div className="flex w-full flex-col gap-4">
+      <TypingHud level={level} secondsLeft={secondsLeft} />
+      <TypingWhiteboard sentence={sentence} typed={typed} />
+      <VirtualKeyboard activeKey={activeKey} activeStatus={activeStatus} />
       <input
         type="text"
         value={typed}
