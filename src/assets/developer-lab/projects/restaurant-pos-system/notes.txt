@@ -2,9 +2,9 @@ Title: Restaurant POS System
 Description: A hybrid local-first & cloud-ready Point of Sale (POS) system built for small to medium restaurants. Feature-rich Progressive Web App (PWA) with cash-first order processing, real-time kitchen display, inventory & pricing, and sales reports—running seamlessly offline via IndexedDB or hosted online in the cloud.
 Built as a Progressive Web App with React + Vite + Tailwind, installable on desktop or mobile with no app store required. It handles dine-in, takeout, delivery, and scheduled orders with a kitchen display system, table management, inventory/pricing management, and sales reporting, storing all data client-side in IndexedDB with no backend server.
 
-Tech Stack:
+Tech Stack
 
-Frontend (the whole app — no backend exists):
+Frontend:
 React 18.3 + React Router 6
 Vite 5 (build/dev server)
 Tailwind CSS 3 + PostCSS + Autoprefixer
