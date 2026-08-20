@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 42 complete — Typing Speed Test redesign finished, awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 43 complete — Typing Game overlay + sound finished, awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-20 — `npm run verify` → PASS
 **Verify command:** `npm run verify`
 
@@ -1960,6 +1960,64 @@ buildable tasks (flagged here, easy to revisit):_
       above; confirm no remaining imports of either.
       **Pass condition:** both files are gone and `verify` still passes with no dangling-import
       errors.
+
+---
+
+## PHASE 43 — TYPING GAME: OVERLAY GAME-OVER CARD + SOUND
+
+_Requested by Sonny on 2026-08-20: replace the plain full-screen "Game Over" view from Phase 42
+(P211) with an image-based overlay card (`typing game over.png`, already dropped into
+`assets/components/`) shown on top of the classroom scene — matching the `FlappyBirdGame.jsx`
+pattern of pixel-measured text slots and button hit-areas over a designed PNG. Also add a
+keyboard click sound per keystroke and looped background music for the whole time the game is
+open, using the two files Sonny dropped into `assets/sound/` (`keyboard sound.MP3`,
+`typing background music.mp3`). Pixel rects below were measured directly off the 600×600
+`typing game over.png` by scanning its pixel data (same technique `FlappyBirdGame.jsx`'s own
+comment describes), not eyeballed:_
+
+- _`SCORE_SLOT: { x: 456, y: 272 }`, `LEVEL_SLOT: { x: 456, y: 314 }` — the blank keycap space
+  immediately after each baked-in label word, on the card's right side._
+- _`REPLAY_RECT: { left: 74, top: 470, width: 209, height: 45 }`,
+  `EXIT_RECT: { left: 314, top: 470, width: 206, height: 43 }` — the baked-in button graphics._
+- _Claude's call: the card only has one label pair ("SCORE"/"LEVEL"), so SCORE shows
+  `completedLevels` (the same value submitted to the leaderboard) and LEVEL shows the level
+  reached/died on (`completedLevels + 1`, capped at 100) — two distinct, informative numbers
+  rather than duplicating one value under both labels._
+- _Background music plays for the entire time the Typing Speed Test view is mounted (idle,
+  playing, tier-warning, game-over alike), starting on mount and stopping on unmount/exit —
+  "when game open," not gated to only the active-typing phase._
+
+- [x] **P214** — Create `src/components/games/typing/TypingGameOverOverlay.jsx`: renders
+      `typing game over.png` at its native 600×600 inside an `absolute inset-0` dark backdrop
+      (so the classroom scene stays visible behind it), overlaying `score`/`level` prop values at
+      `SCORE_SLOT`/`LEVEL_SLOT` and invisible `Replay`/`Exit` buttons at `REPLAY_RECT`/`EXIT_RECT`
+      calling `onReplay`/`onExit` — mirroring `FlappyBirdGame.jsx`'s existing card pattern exactly.
+      **Pass condition:** standalone render with sample `score`/`level` shows both numbers in the
+      right slots; clicking each button fires its callback; `verify` passes.
+
+- [x] **P215** — In `src/components/games/typing/TypingSpeedGame.jsx`: delete the plain
+      `'game-over'` block from Phase 42; extend the classroom-background wrapper to render
+      whenever `phase !== 'start'` (so it persists behind the overlay); render
+      `TypingGameOverOverlay` (score=`completedLevels`, level=`Math.min(level, 100)`) on top when
+      `phase === 'game-over'`, wiring `onReplay={handlePlayAgain}` and accepting an `onExit` prop
+      (passed through from `GamesApp.jsx`, matching every other game's existing `onExit` wiring).
+      **Pass condition:** reaching game-over shows the classroom scene dimly visible behind the new
+      overlay card with correct score/level numbers; Replay restarts at level 1; Exit returns to
+      the arcade hub; `verify` passes.
+
+- [x] **P216** — Add the keyboard click sound to `TypingTestArea.jsx`: a `useRef`-held `Audio`
+      instance for `assets/sound/keyboard sound.MP3`, created inside a mount-only `useEffect`
+      (matching `FlappyBirdGame.jsx`'s existing audio-ref pattern) and played (`currentTime = 0`
+      then `.play().catch(() => {})`) on every keystroke, alongside the existing key-flash logic.
+      **Pass condition:** typing a character audibly plays the click sound in the browser, for
+      both correct and incorrect keystrokes; `verify` passes.
+
+- [x] **P217** — Add looped background music to `TypingSpeedGame.jsx`: a `useRef`-held looping
+      `Audio` instance for `assets/sound/typing background music.mp3`, started in a mount-only
+      `useEffect` and paused/cleaned up on unmount — playing for as long as the Typing Speed Test
+      view stays open, regardless of phase.
+      **Pass condition:** opening the game starts the music; navigating back to the arcade hub (or
+      closing the Games window) stops it; `verify` passes.
 
 ---
 

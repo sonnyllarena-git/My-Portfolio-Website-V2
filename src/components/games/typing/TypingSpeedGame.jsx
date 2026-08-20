@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TypingStartScreen from './TypingStartScreen.jsx'
 import TierWarningBanner from './TierWarningBanner.jsx'
 import TypingTestArea from './TypingTestArea.jsx'
-import GameLeaderboard from '../GameLeaderboard.jsx'
+import TypingGameOverOverlay from './TypingGameOverOverlay.jsx'
 import mapBackground from './assets/components/map.avif'
+import backgroundMusic from './assets/sound/typing background music.mp3'
 import {
   getLevelInfo,
   isTierStart,
@@ -14,12 +15,21 @@ import { useGames } from '../../../context/GamesContext.jsx'
 const GAME_ID = 'typing-speed'
 const LEVEL_DURATION_MS = 20000
 
-export default function TypingSpeedGame() {
+export default function TypingSpeedGame({ onExit }) {
   const { submitScore } = useGames()
   const [phase, setPhase] = useState('start')
   const [level, setLevel] = useState(1)
   const [completedLevels, setCompletedLevels] = useState(0)
   const [warningText, setWarningText] = useState('')
+
+  useEffect(() => {
+    const music = new Audio(backgroundMusic)
+    music.loop = true
+    music.play().catch(() => {})
+    return () => {
+      music.pause()
+    }
+  }, [])
 
   function handleStart() {
     setPhase('playing')
@@ -69,7 +79,7 @@ export default function TypingSpeedGame() {
     <div className="relative h-full w-full overflow-hidden bg-[#0d0d0d]">
       {phase === 'start' && <TypingStartScreen onStart={handleStart} />}
 
-      {(phase === 'tier-warning' || phase === 'playing') && (
+      {phase !== 'start' && (
         <div
           className="flex h-full w-full items-center justify-center bg-cover bg-center p-6"
           style={{ backgroundImage: `url(${mapBackground})` }}
@@ -95,30 +105,12 @@ export default function TypingSpeedGame() {
       )}
 
       {phase === 'game-over' && (
-        <div className="flex h-full flex-col items-center justify-center gap-4 overflow-y-auto p-6 text-center text-white">
-          <h2 className="text-xl font-bold">Game Over</h2>
-          <p className="text-3xl font-bold">
-            {completedLevels} {completedLevels === 1 ? 'Level' : 'Levels'}{' '}
-            Completed
-          </p>
-          <p className="text-sm text-gray-400">
-            {getLevelInfo(level).tierName}
-          </p>
-          <button
-            type="button"
-            onClick={handlePlayAgain}
-            className="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-          >
-            Play Again
-          </button>
-          <div className="w-full max-w-xs">
-            <GameLeaderboard
-              gameId={GAME_ID}
-              scoreLabel="Highest Level"
-              sortOrder="desc"
-            />
-          </div>
-        </div>
+        <TypingGameOverOverlay
+          score={completedLevels}
+          level={Math.min(level, 100)}
+          onReplay={handlePlayAgain}
+          onExit={() => onExit?.()}
+        />
       )}
     </div>
   )
