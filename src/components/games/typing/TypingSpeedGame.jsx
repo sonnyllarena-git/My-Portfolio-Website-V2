@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TypingStartScreen from './TypingStartScreen.jsx'
 import TierWarningBanner from './TierWarningBanner.jsx'
 import TypingTestArea from './TypingTestArea.jsx'
@@ -16,20 +16,27 @@ const GAME_ID = 'typing-speed'
 const LEVEL_DURATION_MS = 20000
 
 export default function TypingSpeedGame({ onExit }) {
-  const { submitScore } = useGames()
+  const { submitScore, soundMuted } = useGames()
   const [phase, setPhase] = useState('start')
   const [level, setLevel] = useState(1)
   const [completedLevels, setCompletedLevels] = useState(0)
   const [warningText, setWarningText] = useState('')
+  const musicRef = useRef(null)
 
   useEffect(() => {
     const music = new Audio(backgroundMusic)
     music.loop = true
-    music.play().catch(() => {})
+    musicRef.current = music
     return () => {
       music.pause()
     }
   }, [])
+
+  useEffect(() => {
+    if (!musicRef.current) return
+    if (soundMuted) musicRef.current.pause()
+    else musicRef.current.play().catch(() => {})
+  }, [soundMuted])
 
   function handleStart() {
     setPhase('playing')

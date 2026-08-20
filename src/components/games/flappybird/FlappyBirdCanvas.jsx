@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import {
   applyGravity,
   jump,
@@ -11,6 +11,7 @@ import flappyPlayerSprite from './assets/components/flappy spiderman.png'
 import flappyMapBackground from './assets/components/flappy spiderman map.jpg'
 import flappyPipeSprite from './assets/components/pipe.png'
 import jumpSound from './assets/audio/jump.mp3'
+import { useGames } from '../../../context/GamesContext.jsx'
 
 const PIPE_SPEED = 120
 const MAP_SCROLL_SPEED = PIPE_SPEED * 0.1
@@ -127,6 +128,7 @@ function draw(ctx, bird, pipes, score, width, height, mapOffset) {
 }
 
 export default function FlappyBirdCanvas({ paused, onGameOver }) {
+  const { soundMuted } = useGames()
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const dimsRef = useRef({ width: 400, height: 600 })
@@ -278,14 +280,14 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
     return () => cancelAnimationFrame(frameId)
   }, [paused])
 
-  function handleJump() {
+  const handleJump = useCallback(() => {
     if (!isRunningRef.current || pausedRef.current) return
     birdRef.current = jump(birdRef.current)
-    if (jumpAudioRef.current) {
+    if (jumpAudioRef.current && !soundMuted) {
       jumpAudioRef.current.currentTime = 0
       jumpAudioRef.current.play().catch(() => {})
     }
-  }
+  }, [soundMuted])
 
   useEffect(() => {
     function handleKeydown(event) {
@@ -296,7 +298,7 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
     }
     window.addEventListener('keydown', handleKeydown)
     return () => window.removeEventListener('keydown', handleKeydown)
-  }, [])
+  }, [handleJump])
 
   return (
     <div ref={containerRef} className="h-full w-full">

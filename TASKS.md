@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 48 complete — Memory Flip Card has its image game-over card + real background, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-20 — `npm run verify` → PASS (also manually tested in-browser: game-over card renders correctly over the frozen board, Replay/Exit work, background image + legible HUD confirmed)
+**Current task pointer:** `_(Phase 50 complete — Arcade login/logout, time-of-day greetings, and a Settings menu (real sound mute, hub backgrounds, About, Contact Developer) on top of Phase 49's rating system, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-20 — `npm run verify` → PASS (0 errors, 4 pre-existing warnings, 33 tests); manually driven in-browser via Playwright — login/logout, greeting, settings menu (sound mute, background swap, About, Contact Developer), rating toast, and a Flappy Bird start/jump smoke test all confirmed working
 **Verify command:** `npm run verify`
 
 ---
@@ -2252,6 +2252,196 @@ technique the earlier phases describe:_
 
 ---
 
+## PHASE 49 — ARCADE RATING SYSTEM
+
+_Requested by Sonny on 2026-08-20, from a screenshot mockup of the arcade hub with a per-game
+5-star average rating badge and a "View/Add Rate" button. Confirmed with Sonny: visitor name is
+captured once via a required name gate on first opening the Games icon and remembered forever in
+this browser (localStorage, same pattern as `gameScores.js`); the same name can submit more than
+one rating/comment on the same game, every submission counts toward the average; ratings/comments
+are seeded with 8-10 mock entries per game; scale is 1-5 stars, matching Memory Wall's existing
+star control. Storage is localStorage-backed per-browser for now (mirrors the existing
+`gameScores.js`/`arcade:` key convention) — Sonny explicitly wants this swapped for a real cloud
+database later, tracked in the Backlog below, not a new architectural layer now._
+
+- [x] **P237** — Create `src/data/gameRatingSeeds.js`: exports a `gameRatingSeeds` object keyed by
+      each `gamesCatalog` id (`flappy-bird`/`typing-speed`/`memory-flip`), each an array of 8-10
+      mock `{ id, name, rating (1-5), comment, timestamp (ISO string) }` entries, generic
+      placeholder names/comments (not real visitor data).
+      **Pass condition:** the file exports a well-formed object with 8-10 entries per game id;
+      `verify` passes.
+
+- [x] **P238** — Create `src/utils/gameRatings.js` (mirroring `gameScores.js`'s shape) with
+      `readRatings(gameId)` (returns the stored `arcade:ratings:<gameId>` list from localStorage,
+      seeding it from `gameRatingSeeds.js` on first read when nothing is stored yet, falling back
+      to the seed list on corrupt data), `addRating(gameId, { name, rating, comment })` (appends a
+      new entry with a generated id/timestamp, persists, returns the updated list), and
+      `getAverageRating(ratings)` (pure helper: mean of `rating` values rounded to 1 decimal, plus
+      count; returns `null` average for an empty list); add `gameRatings.test.js` covering
+      write-then-read-back, the corrupt-data fallback, and the average computation.
+      **Pass condition:** `npm run test` shows all new cases passing; `verify` passes.
+
+- [x] **P239** — Create `src/utils/gameVisitor.js`: `readVisitorName()`/`writeVisitorName(name)`
+      reading/writing a single `arcade:visitorName` localStorage string (same try/catch-safe
+      pattern as `gameScores.js`); add `gameVisitor.test.js` covering write-then-read-back and the
+      no-value-stored case returning `null`.
+      **Pass condition:** `npm run test` shows both cases passing; `verify` passes.
+
+- [x] **P240** — Extend `src/context/GamesContext.jsx`: add `ratingsByGame` state plus
+      `getRatings(gameId)`/`getAverageRating(gameId)`/`submitRating(gameId, { name, rating, comment })`
+      wired to `gameRatings.js` (from P238), and `visitorName` state (initialized from
+      `readVisitorName()`) plus `setVisitorName(name)` (writes via `writeVisitorName` then updates
+      state) wired to `gameVisitor.js` (from P239); expose all five from the context value.
+      **Pass condition:** a component under `GamesProvider` can read seeded ratings/average, submit
+      a new rating and see the average update, and read/set the visitor name; `verify` passes.
+
+- [x] **P241** — Create `src/components/games/GamesNameGate.jsx`: a modal (mirroring
+      `GmailGuestGate.jsx`'s structure/styling) asking only for the visitor's name, required,
+      Continue disabled until non-empty, with a Cancel action that just dismisses the gate.
+      **Pass condition:** standalone render shows the Name input and a Continue button disabled
+      until filled; `verify` passes.
+
+- [x] **P242** — Wire the name gate into `src/components/Desktop.jsx`: add `gamesGateOpen` state;
+      in `handleIconOpen`, when `id === 'games'` and `useGames().visitorName` is empty, open the
+      gate instead of the app (same branch shape as the existing `gmail`/`gmailGateOpen` check);
+      render `GamesNameGate` when `gamesGateOpen` is true, with `onSubmit` calling `setVisitorName`
+      then `openApp('games')`, and `onCancel` closing the gate.
+      **Pass condition:** double-clicking Games with no stored name shows the name gate; submitting
+      it opens Games and stores the name; reopening Games afterward (or after a page reload) skips
+      the gate; `verify` passes.
+
+- [x] **P243** — Create `src/components/games/GameRatingModal.jsx`: a centered modal (fixed
+      backdrop, `stopPropagation` on click/context-menu like other in-window modals) showing the
+      game's title, a scrollable list of its ratings/comments from `useGames().getRatings(gameId)`
+      (newest first — name, star display, comment, formatted timestamp), an "Add your rating" form
+      (a clickable 1-5 star input reusing Memory Wall's `StarRatingInput` pattern, a comment
+      textarea, and a Submit button that calls `submitRating(gameId, { name: visitorName, rating,
+comment })` and clears the form), and a Close button.
+      **Pass condition:** standalone render shows the seeded ratings list and the add-rating form;
+      submitting a new rating appears in the list immediately; Close fires its callback; `verify`
+      passes.
+
+- [x] **P244** — Update `src/components/games/GamesHub.jsx`: add a title to `FeaturedGameTile`
+      (matching `GameTile`'s existing `<h3>`) and a real average-rating badge (stars + numeric
+      average, or "No ratings yet") to both tile types via `getAverageRating(game.id)`; add a
+      "View/Add Rate" button below each tile (`stopPropagation` so it doesn't also trigger
+      `onSelectGame`) that opens `GameRatingModal` (from P243) for that game, and render the modal
+      when a game is selected for rating.
+      **Pass condition:** every game tile shows its real computed average rating and a working
+      "View/Add Rate" button; clicking it opens the modal for the right game; `verify` passes.
+      _(One cohesive tile-plus-modal-wiring update — may exceed the usual ≤50-line guidance,
+      matching the `PaintToolbar.jsx` precedent in LESSONS.md.)_
+
+---
+
+## PHASE 50 — ARCADE LOGIN/LOGOUT, TIME GREETINGS, SETTINGS MENU
+
+_Requested by Sonny on 2026-08-20, extending Phase 49: a confirmation toast on rating submit; the
+existing name-gate reframed as a Login/Logout flow (still no real backend auth — logging out just
+clears the stored `arcade:visitorName` and closes the Games window, matching CLAUDE.md §2's
+`Auth: none`); a "Logged in as {name}" line plus a random, time-of-day greeting in the Arcade hub
+header; and a Settings menu (gear button) with Sound settings (a real mute toggle wired into all
+three games' existing `Audio` refs, per Sonny's answer), Background settings (a few preset
+hub-only backgrounds, per Sonny's answer — not the OS desktop wallpaper), Logout, About, and
+Contact Developer (Zoom Chat / Gmail, reusing the existing apps via `onOpenZoomChat`/`onOpenGmail`,
+same pattern as `SettingsApp.jsx`'s Get Support page)._
+
+- [x] **P255** — Add `clearVisitorName()` to `src/utils/gameVisitor.js` (`localStorage.removeItem`
+      on the existing key, same try/catch-safe pattern) with a covering case in
+      `gameVisitor.test.js`; add `logout()` to `src/context/GamesContext.jsx` that calls it and
+      resets `visitorName` state to `null`, exposed from the context value.
+      **Pass condition:** `npm run test` shows the new case passing; a component under
+      `GamesProvider` calling `logout()` sees `visitorName` become `null` and the localStorage key
+      cleared; `verify` passes.
+
+- [x] **P256** — Create `src/utils/arcadeSettings.js`: `readArcadeSettings()`/
+      `writeArcadeSettings(partial)` reading/writing a single `arcade:settings` localStorage JSON
+      object (`{ soundMuted: boolean, backgroundId: string }`, defaults `false`/`'midnight'`,
+      corrupt-data and partial-merge safe); add `arcadeSettings.test.js` covering the defaults,
+      write-then-read-back, and the corrupt-data fallback. Extend `GamesContext.jsx` with
+      `soundMuted`/`setSoundMuted(muted)` and `backgroundId`/`setBackgroundId(id)` state
+      (initialized from `readArcadeSettings()`, each setter also persisting via
+      `writeArcadeSettings`), exposed from the context value.
+      **Pass condition:** `npm run test` shows all new cases passing; a component under
+      `GamesProvider` can read/set both values and see them persist across a fresh `readArcadeSettings()` call; `verify` passes.
+
+- [x] **P257** — Create `src/data/arcadeGreetings.js` (greeting message templates, each containing
+      a `{name}` placeholder, grouped into `morning`/`afternoon`/`evening`/`night` arrays of 4-5
+      entries) and `src/utils/greeting.js` exporting `getTimeBucket(hour)` (pure: hour → bucket
+      name) and `getGreeting(hour, name, randomFn = Math.random)` (picks the bucket's template list
+      and a random entry via `randomFn`, substituting `{name}`); add `greeting.test.js` covering
+      each bucket's hour boundaries and that a fixed `randomFn` deterministically picks the
+      first/last template.
+      **Pass condition:** `npm run test` shows all new cases passing; `verify` passes.
+
+- [x] **P258** — Create `src/data/arcadeBackgrounds.js`: 4 preset hub-only backgrounds (id/label/
+      Tailwind `className`), first one (`midnight`) matching the hub's current `bg-[#0d0d0d]`
+      fill.
+      **Pass condition:** file exports a well-formed array of 4 entries; `verify` passes.
+
+- [x] **P259** — Update `src/components/games/GamesNameGate.jsx`: reword as a Login screen
+      ("Login to the Arcade" heading, "Login" button label instead of "Continue"), no behavior
+      change.
+      **Pass condition:** standalone render shows the new copy; `verify` passes.
+
+- [x] **P260** — Add a "Rate has been added" confirmation toast to
+      `src/components/games/GameRatingModal.jsx` (mirroring `PaintApp.jsx`'s
+      `showSavedToast`/`setTimeout` pattern): shown for ~2s after a successful `submitRating` call.
+      **Pass condition:** submitting a rating in the browser shows the toast, which disappears on
+      its own after ~2s; `verify` passes.
+
+- [x] **P261** — Create `src/components/games/GamesSettingsMenu.jsx`: a dropdown panel (anchored
+      under a gear trigger, closes on outside click) with a Sound section (mute toggle bound to
+      `soundMuted`/`setSoundMuted`), a Background section (the `arcadeBackgrounds.js` presets as
+      swatch buttons calling `setBackgroundId`, checkmark on the active one), a Logout button
+      (calls an `onLogout` prop), an expandable About section (generic Arcade blurb), and a Contact
+      Developer section with two buttons calling `onOpenZoomChat`/`onOpenGmail` props.
+      **Pass condition:** standalone render shows all five sections; toggling sound, picking a
+      background, and clicking Logout/Contact Developer's buttons each fire their expected
+      callback; `verify` passes.
+      _(One cohesive settings-panel component — may exceed the usual ≤50-line guidance, same
+      precedent as P244/`PaintToolbar.jsx`.)_
+
+- [x] **P262** — Wire `src/components/Desktop.jsx`: destructure `logout` from `useGames()`; pass
+      `onOpenGmail={() => handleIconOpen('gmail')}`, `onOpenZoomChat={() => handleIconOpen('zoom-chat')}`,
+      and `onLogout={() => { logout(); shared.onClose() }}` into the `games` branch's `<GamesApp>`.
+      **Pass condition:** these three props reach `GamesApp` for the open Games window; `verify`
+      passes.
+
+- [x] **P263** — Update `src/components/GamesApp.jsx`'s hub view: accept `onOpenGmail`/
+      `onOpenZoomChat`/`onLogout` props; add a header row showing "Logged in as {visitorName}" plus
+      a random time-of-day greeting from `getGreeting()` (from P257, using `new Date().getHours()`)
+      next to the existing Arcade title; add the gear button rendering `GamesSettingsMenu` (from
+      P261), passing the three props through plus `soundMuted`/`setSoundMuted`/`backgroundId`/
+      `setBackgroundId` from `useGames()`; apply the selected background's `className` (from
+      `arcadeBackgrounds.js`) to the hub container in place of the hardcoded `bg-[#0d0d0d]`.
+      **Pass condition:** the hub shows the login/greeting line and a working settings gear;
+      picking a background visibly changes the hub's background; Logout closes the Games window;
+      `verify` passes.
+
+- [x] **P264** — Wire real sound muting into `src/components/games/flappybird/FlappyBirdGame.jsx`
+      and `FlappyBirdCanvas.jsx`: read `soundMuted` from `useGames()`; gate every `.play()` call on
+      `!soundMuted`; pause the looping background-music ref immediately when `soundMuted` becomes
+      `true` (resume it if `phase === 'playing'` when it becomes `false`).
+      **Pass condition:** muting sound before/during a Flappy Bird run stops the background music
+      and jump sound from playing; unmuting mid-run resumes the background music; `verify` passes.
+
+- [x] **P265** — Wire real sound muting into
+      `src/components/games/typing/TypingSpeedGame.jsx` and `TypingTestArea.jsx`: same pattern as
+      P264 — gate the background-music and key-sound `.play()` calls on `!soundMuted`, lift the
+      background-music `Audio` into a ref so a `soundMuted`-keyed effect can pause/resume it.
+      **Pass condition:** muting sound stops Typing Speed Test's background music and key sounds;
+      unmuting resumes the background music; `verify` passes.
+
+- [x] **P266** — Wire real sound muting into
+      `src/components/games/memory/MemoryFlipGame.jsx`: same pattern as P264/P265 — gate the
+      flip/correct/wrong one-shot sounds and the looping background music on `!soundMuted`, lift
+      the background-music `Audio` into a ref so a `soundMuted`-keyed effect can pause/resume it.
+      **Pass condition:** muting sound stops Memory Flip Card's sound effects and background music;
+      unmuting resumes the background music; `verify` passes.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.
@@ -2270,6 +2460,11 @@ Anything here is out of scope until Sonny moves it up.
   cross-visitor leaderboard needs a backend + database, which is a new architectural layer banned
   by CLAUDE.md §2 without Sonny's explicit sign-off — he confirmed he wants this "built later," so
   it stays here until he moves it up and approves the stack addition it requires.
+- **Cloud database for arcade ratings/comments** — Phase 49's ratings/comments (P237-P244) are
+  localStorage-backed, per-browser only, matching the existing scores/plays pattern. Sonny
+  explicitly said this is a placeholder and he wants a real cloud database later — that's a new
+  architectural layer banned by CLAUDE.md §2 without his explicit sign-off, so it stays here until
+  he moves it up and approves the stack addition it requires.
 
 ---
 

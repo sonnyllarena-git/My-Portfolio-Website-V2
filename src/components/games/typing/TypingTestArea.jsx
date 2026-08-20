@@ -5,6 +5,7 @@ import VirtualKeyboard from './VirtualKeyboard.jsx'
 import { getLevelInfo } from '../../../utils/games/typingLevels.js'
 import { resolvePhysicalKey } from '../../../utils/games/keyboardLayout.js'
 import keyboardSound from './assets/sound/keyboard sound.MP3'
+import { useGames } from '../../../context/GamesContext.jsx'
 
 const KEY_FLASH_MS = 150
 
@@ -14,6 +15,7 @@ export default function TypingTestArea({
   onLevelComplete,
   onTimeout,
 }) {
+  const { soundMuted } = useGames()
   const { sentence } = getLevelInfo(level)
   const [typed, setTyped] = useState('')
   const [secondsLeft, setSecondsLeft] = useState(Math.ceil(durationMs / 1000))
@@ -57,7 +59,7 @@ export default function TypingTestArea({
       const expectedChar = sentence[value.length - 1]
       setActiveKey(resolvePhysicalKey(typedChar))
       setActiveStatus(typedChar === expectedChar ? 'correct' : 'incorrect')
-      if (keySoundRef.current) {
+      if (keySoundRef.current && !soundMuted) {
         keySoundRef.current.currentTime = 0
         keySoundRef.current.play().catch(() => {})
       }

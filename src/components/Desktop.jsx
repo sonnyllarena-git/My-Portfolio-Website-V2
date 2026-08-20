@@ -7,6 +7,8 @@ import ThisPCWindow from './ThisPCWindow.jsx'
 import DeveloperLabWindow from './DeveloperLabWindow.jsx'
 import ContactInfoApp from './ContactInfoApp.jsx'
 import GmailGuestGate from './GmailGuestGate.jsx'
+import GamesNameGate from './games/GamesNameGate.jsx'
+import { useGames } from '../context/GamesContext.jsx'
 import GmailComposeApp from './GmailComposeApp.jsx'
 import PaintApp from './PaintApp.jsx'
 import VisitorArtsApp from './VisitorArtsApp.jsx'
@@ -106,6 +108,8 @@ function Desktop() {
   const [refreshToken, setRefreshToken] = useState(0)
   const [gmailGateOpen, setGmailGateOpen] = useState(false)
   const [gmailGuest, setGmailGuest] = useState(null)
+  const [gamesGateOpen, setGamesGateOpen] = useState(false)
+  const { visitorName, setVisitorName, logout } = useGames()
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
   const column2 = desktopIcons.filter((icon) => icon.column === 2)
   const iconRefs = useRef(new Map())
@@ -204,6 +208,10 @@ function Desktop() {
   function handleIconOpen(id) {
     if (id === 'gmail' && !gmailGuest) {
       setGmailGateOpen(true)
+      return
+    }
+    if (id === 'games' && !visitorName) {
+      setGamesGateOpen(true)
       return
     }
     openApp(id)
@@ -470,7 +478,14 @@ function Desktop() {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <GamesApp />
+                <GamesApp
+                  onOpenGmail={() => handleIconOpen('gmail')}
+                  onOpenZoomChat={() => handleIconOpen('zoom-chat')}
+                  onLogout={() => {
+                    logout()
+                    shared.onClose()
+                  }}
+                />
               </Window>
             )
           }
@@ -606,6 +621,16 @@ function Desktop() {
             openApp('gmail')
           }}
           onCancel={() => setGmailGateOpen(false)}
+        />
+      )}
+      {gamesGateOpen && (
+        <GamesNameGate
+          onSubmit={(name) => {
+            setVisitorName(name)
+            setGamesGateOpen(false)
+            openApp('games')
+          }}
+          onCancel={() => setGamesGateOpen(false)}
         />
       )}
       {marqueeBox && (

@@ -34,14 +34,14 @@ function buildLevelDeck(level) {
   )
 }
 
-function playSound(ref) {
-  if (!ref.current) return
+function playSound(ref, muted) {
+  if (!ref.current || muted) return
   ref.current.currentTime = 0
   ref.current.play().catch(() => {})
 }
 
 export default function MemoryFlipGame({ onExit }) {
-  const { submitScore } = useGames()
+  const { submitScore, soundMuted } = useGames()
   const [level, setLevel] = useState(1)
   const [lives, setLives] = useState(STARTING_LIVES)
   const [deck, setDeck] = useState(() => buildLevelDeck(1))
@@ -53,6 +53,7 @@ export default function MemoryFlipGame({ onExit }) {
   const flipSoundRef = useRef(null)
   const correctSoundRef = useRef(null)
   const wrongSoundRef = useRef(null)
+  const musicRef = useRef(null)
 
   function showToast(text) {
     toastIdRef.current += 1
@@ -87,11 +88,17 @@ export default function MemoryFlipGame({ onExit }) {
   useEffect(() => {
     const music = new Audio(backgroundMusic)
     music.loop = true
-    music.play().catch(() => {})
+    musicRef.current = music
     return () => {
       music.pause()
     }
   }, [])
+
+  useEffect(() => {
+    if (!musicRef.current) return
+    if (soundMuted) musicRef.current.pause()
+    else musicRef.current.play().catch(() => {})
+  }, [soundMuted])
 
   function handleFlip(id) {
     if (flippedIds.length === 2) return
@@ -100,7 +107,7 @@ export default function MemoryFlipGame({ onExit }) {
       card.id === id ? { ...card, isFlipped: true } : card,
     )
     setDeck(nextDeck)
-    playSound(flipSoundRef)
+    playSound(flipSoundRef, soundMuted)
     const nextFlipped = [...flippedIds, id]
     setFlippedIds(nextFlipped)
 
@@ -111,7 +118,7 @@ export default function MemoryFlipGame({ onExit }) {
     const second = nextDeck.find((card) => card.id === secondId)
 
     if (first.icon === second.icon) {
-      playSound(correctSoundRef)
+      playSound(correctSoundRef, soundMuted)
       const matchedDeck = nextDeck.map((card) =>
         card.id === firstId || card.id === secondId
           ? { ...card, isMatched: true }
@@ -133,7 +140,7 @@ export default function MemoryFlipGame({ onExit }) {
         showToast('+1 FLIP')
       }
     } else {
-      playSound(wrongSoundRef)
+      playSound(wrongSoundRef, soundMuted)
       timeoutRef.current = setTimeout(() => {
         const nextLives = lives - 1
         setLives(nextLives)

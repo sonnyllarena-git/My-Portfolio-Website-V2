@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { gamesCatalog } from '../data/gamesCatalog.js'
+import { arcadeBackgrounds } from '../data/arcadeBackgrounds.js'
+import { getGreeting } from '../utils/greeting.js'
+import { useGames } from '../context/GamesContext.jsx'
 import GamesHub from './games/GamesHub.jsx'
+import GamesSettingsMenu from './games/GamesSettingsMenu.jsx'
 import FlappyBirdGame from './games/flappybird/FlappyBirdGame.jsx'
 import TypingSpeedGame from './games/typing/TypingSpeedGame.jsx'
 import MemoryFlipGame from './games/memory/MemoryFlipGame.jsx'
@@ -11,17 +15,61 @@ const GAME_COMPONENTS = {
   'memory-flip': MemoryFlipGame,
 }
 
-export default function GamesApp() {
+export default function GamesApp({ onOpenGmail, onOpenZoomChat, onLogout }) {
+  const {
+    visitorName,
+    soundMuted,
+    setSoundMuted,
+    backgroundId,
+    setBackgroundId,
+  } = useGames()
   const [activeGameId, setActiveGameId] = useState(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [greeting] = useState(() =>
+    getGreeting(new Date().getHours(), visitorName ?? 'Guest'),
+  )
   const activeGame = gamesCatalog.find((game) => game.id === activeGameId)
 
   if (!activeGame) {
+    const background =
+      arcadeBackgrounds.find((bg) => bg.id === backgroundId) ??
+      arcadeBackgrounds[0]
     return (
-      <div className="h-full overflow-y-auto bg-[#0d0d0d] p-6">
-        <h1 className="mb-1 text-2xl font-bold text-white">Arcade</h1>
-        <p className="mb-6 text-sm text-gray-400">
-          Pick a game and try to top the leaderboard.
-        </p>
+      <div className={`h-full overflow-y-auto p-6 ${background.className}`}>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="mb-1 text-2xl font-bold text-white">Arcade</h1>
+            <p className="text-sm text-gray-400">
+              Pick a game and try to top the leaderboard.
+            </p>
+            <p className="mt-2 text-sm font-medium text-cyan-300">
+              Logged in as {visitorName ?? 'Guest'}
+            </p>
+            <p className="text-sm text-gray-300">{greeting}</p>
+          </div>
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setSettingsOpen((prev) => !prev)}
+              className="rounded-lg border border-white/10 px-3 py-2 text-lg hover:border-white/30"
+              aria-label="Arcade settings"
+            >
+              ⚙️
+            </button>
+            {settingsOpen && (
+              <GamesSettingsMenu
+                soundMuted={soundMuted}
+                setSoundMuted={setSoundMuted}
+                backgroundId={backgroundId}
+                setBackgroundId={setBackgroundId}
+                onLogout={onLogout}
+                onOpenZoomChat={onOpenZoomChat}
+                onOpenGmail={onOpenGmail}
+                onClose={() => setSettingsOpen(false)}
+              />
+            )}
+          </div>
+        </div>
         <GamesHub onSelectGame={setActiveGameId} />
       </div>
     )

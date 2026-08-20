@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import FlappyBirdCanvas from './FlappyBirdCanvas.jsx'
 import gameOverCard from './assets/components/game over.png'
 import startPrompt from './assets/components/start.png'
@@ -18,7 +18,7 @@ const REPLAY_RECT = { left: 74, top: 352, width: 119, height: 37 }
 const EXIT_RECT = { left: 211, top: 351, width: 119, height: 39 }
 
 export default function FlappyBirdGame({ onExit }) {
-  const { submitScore, getTopScores } = useGames()
+  const { submitScore, getTopScores, soundMuted } = useGames()
   const [phase, setPhase] = useState('start')
   const [runKey, setRunKey] = useState(0)
   const [score, setScore] = useState(0)
@@ -39,24 +39,25 @@ export default function FlappyBirdGame({ onExit }) {
   }, [])
 
   useEffect(() => {
-    if (phase === 'playing') {
+    if (phase === 'playing' && !soundMuted) {
       bgMusicRef.current?.play().catch(() => {})
     } else {
       bgMusicRef.current?.pause()
-      if (bgMusicRef.current) bgMusicRef.current.currentTime = 0
+      if (phase !== 'playing' && bgMusicRef.current)
+        bgMusicRef.current.currentTime = 0
     }
-    if (phase === 'game-over') {
+    if (phase === 'game-over' && !soundMuted) {
       gameOverAudioRef.current?.play().catch(() => {})
     }
-  }, [phase])
+  }, [phase, soundMuted])
 
-  function handleStart() {
-    if (jumpAudioRef.current) {
+  const handleStart = useCallback(() => {
+    if (jumpAudioRef.current && !soundMuted) {
       jumpAudioRef.current.currentTime = 0
       jumpAudioRef.current.play().catch(() => {})
     }
     setPhase('playing')
-  }
+  }, [soundMuted])
 
   useEffect(() => {
     if (phase !== 'start') return
@@ -68,7 +69,7 @@ export default function FlappyBirdGame({ onExit }) {
     }
     window.addEventListener('keydown', handleKeydown)
     return () => window.removeEventListener('keydown', handleKeydown)
-  }, [phase])
+  }, [phase, handleStart])
 
   function handleGameOver(finalScore) {
     setScore(finalScore)
