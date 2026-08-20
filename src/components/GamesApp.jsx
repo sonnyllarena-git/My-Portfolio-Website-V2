@@ -36,41 +36,58 @@ export default function GamesApp({ onOpenGmail, onOpenZoomChat, onLogout }) {
       arcadeBackgrounds[0]
     return (
       <div className={`h-full overflow-y-auto p-6 ${background.className}`}>
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="mb-1 text-2xl font-bold text-white">Arcade</h1>
-            <p className="text-sm text-gray-400">
-              Pick a game and try to top the leaderboard.
-            </p>
-            <p className="mt-2 text-sm font-medium text-cyan-300">
-              Logged in as {visitorName ?? 'Guest'}
-            </p>
-            <p className="text-sm text-gray-300">{greeting}</p>
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-white">Arcade</h1>
+              <p className="text-sm text-gray-400">
+                Explore a suite of custom-engineered web experiences designed,
+                developed, and deployed independently by Sonny. Featuring
+                optimized state management, real-time leaderboard tracking,
+                and lightweight frontend architecture.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <span className="text-sm font-medium text-cyan-300">
+                Logged in as {visitorName ?? 'Guest'}
+              </span>
+              <span
+                aria-hidden="true"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base"
+              >
+                👤
+              </span>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen((prev) => !prev)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base hover:border-white/30"
+                  aria-label="Arcade settings"
+                >
+                  ⚙️
+                </button>
+                {settingsOpen && (
+                  <GamesSettingsMenu
+                    soundMuted={soundMuted}
+                    setSoundMuted={setSoundMuted}
+                    backgroundId={backgroundId}
+                    setBackgroundId={setBackgroundId}
+                    onLogout={onLogout}
+                    onOpenZoomChat={onOpenZoomChat}
+                    onOpenGmail={onOpenGmail}
+                    onClose={() => setSettingsOpen(false)}
+                  />
+                )}
+              </div>
+            </div>
           </div>
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => setSettingsOpen((prev) => !prev)}
-              className="rounded-lg border border-white/10 px-3 py-2 text-lg hover:border-white/30"
-              aria-label="Arcade settings"
-            >
-              ⚙️
-            </button>
-            {settingsOpen && (
-              <GamesSettingsMenu
-                soundMuted={soundMuted}
-                setSoundMuted={setSoundMuted}
-                backgroundId={backgroundId}
-                setBackgroundId={setBackgroundId}
-                onLogout={onLogout}
-                onOpenZoomChat={onOpenZoomChat}
-                onOpenGmail={onOpenGmail}
-                onClose={() => setSettingsOpen(false)}
-              />
-            )}
-          </div>
+          <p className="mt-2 text-sm text-gray-300">{greeting}</p>
         </div>
         <GamesHub onSelectGame={setActiveGameId} />
+        <p className="mt-8 text-center text-xs text-gray-500">
+          © 2026 Sonny. All rights reserved. For commercial partnerships,
+          technical consultations, or business inquiries, contact Sonny.
+        </p>
       </div>
     )
   }

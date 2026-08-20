@@ -1,12 +1,12 @@
 import flappyBirdIcon from '../components/games/flappybird/assets/icon/flappy bird icon.png'
-import flappyBirdThumbnail from '../components/games/flappybird/assets/components/spiderman thumbnail.png'
+import flappyBirdThumbnail from '../components/games/flappybird/assets/components/flappy spiderman thumbnail v2.png'
 import typingSpeedThumbnail from '../components/games/typing/assets/components/typing speed test thumbnail.png'
 import memoryFlipThumbnail from '../components/games/memory/assets/components/youtuber memory flip thumbnail.png'
 
 export const gamesCatalog = [
   {
     id: 'flappy-bird',
-    title: 'Flappy Bird',
+    title: 'Flappy Spider-Man',
     tagline: 'Tap to fly, dodge the pipes.',
     icon: '🐦',
     iconImage: flappyBirdIcon,
@@ -27,7 +27,7 @@ export const gamesCatalog = [
   },
   {
     id: 'memory-flip',
-    title: 'Memory Flip Card',
+    title: 'Youtuber Memory Flip',
     tagline: 'Climb as many levels as your memory (and lives) allow.',
     icon: '🧠',
     thumbnail: memoryFlipThumbnail,

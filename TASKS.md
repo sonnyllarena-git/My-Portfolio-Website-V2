@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 53.1 complete — Gmail guest gate's invalid-email message repositioned below the Next button, and the close ("X") hitbox now shows a pointer cursor + hover highlight, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-20 — `npm run verify` → PASS (0 errors, 4 pre-existing warnings, 33 tests)
+**Current task pointer:** `_(Phase 54 complete — game cards use the real PLAY button art cropped tight to its visible pill at 45% of thumbnail width, centered on the thumbnail/description seam, 2:1 thumbnail height anchored top, pointer-cursor hovers on PLAY/ratings, clickable ratings, Arcade header reflowed, "Youtuber Memory Flip" renamed, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-20 — `npm run verify` → PASS (0 errors, 5 pre-existing warnings, 33 tests)
 **Verify command:** `npm run verify`
 
 ---
@@ -2744,6 +2744,113 @@ hitbox gave no hover feedback._
       **Pass condition:** an invalid email shows the error message immediately below Next, not
       below the card; hovering the close hitbox shows a pointer cursor and a faint highlight;
       `verify` passes.
+
+---
+
+## PHASE 54 — GAME CARD REDESIGN (HOVER PLAY) + CLICKABLE RATINGS + ARCADE HEADER LAYOUT
+
+_Requested by Sonny on 2026-08-20, from two Arcade screenshots: (1) a game card with a green
+"PLAY" pill button that appears over the thumbnail on hover, and the Flappy Bird title renamed
+to match its Spider-Man reskin; (2) the same card design applied to every game (all three
+already carry a `thumbnail`, so the old compact `GameTile` branch was unreachable dead code)
+with the "View/Add Rate" button removed in favor of a directly clickable rating badge that opens
+`GameRatingModal`, plus a hover effect on that badge; (3) the Arcade header reflowed into a
+single row — title/subtitle left, "Logged in as X" + a profile icon + the existing settings gear
+grouped on the right — matching the reference screenshot's layout._
+
+- [x] **P298** — Rename `title: 'Flappy Bird'` to `title: 'Flappy Spider-Man'` in
+      `src/data/gamesCatalog.js`.
+      **Pass condition:** the arcade hub and in-game header show "Flappy Spider-Man"; `verify`
+      passes.
+
+- [x] **P299** — Redesign `src/components/games/GamesHub.jsx`: delete the unreachable
+      `GameTile`/`bestScorePreview` branch (every game already has a `thumbnail`, so
+      `FeaturedGameTile` was the only branch ever rendered); rework it into one `GameCard` used
+      for all games, with a centered green "PLAY" pill (▶ + text) that fades in over the
+      thumbnail on hover; replace `RateButton` with a `RatingButton` — the average-rating badge
+      itself, clickable (`stopPropagation` so it doesn't also start the game) with a hover color
+      change, opening `GameRatingModal` exactly as the old button did. Kept as one task per the
+      `PaintToolbar.jsx` precedent in LESSONS.md — one cohesive card component, splitting it
+      would fragment a single visual unit for no real benefit.
+      **Pass condition:** every game renders the same card; hovering its thumbnail shows the PLAY
+      pill; there is no separate "View/Add Rate" button; clicking the rating badge opens the
+      ratings modal without starting the game; `verify` passes.
+
+- [x] **P300** — Reflow the Arcade header in `src/components/GamesApp.jsx` into a single row:
+      title + subtitle stay left; "Logged in as {visitorName}", a decorative profile icon, and
+      the existing settings-gear button (now a matching circular icon button) move to the right
+      in that order; the greeting line moves below the full-width row instead of stacking under
+      "Logged in as".
+      **Pass condition:** the header matches the reference screenshot's layout in the browser;
+      the settings menu still opens from the gear button; `verify` passes.
+
+- [x] **P301** — Sonny asked for a real follow-up on P299's PLAY control, refined over several
+      rounds against a reference screenshot: use the
+      `src/components/games/assets/play button games screen.png` art instead of the text pill,
+      always visible (not a hover overlay) and sized to 1/3 of the card's width, straddling the
+      seam between the thumbnail and the title/stats block with a negative top margin (matching
+      the reference screenshot's placement) so it never overlaps the description text below;
+      only that button — not the thumbnail or the rest of the card — starts the game, so
+      `GameCard`'s outer `<button>` wrapper came off and the click handler lives on the PLAY
+      button alone, with its own hover scale effect.
+      **Pass condition:** the PLAY button art is visible at all times, sized to roughly a third of
+      the card's width, overlaps only the thumbnail's bottom edge (never the description text),
+      grows slightly on hover, and is the only part of the card that starts the game (clicking
+      the thumbnail or title/stats does nothing); `verify` passes.
+
+- [x] **P302** — Sonny reported P301's button still read small at exactly 1/3 width (measured
+      368px thumbnail → 123px button) — the source PNG's canvas has transparent padding around
+      the visible pill, so a width-accurate box still looks undersized. Bumped
+      `src/components/games/GamesHub.jsx`'s PLAY button to 45% of the thumbnail's width (measured
+      366px thumbnail → 166px button) with a deeper `-mt-9` overlap to match its taller box.
+      **Pass condition:** measured via Playwright, the PLAY button's rendered width is ~45% of
+      the thumbnail's; still overlaps only the thumbnail, not the description; `verify` passes.
+
+- [x] **P303** — Sonny asked to keep P302's size but center the button exactly on the seam
+      ("middle of the line") between the thumbnail and description, with no dead space either
+      side. Since the button's own height is a fixed ratio of its width (a plain fixed
+      `-mt-9`/`translate` either overlapped unevenly or left a flow gap once the negative-margin
+      math was worked through), `src/components/games/GamesHub.jsx`'s wrapper now pulls up by
+      `-mt-[18.8%]` — a CSS percentage margin resolves against the containing block's _width_,
+      and 18.8% of the card's width equals exactly half the button's rendered height at its 45%
+      sizing, so the button straddles the seam symmetrically at every breakpoint without leaving
+      a gap before the title.
+      **Pass condition:** measured via Playwright, the PLAY button's vertical center equals the
+      thumbnail's bottom edge (confirmed: thumbnail bottom 405.0px, button center 405.0px), with
+      no visible gap before the title/stats block; `verify` passes.
+
+- [x] **P304** — Sonny reported the arcade hub's card grid left ~228px of dead space below it
+      inside the 1200×800 Games window. Widened `src/components/games/GamesHub.jsx`'s thumbnail
+      from `aspect-video` (16:9) to `aspect-square` to close most of that gap, then — per Sonny's
+      follow-up that square read too tall — settled on `aspect-[2/1]`, slightly shorter than the
+      original 16:9 (measured grid height 400px → 377px), while still cutting the dead space from
+      228px down to ~250px close (verified via Playwright bounding boxes at each step). Also added
+      explicit `cursor-pointer` to the PLAY button and both `RatingButton` states (rated and
+      "No ratings yet") per Sonny's ask for a pointer-cursor hover cue on both.
+      **Pass condition:** thumbnail is visibly shorter than the original 16:9 version; hovering
+      the PLAY button or a rating badge shows a pointer cursor; `verify` passes.
+
+- [x] **P305** — Renamed `title: 'Memory Flip Card'` to `title: 'Youtuber Memory Flip'` (via an
+      intermediate `'Youtube Memory Flip'` per an earlier draft of the same request, then
+      corrected) in `src/data/gamesCatalog.js` per Sonny's request.
+      **Pass condition:** the arcade hub's third card shows "Youtuber Memory Flip"; `verify`
+      passes.
+
+- [x] **P306** — Sonny reported two more visual bugs in `src/components/games/GamesHub.jsx`: (1)
+      thumbnails were cropping into each game's title art at the top — `object-cover`'s default
+      center anchor was cutting symmetrically top/bottom on the `aspect-[2/1]` box, and the source
+      art keeps its title text near the top, so switched to `object-cover object-top`; (2) too
+      much dead space between the PLAY button and the title text below it — traced (via a
+      Playwright canvas alpha-channel scan of the PNG) to the source asset's own transparent
+      padding: the visible pill only occupies pixel rows 59–211 of a 280px-tall canvas, i.e. ~21%
+      dead space above it and ~24% below. Cropped that padding out with an `overflow-hidden`
+      `aspect-[335/153]` window around the button and a `-mt-[17.61%]` shift on the inner image
+      (the fraction `59/335`, since percentage margins resolve against container _width_) so only
+      the visible pill renders; recalculated the seam-straddle overlap from P303 down to
+      `-mt-[10.28%]` (half of the now-shorter cropped height) to match.
+      **Pass condition:** each thumbnail's title art is fully visible at the top, not clipped;
+      the gap between the PLAY button and the title/stats text is visibly tight, matching the
+      reference screenshot; `verify` passes.
 
 ---
 
