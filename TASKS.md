@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 46 complete — trimmed to 3 games, Memory Flip has real icons/thumbnail/flip animation/stats, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-20 — `npm run verify` → PASS (also manually tested in-browser with Sonny's real uploaded icons: 3-game hub, real thumbnail + Best Score/Total Plays tile, 3D flip animation confirmed mid-transition, in-game HUD stats)
+**Current task pointer:** `_(Phase 48 complete — Memory Flip Card has its image game-over card + real background, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-20 — `npm run verify` → PASS (also manually tested in-browser: game-over card renders correctly over the frozen board, Replay/Exit work, background image + legible HUD confirmed)
 **Verify command:** `npm run verify`
 
 ---
@@ -2171,6 +2171,84 @@ game, just not shown inside Memory Flip's own HUD yet)._
       `MemoryFlipGame.jsx`.
       **Pass condition:** the in-game HUD shows the current Best Score and Total Plays alongside
       Level/Lives/Moves/Time, updating after each completed run; `verify` passes.
+
+---
+
+## PHASE 47 — MEMORY FLIP CARD: SOUND EFFECTS
+
+_Requested by Sonny on 2026-08-20: flip/correct/wrong sound effects plus looping background
+music, matching the same `useRef`-held `Audio` pattern already used for the Typing Speed Test
+(Phase 43, P216). Sonny dropped `correct.MP3`, `wrong.MP3`, and `flip card.MP3` into
+`src/components/games/memory/assets/audio/` — `flip background music` is not in that folder yet,
+so P232 is blocked until that file lands._
+
+- [x] **P231** — Add flip/correct/wrong sound effects to `MemoryFlipGame.jsx`: three
+      `useRef`-held `Audio` instances created in a mount-only `useEffect` from
+      `assets/audio/{flip card.MP3, correct.MP3, wrong.MP3}`; play the flip sound on every card
+      flip in `handleFlip`, the correct sound when a pair matches, the wrong sound the moment a
+      pair mismatches (each via `currentTime = 0` then `.play().catch(() => {})`).
+      **Pass condition:** flipping a card audibly plays the flip sound, a matching pair plays the
+      correct sound, a mismatched pair plays the wrong sound; `verify` passes.
+
+- [x] **P232** — Add looped background music to `MemoryFlipGame.jsx` from
+      `assets/audio/flip background music.mp3` (same pattern as Phase 43's P217 — start on
+      mount, stop/cleanup on unmount, playing for as long as Memory Flip Card stays open).
+      **Pass condition:** opening Memory Flip Card starts the looping music; leaving the game
+      stops it with no console errors; `verify` passes.
+
+---
+
+## PHASE 48 — MEMORY FLIP CARD: IMAGE GAME-OVER CARD
+
+_Requested by Sonny on 2026-08-20: replace the plain text "Game Over" screen with an image-based
+overlay card (`game over.png`, dropped into
+`src/components/games/memory/assets/components/`), matching the same pattern already used for
+Typing Speed Test (Phase 43/44) and Flappy Bird — pixel-measured score slot and invisible
+Replay/Exit hit-areas over the baked-in card art, layered over the (now-frozen) board instead of
+replacing it outright. Pixel rects below were measured directly off the 600x600 `game over.png`
+by scanning its alpha channel and cropping candidate regions for visual confirmation, same
+technique the earlier phases describe:_
+
+- _`SCORE_VALUE_SLOT: { x: 300, y: 243 }` — center of the blank metallic plate below the baked-in
+  "SCORE LEVEL" label. The card has one label over one blank slot (same situation Phase 44 solved
+  for Typing), so it shows `level - 1` (levels cleared), the same value submitted to the
+  leaderboard — dropping the separate plain-text leaderboard panel entirely, matching Typing's
+  card-only precedent._
+- _`REPLAY_RECT: { left: 70, top: 272, width: 230, height: 118 }`,
+  `EXIT_RECT: { left: 308, top: 272, width: 155, height: 118 }` — the baked-in REPLAY/EXIT button
+  graphics. Exit now actually exits (Memory Flip's `onExit` prop, already passed by `GamesApp.jsx`
+  to every game, was previously ignored)._
+
+- [x] **P233** — Create `src/components/games/memory/MemoryGameOverOverlay.jsx`: renders
+      `game over.png` at its native 600x600 inside an `absolute inset-0` dark backdrop, overlaying
+      a `score` prop value at `SCORE_VALUE_SLOT` (big bold outlined yellow number, matching
+      `TypingGameOverOverlay.jsx`'s styling) and invisible `Replay`/`Exit` buttons at
+      `REPLAY_RECT`/`EXIT_RECT` calling `onReplay`/`onExit`.
+      **Pass condition:** standalone render with a sample `score` shows the number in the right
+      slot; clicking each button fires its callback; `verify` passes.
+
+- [x] **P234** — In `src/components/games/memory/MemoryFlipGame.jsx`: accept an `onExit` prop;
+      delete the plain full-screen "Game Over" block and its `GameLeaderboard` usage; always
+      render the HUD + board (wrapped in a `relative` container) and layer
+      `MemoryGameOverOverlay` on top (`score={level - 1}`, `onReplay={handlePlayAgain}`,
+      `onExit={() => onExit?.()}`) whenever `lives <= 0`.
+      **Pass condition:** losing all lives shows the board frozen behind the new image card with
+      the correct levels-cleared number; Replay restarts a fresh climb; Exit returns to the arcade
+      hub; `verify` passes.
+
+- [x] **P235** — Wire `game background.jpg` (dropped into
+      `src/components/games/memory/assets/components/`) as the real backdrop of
+      `MemoryFlipGame.jsx`, replacing the plain `bg-[#0d0d0d]` fill — same `bg-cover bg-center`
+      inline-`backgroundImage` pattern already used for Typing Speed Test's classroom background.
+      **Pass condition:** the Memory Flip play area shows the real background image behind the
+      HUD/board instead of a flat dark fill; `verify` passes.
+
+- [x] **P236** — Fix HUD legibility regression from P235: wrap `MemoryHud.jsx`'s content in a
+      translucent dark rounded panel (`bg-black/60`, `backdrop-blur-sm`) so Level/Moves/Time/Best
+      Score/Total Plays stay readable against the busy background photo instead of sitting as
+      bare text directly on it.
+      **Pass condition:** all HUD text is clearly legible over the background image in the
+      browser; `verify` passes.
 
 ---
 

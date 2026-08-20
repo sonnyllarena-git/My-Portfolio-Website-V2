@@ -9,7 +9,7 @@ export default function MemoryHud({
   totalPlays,
 }) {
   return (
-    <div className="flex w-full max-w-md flex-col gap-2 text-white">
+    <div className="flex w-full max-w-md flex-col gap-2 rounded-xl bg-black/60 p-3 text-white backdrop-blur-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold">Memory Flip</h2>

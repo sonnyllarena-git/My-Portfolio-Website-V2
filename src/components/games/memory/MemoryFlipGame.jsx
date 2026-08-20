@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import MemoryCard from './MemoryCard.jsx'
 import MemoryHud from './MemoryHud.jsx'
-import GameLeaderboard from '../GameLeaderboard.jsx'
+import MemoryGameOverOverlay from './MemoryGameOverOverlay.jsx'
 import { useGames } from '../../../context/GamesContext.jsx'
 import {
   buildShuffledDeck,
@@ -9,6 +9,11 @@ import {
 } from '../../../utils/games/memoryDeck.js'
 import { boardPairsForLevel } from '../../../utils/games/memoryLevels.js'
 import { memoryCardIcons } from '../../../data/memoryCardIcons.js'
+import flipCardSound from './assets/audio/flip card.MP3'
+import correctSound from './assets/audio/correct.MP3'
+import wrongSound from './assets/audio/wrong.MP3'
+import backgroundMusic from './assets/audio/flip background music.mp3'
+import gameBackground from './assets/components/game background.jpg'
 
 const GAME_ID = 'memory-flip'
 const MISMATCH_DELAY_MS = 800
@@ -19,7 +24,13 @@ function buildLevelDeck(level) {
   return buildShuffledDeck(pickRandomIcons(memoryCardIcons, pairCount))
 }
 
-export default function MemoryFlipGame() {
+function playSound(ref) {
+  if (!ref.current) return
+  ref.current.currentTime = 0
+  ref.current.play().catch(() => {})
+}
+
+export default function MemoryFlipGame({ onExit }) {
   const { submitScore, getTopScores, getTotalPlays } = useGames()
   const [level, setLevel] = useState(1)
   const [lives, setLives] = useState(STARTING_LIVES)
@@ -29,6 +40,9 @@ export default function MemoryFlipGame() {
   const [startTime, setStartTime] = useState(null)
   const [elapsedMs, setElapsedMs] = useState(0)
   const timeoutRef = useRef(null)
+  const flipSoundRef = useRef(null)
+  const correctSoundRef = useRef(null)
+  const wrongSoundRef = useRef(null)
 
   const isComplete = deck.every((card) => card.isMatched)
   const isGameOver = lives <= 0
@@ -43,7 +57,24 @@ export default function MemoryFlipGame() {
   }, [startTime, isComplete, isGameOver])
 
   useEffect(() => {
-    return () => clearTimeout(timeoutRef.current)
+    flipSoundRef.current = new Audio(flipCardSound)
+    correctSoundRef.current = new Audio(correctSound)
+    wrongSoundRef.current = new Audio(wrongSound)
+    return () => {
+      clearTimeout(timeoutRef.current)
+      flipSoundRef.current?.pause()
+      correctSoundRef.current?.pause()
+      wrongSoundRef.current?.pause()
+    }
+  }, [])
+
+  useEffect(() => {
+    const music = new Audio(backgroundMusic)
+    music.loop = true
+    music.play().catch(() => {})
+    return () => {
+      music.pause()
+    }
   }, [])
 
   function handleFlip(id) {
@@ -54,6 +85,7 @@ export default function MemoryFlipGame() {
       card.id === id ? { ...card, isFlipped: true } : card,
     )
     setDeck(nextDeck)
+    playSound(flipSoundRef)
     const nextFlipped = [...flippedIds, id]
     setFlippedIds(nextFlipped)
 
@@ -65,6 +97,7 @@ export default function MemoryFlipGame() {
     const second = nextDeck.find((card) => card.id === secondId)
 
     if (first.icon === second.icon) {
+      playSound(correctSoundRef)
       const matchedDeck = nextDeck.map((card) =>
         card.id === firstId || card.id === secondId
           ? { ...card, isMatched: true }
@@ -82,6 +115,7 @@ export default function MemoryFlipGame() {
         setElapsedMs(0)
       }
     } else {
+      playSound(wrongSoundRef)
       timeoutRef.current = setTimeout(() => {
         const nextLives = lives - 1
         setLives(nextLives)
@@ -111,32 +145,11 @@ export default function MemoryFlipGame() {
     setElapsedMs(0)
   }
 
-  if (isGameOver) {
-    return (
-      <div className="flex h-full flex-col items-center gap-4 overflow-y-auto bg-[#0d0d0d] p-6 text-center">
-        <h2 className="text-xl font-bold text-white">Game Over</h2>
-        <p className="text-3xl font-bold text-white">{level - 1}</p>
-        <p className="text-sm text-gray-400">levels cleared</p>
-        <button
-          type="button"
-          onClick={handlePlayAgain}
-          className="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-        >
-          Play Again
-        </button>
-        <div className="w-full max-w-xs">
-          <GameLeaderboard
-            gameId={GAME_ID}
-            scoreLabel="Highest Level"
-            sortOrder="desc"
-          />
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex h-full flex-col items-center gap-4 bg-[#0d0d0d] p-6">
+    <div
+      className="relative flex h-full flex-col items-center gap-4 bg-cover bg-center p-6"
+      style={{ backgroundImage: `url(${gameBackground})` }}
+    >
       <MemoryHud
         level={level}
         lives={lives}
@@ -157,6 +170,13 @@ export default function MemoryFlipGame() {
           <MemoryCard key={card.id} card={card} onFlip={handleFlip} />
         ))}
       </div>
+      {isGameOver && (
+        <MemoryGameOverOverlay
+          score={level - 1}
+          onReplay={handlePlayAgain}
+          onExit={() => onExit?.()}
+        />
+      )}
     </div>
   )
 }
