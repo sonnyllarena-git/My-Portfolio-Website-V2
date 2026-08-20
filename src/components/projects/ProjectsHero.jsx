@@ -1,14 +1,22 @@
-function ProjectsHero({ project }) {
+function ProjectsHero({ project, isMobile = false }) {
   if (!project) {
     return (
-      <div className="flex h-[500px] items-center justify-center rounded-xl border border-white/10 bg-[#141414] text-white/40">
+      <div
+        className={`flex items-center justify-center rounded-xl border border-white/10 bg-[#141414] text-white/40 ${
+          isMobile ? 'py-16' : 'h-[500px]'
+        }`}
+      >
         Select a project
       </div>
     )
   }
 
   return (
-    <div className="flex h-[500px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#141414]">
+    <div
+      className={`flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#141414] ${
+        isMobile ? '' : 'h-[500px]'
+      }`}
+    >
       <div className="scrollbar-black flex-1 overflow-y-auto p-4">
         <div className="relative mx-auto mt-2 aspect-[1024/559] w-full max-w-[1024px] overflow-hidden rounded-xl border border-white/10 shadow-2xl">
           {project.photoSrc ? (

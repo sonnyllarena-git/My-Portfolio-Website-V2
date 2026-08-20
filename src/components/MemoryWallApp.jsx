@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMemoryWall } from '../context/MemoryWallContext.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 const MESSAGE_MAX_LENGTH = 420
 
@@ -69,6 +70,7 @@ function StarRatingInput({ rating, onChange }) {
 
 function MemoryWallApp() {
   const { notes, addNote } = useMemoryWall()
+  const isMobile = useIsMobile()
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
   const [rating, setRating] = useState(0)
@@ -135,8 +137,16 @@ function MemoryWallApp() {
           </div>
         </div>
       </div>
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-72 shrink-0 overflow-y-auto border-r border-white/10 p-4 text-sm">
+      <div
+        className={`flex flex-1 ${isMobile ? 'flex-col overflow-y-auto' : 'overflow-hidden'}`}
+      >
+        <div
+          className={`shrink-0 overflow-y-auto p-4 text-sm ${
+            isMobile
+              ? 'w-full border-b border-white/10'
+              : 'w-72 border-r border-white/10'
+          }`}
+        >
           <h3 className="mb-1 font-semibold">Add your note</h3>
           <p className="mb-4 text-xs text-white/50">
             Leave a small piece of your visit inside Sonny&apos;s interactive
@@ -218,7 +228,9 @@ function MemoryWallApp() {
               No notes match
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div
+              className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}
+            >
               {visibleNotes.map((note) => (
                 <NoteCard key={note.id} note={note} />
               ))}

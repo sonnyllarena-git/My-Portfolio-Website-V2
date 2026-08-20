@@ -107,7 +107,7 @@ Prefer the boring, well-documented option over the clever one. You will be debug
         └── sum.test.js
 ```
 
-`src/hooks/` doesn't exist yet — it lands in Phase 1 once there is a real hook to put in it.
+`src/hooks/` holds `useIsMobile.js` (Phase 51 — the mobile-breakpoint hook), the first real hook.
 
 Real icon image files (replacing the current emoji/inline-SVG placeholders) go in
 `src/assets/icons/`, one file per icon, named after that icon's `id` in

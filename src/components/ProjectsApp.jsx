@@ -3,8 +3,10 @@ import { projects } from '../data/projectsLibrary.js'
 import ProjectsCategorySidebar from './projects/ProjectsCategorySidebar.jsx'
 import ProjectsHero from './projects/ProjectsHero.jsx'
 import ProjectsMoreList from './projects/ProjectsMoreList.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function ProjectsApp() {
+  const isMobile = useIsMobile()
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedId, setSelectedId] = useState(projects[0]?.id ?? null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -31,15 +33,16 @@ function ProjectsApp() {
             media management and end-to-end IT solutions.
           </p>
         </div>
-        <div className="flex pb-8">
+        <div className={`pb-8 ${isMobile ? 'flex flex-col gap-6' : 'flex'}`}>
           <ProjectsCategorySidebar
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onSelectCategory={setSelectedCategory}
             onSelectProject={setSelectedId}
+            isMobile={isMobile}
           />
-          <div className="flex-1 pl-6">
-            <ProjectsHero project={selectedProject} />
+          <div className={isMobile ? 'flex-1' : 'flex-1 pl-6'}>
+            <ProjectsHero project={selectedProject} isMobile={isMobile} />
             <ProjectsMoreList
               projects={filteredProjects}
               selectedId={selectedId}

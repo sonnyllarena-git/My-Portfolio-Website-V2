@@ -11,7 +11,7 @@ function GmailGuestGate({ onSubmit, onCancel }) {
       onContextMenu={(e) => e.stopPropagation()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
-      <div className="w-80 rounded-lg border border-white/10 bg-[#2b2b2b] p-5 text-white shadow-2xl">
+      <div className="w-80 max-w-[90vw] rounded-lg border border-white/10 bg-[#2b2b2b] p-5 text-white shadow-2xl">
         <h2 className="text-sm font-semibold">Before you compose...</h2>
         <p className="mt-1 text-xs text-white/60">
           Let Sonny know who's reaching out.

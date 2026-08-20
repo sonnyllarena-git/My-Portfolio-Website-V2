@@ -17,6 +17,7 @@ function RootView({
   onOpenTile,
   onTileContextMenu,
   searchTerm = '',
+  isMobile = false,
 }) {
   const filteredFolders = folders.filter((item) =>
     matchesSearch(item.label, searchTerm),
@@ -44,6 +45,7 @@ function RootView({
             onSelect={() => onSelectTile(item.label)}
             onOpen={() => onOpenTile(item)}
             onContextMenu={(x, y) => onTileContextMenu(x, y, item)}
+            isMobile={isMobile}
             className="flex cursor-pointer flex-col items-center gap-1 rounded p-2"
           >
             <ItemIcon
@@ -67,6 +69,7 @@ function RootView({
                 onSelect={() => onSelectTile(drive.label)}
                 onOpen={() => onOpenTile(drive)}
                 onContextMenu={(x, y) => onTileContextMenu(x, y, drive)}
+                isMobile={isMobile}
                 className="rounded-lg border border-white/10 p-3"
               >
                 <div className="flex items-center gap-2">

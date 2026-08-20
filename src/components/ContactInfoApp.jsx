@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { contactInfo, buildContactText } from '../data/contactInfo.js'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 const documentText = buildContactText(contactInfo)
 const lineCount = documentText.split('\n').length
@@ -22,9 +23,13 @@ function downloadContactText() {
   URL.revokeObjectURL(url)
 }
 
-function ContactRow({ label, value, isLink, editable }) {
+function ContactRow({ label, value, isLink, editable, isMobile = false }) {
   return (
-    <div className="grid grid-cols-[160px_1fr] gap-4 border-b border-white/10 py-3">
+    <div
+      className={`border-b border-white/10 py-3 ${
+        isMobile ? 'flex flex-col gap-1' : 'grid grid-cols-[160px_1fr] gap-4'
+      }`}
+    >
       <div className="text-xs font-semibold tracking-wide text-white/50 uppercase">
         {label}
       </div>
@@ -47,6 +52,7 @@ function ContactRow({ label, value, isLink, editable }) {
 }
 
 function ContactInfoApp() {
+  const isMobile = useIsMobile()
   const [mode, setMode] = useState('read')
   const [showToast, setShowToast] = useState(false)
   const [showFileMenu, setShowFileMenu] = useState(false)
@@ -151,7 +157,12 @@ function ContactInfoApp() {
           {contactInfo.headline}
         </div>
         {contactInfo.fields.map((field) => (
-          <ContactRow key={field.label} {...field} editable={mode === 'edit'} />
+          <ContactRow
+            key={field.label}
+            {...field}
+            editable={mode === 'edit'}
+            isMobile={isMobile}
+          />
         ))}
         <div className="mt-6 mb-1 text-sm font-semibold">Official Profiles</div>
         {contactInfo.profiles.map((profile) => (
@@ -160,6 +171,7 @@ function ContactInfoApp() {
             label={profile.label}
             value={profile.url}
             isLink
+            isMobile={isMobile}
           />
         ))}
       </div>

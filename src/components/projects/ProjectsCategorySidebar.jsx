@@ -7,6 +7,7 @@ function ProjectsCategorySidebar({
   onSearchChange,
   onSelectCategory,
   onSelectProject,
+  isMobile = false,
 }) {
   const [expandedCategory, setExpandedCategory] = useState(null)
 
@@ -25,7 +26,11 @@ function ProjectsCategorySidebar({
   }
 
   return (
-    <div className="h-[500px] w-72 min-w-[280px] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#141414] text-sm text-white">
+    <div
+      className={`shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#141414] text-sm text-white ${
+        isMobile ? 'max-h-[50vh] w-full' : 'h-[500px] w-72 min-w-[280px]'
+      }`}
+    >
       <div className="scrollbar-black h-full overflow-y-auto p-4">
         <div className="sticky top-0 z-10 mb-4 bg-[#141414] pb-1">
           <input

@@ -1,3 +1,5 @@
+import { useIsMobile } from '../../../hooks/useIsMobile.js'
+
 const ROWS = [
   {
     border: 'border-slate-300',
@@ -91,6 +93,9 @@ export default function VirtualKeyboard({
   activeKey = null,
   activeStatus = null,
 }) {
+  const isMobile = useIsMobile()
+  if (isMobile) return null
+
   return (
     <div className="relative rounded-2xl border-4 border-rose-800 bg-gradient-to-b from-slate-700 to-slate-800 p-4 shadow-xl">
       <div className="mb-2 flex justify-between px-1">

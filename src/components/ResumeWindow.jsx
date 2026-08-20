@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 import { accentColors } from '../data/accentColors.js'
 import ResumePage from './ResumePage.jsx'
 
@@ -24,7 +25,11 @@ function ResumeWindow({
 }) {
   const { accentColor } = useSystemSettings()
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
+  const isMobile = useIsMobile()
   const isHidden = isMinimized || isClosing
+  const positionClasses = isMobile
+    ? 'fixed inset-0'
+    : 'absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2'
   const [shouldRender, setShouldRender] = useState(!isClosing)
   const [showFileMenu, setShowFileMenu] = useState(false)
 
@@ -47,7 +52,7 @@ function ResumeWindow({
       animate={{ opacity: isHidden ? 0 : 1 }}
       transition={{ duration: FADE_DURATION }}
       style={{ borderColor: accentHex, zIndex }}
-      className={`absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border-2 bg-[#2b2b2b] shadow-2xl ${isHidden ? 'pointer-events-none' : 'pointer-events-auto'}`}
+      className={`${positionClasses} overflow-hidden rounded-lg border-2 bg-[#2b2b2b] shadow-2xl ${isHidden ? 'pointer-events-none' : 'pointer-events-auto'}`}
     >
       <div className="flex items-center justify-between bg-[#b30b00] px-3 py-2 text-white">
         <span className="text-sm font-medium">Resume.pdf</span>

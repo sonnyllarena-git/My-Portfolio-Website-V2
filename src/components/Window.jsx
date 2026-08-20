@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Rnd } from 'react-rnd'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 import { accentColors } from '../data/accentColors.js'
 
 const MIN_WIDTH = 480
@@ -26,6 +27,7 @@ function Window({
 }) {
   const { accentColor } = useSystemSettings()
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
+  const isMobile = useIsMobile()
   const isHidden = isMinimized || isClosing
   const [shouldRender, setShouldRender] = useState(!isClosing)
   const [isMaximized, setIsMaximized] = useState(false)
@@ -51,6 +53,20 @@ function Window({
       ),
     }
   })
+
+  useEffect(() => {
+    if (!isMobile) return
+    const fillViewport = () =>
+      setLayout({
+        x: 0,
+        y: 0,
+        width: window.innerWidth,
+        height: window.innerHeight - TASKBAR_HEIGHT,
+      })
+    fillViewport()
+    window.addEventListener('resize', fillViewport)
+    return () => window.removeEventListener('resize', fillViewport)
+  }, [isMobile])
 
   function toggleMaximize() {
     if (isMaximized) {
@@ -82,12 +98,12 @@ function Window({
           ...pos,
         })
       }
-      minWidth={MIN_WIDTH}
-      minHeight={MIN_HEIGHT}
+      minWidth={isMobile ? 0 : MIN_WIDTH}
+      minHeight={isMobile ? 0 : MIN_HEIGHT}
       bounds="parent"
       dragHandleClassName="window-title-bar"
-      disableDragging={isMaximized}
-      enableResizing={!isMaximized}
+      disableDragging={isMaximized || isMobile}
+      enableResizing={!isMaximized && !isMobile}
       className={isHidden ? 'pointer-events-none' : 'pointer-events-auto'}
       style={{ zIndex }}
     >

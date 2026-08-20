@@ -5,6 +5,7 @@ import ItemIcon from './ItemIcon.jsx'
 import RibbonMenu from './RibbonMenu.jsx'
 import RootView from './RootView.jsx'
 import Tile from './Tile.jsx'
+import { useIsMobile } from '../../hooks/useIsMobile.js'
 
 function ExplorerBody({
   rootLabel,
@@ -16,6 +17,7 @@ function ExplorerBody({
   onClose,
   onOpenApp = () => {},
 }) {
+  const isMobile = useIsMobile()
   const rootLocation = { type: 'root', label: rootLabel }
   const [history, setHistory] = useState([rootLocation])
   const [historyIndex, setHistoryIndex] = useState(0)
@@ -157,9 +159,17 @@ function ExplorerBody({
           setActiveRibbonTab((prev) => (prev === label ? null : label))
         }
       />
-      <div className="flex">
-        <div className="w-36 shrink-0 border-r border-white/10 bg-[#1f2126] py-2 text-xs">
-          <div className="px-3 py-1 text-white/50">Quick access</div>
+      <div className={isMobile ? 'flex flex-col' : 'flex'}>
+        <div
+          className={
+            isMobile
+              ? 'flex w-full shrink-0 items-center gap-2 overflow-x-auto border-b border-white/10 bg-[#1f2126] px-2 py-2 text-xs'
+              : 'w-36 shrink-0 border-r border-white/10 bg-[#1f2126] py-2 text-xs'
+          }
+        >
+          {!isMobile && (
+            <div className="px-3 py-1 text-white/50">Quick access</div>
+          )}
           {quickAccess.map((item) => (
             <Tile
               key={item.label}
@@ -167,13 +177,20 @@ function ExplorerBody({
               onSelect={() => setSelectedTile(item.label)}
               onOpen={() => openItem(item)}
               onContextMenu={(x, y) => setTileMenu({ x, y, item })}
-              className="flex cursor-pointer items-center gap-2 px-3 py-1.5"
+              isMobile={isMobile}
+              className={
+                isMobile
+                  ? 'flex shrink-0 cursor-pointer items-center gap-2 rounded px-2 py-1.5 whitespace-nowrap'
+                  : 'flex cursor-pointer items-center gap-2 px-3 py-1.5'
+              }
             >
               <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
               <span>{item.label}</span>
             </Tile>
           ))}
-          <div className="mt-2 px-3 py-1 text-white/50">This PC</div>
+          {!isMobile && (
+            <div className="mt-2 px-3 py-1 text-white/50">This PC</div>
+          )}
           {pcDrives.map((item) => (
             <Tile
               key={item.label}
@@ -181,7 +198,12 @@ function ExplorerBody({
               onSelect={() => setSelectedTile(item.label)}
               onOpen={() => openItem(item)}
               onContextMenu={(x, y) => setTileMenu({ x, y, item })}
-              className="flex cursor-pointer items-center gap-2 px-3 py-1.5"
+              isMobile={isMobile}
+              className={
+                isMobile
+                  ? 'flex shrink-0 cursor-pointer items-center gap-2 rounded px-2 py-1.5 whitespace-nowrap'
+                  : 'flex cursor-pointer items-center gap-2 px-3 py-1.5'
+              }
             >
               <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
               <span>{item.label}</span>
@@ -198,6 +220,7 @@ function ExplorerBody({
               onOpenTile={openItem}
               onTileContextMenu={(x, y, item) => setTileMenu({ x, y, item })}
               searchTerm={searchTerm}
+              isMobile={isMobile}
             />
           ) : (
             <EmptyFolderView />

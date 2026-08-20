@@ -4,8 +4,11 @@ import MusicLabSidebar from './musicLab/MusicLabSidebar.jsx'
 import MusicLabScreen from './musicLab/MusicLabScreen.jsx'
 import MusicLabAbout from './musicLab/MusicLabAbout.jsx'
 import MusicLabPlayerBar from './musicLab/MusicLabPlayerBar.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function MusicLabApp() {
+  const isMobile = useIsMobile()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [activeType, setActiveType] = useState('video')
   const [activeItem, setActiveItem] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -117,8 +120,19 @@ function MusicLabApp() {
           items={items}
           selectedItemId={activeItem?.id}
           onSelectItem={handleSelectItem}
+          isMobile={isMobile}
+          isOpen={isSidebarOpen}
+          onRequestClose={() => setIsSidebarOpen(false)}
         />
         <div className="flex flex-1 flex-col overflow-auto">
+          {isMobile && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="m-2 self-start rounded bg-white/10 px-3 py-1.5 text-sm hover:bg-white/20"
+            >
+              ☰ Library
+            </button>
+          )}
           <MusicLabScreen
             activeType={activeType}
             activeItem={activeItem}

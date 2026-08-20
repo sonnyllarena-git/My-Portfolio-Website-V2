@@ -18,11 +18,15 @@ function ContextMenu({ x, y, items, onClose }) {
   }, [x, y])
 
   useEffect(() => {
-    function handleOutsideMouseDown(e) {
+    function handleOutsidePointerDown(e) {
       if (!menuRef.current?.contains(e.target)) onClose()
     }
-    window.addEventListener('mousedown', handleOutsideMouseDown)
-    return () => window.removeEventListener('mousedown', handleOutsideMouseDown)
+    window.addEventListener('mousedown', handleOutsidePointerDown)
+    window.addEventListener('touchstart', handleOutsidePointerDown)
+    return () => {
+      window.removeEventListener('mousedown', handleOutsidePointerDown)
+      window.removeEventListener('touchstart', handleOutsidePointerDown)
+    }
   }, [onClose])
 
   return createPortal(

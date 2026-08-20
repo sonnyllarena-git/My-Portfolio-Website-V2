@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGallery } from '../context/GalleryContext.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function downloadArtwork(artwork) {
   const link = document.createElement('a')
@@ -8,7 +9,7 @@ function downloadArtwork(artwork) {
   link.click()
 }
 
-function ArtCard({ artwork, onView, onDelete }) {
+function ArtCard({ artwork, onView, onDelete, isMobile = false }) {
   return (
     <div className="group relative overflow-hidden rounded-lg border border-white/10 bg-[#15171c]">
       <button
@@ -22,7 +23,9 @@ function ArtCard({ artwork, onView, onDelete }) {
           className="aspect-square w-full object-cover"
         />
       </button>
-      <div className="absolute top-1 right-1 hidden gap-1 group-hover:flex">
+      <div
+        className={`absolute top-1 right-1 gap-1 ${isMobile ? 'flex' : 'hidden group-hover:flex'}`}
+      >
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -54,6 +57,7 @@ function ArtCard({ artwork, onView, onDelete }) {
 
 function VisitorArtsApp({ onOpenPaint }) {
   const { artworks, deleteArtwork } = useGallery()
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [previewArtwork, setPreviewArtwork] = useState(null)
   const filtered = artworks.filter((artwork) =>
@@ -68,8 +72,16 @@ function VisitorArtsApp({ onOpenPaint }) {
   }
 
   return (
-    <div className="flex h-full text-sm text-white">
-      <aside className="flex w-60 shrink-0 flex-col gap-4 border-r border-white/10 bg-[#12141a] p-4">
+    <div
+      className={`flex h-full text-sm text-white ${isMobile ? 'flex-col' : ''}`}
+    >
+      <aside
+        className={`flex shrink-0 flex-col gap-4 bg-[#12141a] p-4 ${
+          isMobile
+            ? 'w-full border-b border-white/10'
+            : 'w-60 border-r border-white/10'
+        }`}
+      >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-lg">
             🎨
@@ -123,13 +135,16 @@ function VisitorArtsApp({ onOpenPaint }) {
           />
         </div>
         <div className="flex-1 overflow-auto p-4">
-          <div className="grid grid-cols-4 gap-4">
+          <div
+            className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}
+          >
             {filtered.map((artwork) => (
               <ArtCard
                 key={artwork.id}
                 artwork={artwork}
                 onView={setPreviewArtwork}
                 onDelete={handleDelete}
+                isMobile={isMobile}
               />
             ))}
           </div>

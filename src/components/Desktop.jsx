@@ -23,6 +23,7 @@ import Taskbar from './Taskbar.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
 import ResumePage from './ResumePage.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { wallpapers } from '../data/wallpapers.js'
 import { accentColors } from '../data/accentColors.js'
@@ -101,6 +102,7 @@ function Desktop() {
   const wallpaper =
     wallpapers.find((w) => w.id === wallpaperId) ?? wallpapers[0]
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
+  const isMobile = useIsMobile()
   const [selectedIconIds, setSelectedIconIds] = useState([])
   const [openWindows, setOpenWindows] = useState([])
   const [iconMenu, setIconMenu] = useState(null)
@@ -134,6 +136,7 @@ function Desktop() {
   }
 
   function handleDesktopMouseDown(e) {
+    if (isMobile) return
     if (e.target !== e.currentTarget) return
     marqueeStart.current = { x: e.clientX, y: e.clientY }
     draggedDuringSelect.current = false
@@ -286,6 +289,7 @@ function Desktop() {
       }}
       onMouseDown={handleDesktopMouseDown}
       onContextMenu={(e) => {
+        if (isMobile) return
         e.preventDefault()
         setDesktopMenu({ x: e.clientX, y: e.clientY })
       }}
@@ -311,44 +315,62 @@ function Desktop() {
       <span className="absolute right-4 bottom-4 text-sm text-white/40 select-none [text-shadow:0_0_3px_rgba(0,0,0,0.9),0_0_6px_rgba(0,0,0,0.7)]">
         SonnyOS Professional
       </span>
-      <div className="absolute top-4 left-4 flex gap-2">
-        <div className="flex flex-col gap-2">
-          {column1.map((icon, index) => (
+      {isMobile ? (
+        <div className="absolute inset-x-0 top-0 bottom-12 flex flex-col gap-1 overflow-y-auto p-4">
+          {desktopIcons.map((icon) => (
             <DesktopIcon
               key={icon.id}
-              ref={(node) => registerIconRef(icon.id, node)}
+              variant="list"
               id={icon.id}
-              getOtherRects={getOtherRects}
               icon={icon.icon}
               label={icon.label}
               isSelected={selectedIconIds.includes(icon.id)}
               onSelect={() => setSelectedIconIds([icon.id])}
               onOpen={() => handleIconOpen(icon.id)}
               onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
-              refreshToken={refreshToken}
-              staggerIndex={index}
             />
           ))}
         </div>
-        <div className="flex flex-col gap-2">
-          {column2.map((icon, index) => (
-            <DesktopIcon
-              key={icon.id}
-              ref={(node) => registerIconRef(icon.id, node)}
-              id={icon.id}
-              getOtherRects={getOtherRects}
-              icon={icon.icon}
-              label={icon.label}
-              isSelected={selectedIconIds.includes(icon.id)}
-              onSelect={() => setSelectedIconIds([icon.id])}
-              onOpen={() => handleIconOpen(icon.id)}
-              onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
-              refreshToken={refreshToken}
-              staggerIndex={column1.length + index}
-            />
-          ))}
+      ) : (
+        <div className="absolute top-4 left-4 flex gap-2">
+          <div className="flex flex-col gap-2">
+            {column1.map((icon, index) => (
+              <DesktopIcon
+                key={icon.id}
+                ref={(node) => registerIconRef(icon.id, node)}
+                id={icon.id}
+                getOtherRects={getOtherRects}
+                icon={icon.icon}
+                label={icon.label}
+                isSelected={selectedIconIds.includes(icon.id)}
+                onSelect={() => setSelectedIconIds([icon.id])}
+                onOpen={() => handleIconOpen(icon.id)}
+                onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
+                refreshToken={refreshToken}
+                staggerIndex={index}
+              />
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            {column2.map((icon, index) => (
+              <DesktopIcon
+                key={icon.id}
+                ref={(node) => registerIconRef(icon.id, node)}
+                id={icon.id}
+                getOtherRects={getOtherRects}
+                icon={icon.icon}
+                label={icon.label}
+                isSelected={selectedIconIds.includes(icon.id)}
+                onSelect={() => setSelectedIconIds([icon.id])}
+                onOpen={() => handleIconOpen(icon.id)}
+                onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
+                refreshToken={refreshToken}
+                staggerIndex={column1.length + index}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
       <div className="pointer-events-none absolute inset-0 bottom-12">
         {openWindows.map((w, index) => {
           const shared = {

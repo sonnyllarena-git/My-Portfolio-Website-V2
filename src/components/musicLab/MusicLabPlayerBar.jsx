@@ -7,6 +7,7 @@ import PauseIcon from '../icons/PauseIcon.jsx'
 import CastIcon from '../icons/CastIcon.jsx'
 import SpeakerIcon from '../icons/SpeakerIcon.jsx'
 import CloseIcon from '../icons/CloseIcon.jsx'
+import { useIsMobile } from '../../hooks/useIsMobile.js'
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
@@ -33,6 +34,62 @@ function MusicLabPlayerBar({
   onVolumeChange,
   onClose,
 }) {
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return (
+      <div className="flex items-center gap-3 border-t border-white/10 bg-[#0d0e11] px-3 py-2 text-white">
+        {activeItem?.thumbnailSrc ? (
+          <img
+            src={activeItem.thumbnailSrc}
+            alt=""
+            className="h-9 w-9 shrink-0 rounded object-cover"
+          />
+        ) : (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-white/10 text-lg">
+            {activeType === 'video' ? '🎬' : '🎵'}
+          </div>
+        )}
+        <div className="min-w-0 flex-1 truncate text-sm font-medium">
+          {activeItem?.title ?? 'Nothing playing'}
+        </div>
+        <button
+          onClick={onPrev}
+          aria-label="Previous"
+          className="text-white/70 hover:text-white"
+        >
+          <PreviousIcon className="h-5 w-5" />
+        </button>
+        <button
+          onClick={onTogglePlay}
+          disabled={!activeItem}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black disabled:opacity-40"
+        >
+          {isPlaying ? (
+            <PauseIcon className="h-4 w-4" />
+          ) : (
+            <PlayIcon className="ml-0.5 h-4 w-4" />
+          )}
+        </button>
+        <button
+          onClick={onNext}
+          aria-label="Next"
+          className="text-white/70 hover:text-white"
+        >
+          <NextIcon className="h-5 w-5" />
+        </button>
+        <button
+          onClick={onClose}
+          aria-label="Close now playing"
+          className="text-white/50 hover:text-white"
+        >
+          <CloseIcon className="h-4 w-4" />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-center gap-4 border-t border-white/10 bg-[#0d0e11] px-4 py-3 text-white">
       <div className="flex w-56 shrink-0 items-center gap-3">

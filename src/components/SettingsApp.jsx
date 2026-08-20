@@ -9,6 +9,7 @@ import GetSupportPage from './settings/GetSupportPage.jsx'
 import PersonalizationPage from './settings/PersonalizationPage.jsx'
 import PrivacySecurityPage from './settings/PrivacySecurityPage.jsx'
 import SystemPage from './settings/SystemPage.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 const TABS = [
   { id: 'system', label: 'System', Icon: MonitorIcon },
@@ -19,22 +20,37 @@ const TABS = [
 ]
 
 function SettingsApp({ onOpenGmail, onOpenZoomChat }) {
+  const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('system')
 
   return (
-    <div className="flex h-full text-white">
-      <div className="w-56 shrink-0 border-r border-white/10 bg-[#12141a] p-4 text-sm">
-        <h2 className="mb-4 text-lg font-semibold">Settings</h2>
+    <div className={`flex h-full text-white ${isMobile ? 'flex-col' : ''}`}>
+      <div
+        className={
+          isMobile
+            ? 'flex w-full shrink-0 items-center gap-1 overflow-x-auto border-b border-white/10 bg-[#12141a] p-2 text-sm'
+            : 'w-56 shrink-0 border-r border-white/10 bg-[#12141a] p-4 text-sm'
+        }
+      >
+        {!isMobile && <h2 className="mb-4 text-lg font-semibold">Settings</h2>}
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex w-full items-center gap-2 rounded px-2 py-2 text-left ${
-              activeTab === tab.id
-                ? 'bg-blue-500/20 text-blue-400'
-                : 'hover:bg-white/5'
-            }`}
+            className={
+              isMobile
+                ? `flex shrink-0 items-center gap-2 rounded px-3 py-1.5 whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : 'hover:bg-white/5'
+                  }`
+                : `flex w-full items-center gap-2 rounded px-2 py-2 text-left ${
+                    activeTab === tab.id
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : 'hover:bg-white/5'
+                  }`
+            }
           >
             <tab.Icon className="h-5 w-5" />
             {tab.label}

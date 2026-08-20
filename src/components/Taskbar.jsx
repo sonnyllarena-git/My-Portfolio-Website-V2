@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion'
 import SystemTray from './SystemTray.jsx'
 import TaskbarPreview from './TaskbarPreview.jsx'
 import { iconImages } from '../assets/icons/index.js'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function IconGlyph({ id, icon }) {
   return iconImages[id] ? (
@@ -40,6 +41,7 @@ function RunningAppButton({
   naturalWidth,
   naturalHeight,
 }) {
+  const isMobile = useIsMobile()
   const [isHovered, setIsHovered] = useState(false)
   return (
     <div
@@ -59,7 +61,7 @@ function RunningAppButton({
         <IconGlyph id={id} icon={icon} />
       </button>
       <AnimatePresence>
-        {isHovered && (
+        {isHovered && !isMobile && (
           <TaskbarPreview
             label={label}
             content={preview}
@@ -86,18 +88,11 @@ const pinnedApps = [
 ]
 
 function Taskbar({ openWindows = [], onWindowClick, onOpenSettings }) {
+  const isMobile = useIsMobile()
   return (
     <div className="absolute inset-x-0 bottom-0 z-40 flex h-12 items-center gap-1 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
-      {leftLaunchers.map((item) => (
-        <TaskbarButton
-          key={item.id}
-          id={item.id}
-          icon={item.icon}
-          label={item.label}
-        />
-      ))}
-      <div className="ml-4 flex items-center gap-1">
-        {pinnedApps.map((item) => (
+      {!isMobile &&
+        leftLaunchers.map((item) => (
           <TaskbarButton
             key={item.id}
             id={item.id}
@@ -105,6 +100,16 @@ function Taskbar({ openWindows = [], onWindowClick, onOpenSettings }) {
             label={item.label}
           />
         ))}
+      <div className="ml-4 flex items-center gap-1">
+        {!isMobile &&
+          pinnedApps.map((item) => (
+            <TaskbarButton
+              key={item.id}
+              id={item.id}
+              icon={item.icon}
+              label={item.label}
+            />
+          ))}
         <TaskbarButton
           id="settings"
           icon="⚙️"

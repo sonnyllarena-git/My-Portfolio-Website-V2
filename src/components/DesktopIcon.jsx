@@ -16,6 +16,7 @@ const DesktopIcon = forwardRef(function DesktopIcon(
     getOtherRects,
     refreshToken,
     staggerIndex,
+    variant = 'grid',
   },
   ref,
 ) {
@@ -61,6 +62,44 @@ const DesktopIcon = forwardRef(function DesktopIcon(
     }
   }
 
+  const glyph = iconImages[id] ? (
+    <img src={iconImages[id]} alt="" className="h-8 w-8 object-contain" />
+  ) : icon === 'pdf' ? (
+    <PdfGlyph />
+  ) : (
+    icon
+  )
+
+  if (variant === 'list') {
+    return (
+      <div
+        ref={setRefs}
+        onClick={(e) => {
+          e.stopPropagation()
+          onOpen()
+        }}
+        className={`flex items-center gap-3 rounded p-2 text-white transition-colors ${
+          isSelected ? 'bg-white/10' : 'hover:bg-white/5'
+        }`}
+      >
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center text-2xl">
+          {glyph}
+        </span>
+        <span className="flex-1 text-sm">{label}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onContextMenu(e.clientX, e.clientY)
+          }}
+          aria-label={`${label} options`}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded hover:bg-white/10"
+        >
+          ⋮
+        </button>
+      </div>
+    )
+  }
+
   return (
     <motion.div
       ref={setRefs}
@@ -89,13 +128,7 @@ const DesktopIcon = forwardRef(function DesktopIcon(
       }`}
     >
       <span className="flex h-8 w-8 items-center justify-center text-2xl">
-        {iconImages[id] ? (
-          <img src={iconImages[id]} alt="" className="h-8 w-8 object-contain" />
-        ) : icon === 'pdf' ? (
-          <PdfGlyph />
-        ) : (
-          icon
-        )}
+        {glyph}
       </span>
       <span className="text-xs leading-tight [text-shadow:0_0_3px_rgba(0,0,0,0.9),0_0_6px_rgba(0,0,0,0.7)]">
         {label}

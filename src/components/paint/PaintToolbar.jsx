@@ -1,3 +1,5 @@
+import { useIsMobile } from '../../hooks/useIsMobile.js'
+
 const MENU_ITEMS = ['File', 'Edit', 'Image', 'Colors', 'Help']
 
 const TOOLS = [
@@ -59,6 +61,10 @@ function PaintToolbar({
   onTitleChange,
   onSave,
 }) {
+  const isMobile = useIsMobile()
+  const scrollableRow = isMobile
+    ? 'flex-nowrap overflow-x-auto [&>*]:shrink-0'
+    : ''
   return (
     <div className="border-b border-gray-200 bg-gray-100 text-gray-800">
       <div className="flex gap-4 border-b border-gray-200 px-3 py-1.5 text-sm">
@@ -68,7 +74,9 @@ function PaintToolbar({
           </span>
         ))}
       </div>
-      <div className="flex items-center gap-3 border-b border-gray-200 px-3 py-2">
+      <div
+        className={`flex items-center gap-3 border-b border-gray-200 px-3 py-2 ${scrollableRow}`}
+      >
         <div className="flex gap-1">
           {TOOLS.map((t) => (
             <ToolButton
@@ -118,7 +126,7 @@ function PaintToolbar({
           💾 Save
         </button>
       </div>
-      <div className="flex items-center gap-1 px-3 py-2">
+      <div className={`flex items-center gap-1 px-3 py-2 ${scrollableRow}`}>
         {PALETTE.map((swatch) => (
           <button
             key={swatch}
