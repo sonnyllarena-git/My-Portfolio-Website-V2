@@ -40,12 +40,6 @@ export default function GamesApp({ onOpenGmail, onOpenZoomChat, onLogout }) {
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white">Arcade</h1>
-              <p className="text-sm text-gray-400">
-                Explore a suite of custom-engineered web experiences designed,
-                developed, and deployed independently by Sonny. Featuring
-                optimized state management, real-time leaderboard tracking,
-                and lightweight frontend architecture.
-              </p>
             </div>
             <div className="flex shrink-0 items-center gap-3">
               <span className="text-sm font-medium text-cyan-300">

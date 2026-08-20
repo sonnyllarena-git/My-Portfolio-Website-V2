@@ -1,5 +1,37 @@
 import { useEffect, useRef, useState } from 'react'
 import { arcadeBackgrounds } from '../../data/arcadeBackgrounds.js'
+import { iconImages } from '../../assets/icons/index.js'
+
+function SoundToggle({ soundMuted, setSoundMuted }) {
+  return (
+    <button
+      type="button"
+      onClick={() => setSoundMuted(!soundMuted)}
+      className="flex w-full items-center justify-between rounded-xl border border-slate-700/60 px-2 py-1.5 hover:bg-white/10"
+    >
+      <span className="flex items-center gap-1.5">
+        <span aria-hidden="true">{soundMuted ? '🔇' : '🔊'}</span>
+        Mute all sound
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span
+          className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+            soundMuted ? 'bg-cyan-500' : 'bg-white/10'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full transition-transform ${
+              soundMuted ? 'translate-x-4 bg-white' : 'translate-x-0 bg-red-500'
+            }`}
+          />
+        </span>
+        <span className="w-5 text-xs text-white/60">
+          {soundMuted ? 'On' : 'Off'}
+        </span>
+      </span>
+    </button>
+  )
+}
 
 function GamesSettingsMenu({
   soundMuted,
@@ -13,6 +45,7 @@ function GamesSettingsMenu({
 }) {
   const menuRef = useRef(null)
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [contactOpen, setContactOpen] = useState(false)
 
   useEffect(() => {
     function handleOutsideMouseDown(e) {
@@ -25,25 +58,18 @@ function GamesSettingsMenu({
   return (
     <div
       ref={menuRef}
-      className="absolute top-full right-0 z-20 mt-2 w-64 rounded-lg border border-white/10 bg-[#1a1a1a] p-3 text-sm text-white shadow-2xl"
+      className="absolute top-full right-0 z-50 mt-2 w-64 rounded-2xl border border-slate-700/60 bg-slate-900/95 p-3 text-sm text-white shadow-2xl backdrop-blur-md"
     >
       <div className="mb-3">
-        <p className="mb-1.5 text-xs font-semibold text-white/50">
+        <p className="mb-1.5 text-xs font-semibold tracking-wide text-white/50 uppercase">
           Sound settings
         </p>
-        <button
-          type="button"
-          onClick={() => setSoundMuted(!soundMuted)}
-          className="flex w-full items-center justify-between rounded border border-white/10 px-2 py-1.5 hover:bg-white/10"
-        >
-          <span>Mute all sound</span>
-          <span>{soundMuted ? '🔇 On' : '🔊 Off'}</span>
-        </button>
+        <SoundToggle soundMuted={soundMuted} setSoundMuted={setSoundMuted} />
       </div>
 
       <div className="mb-3">
-        <p className="mb-1.5 text-xs font-semibold text-white/50">
-          Background settings
+        <p className="mb-1.5 text-xs font-semibold tracking-wide text-white/50 uppercase">
+          Themes
         </p>
         <div className="grid grid-cols-2 gap-1.5">
           {arcadeBackgrounds.map((bg) => (
@@ -51,10 +77,10 @@ function GamesSettingsMenu({
               key={bg.id}
               type="button"
               onClick={() => setBackgroundId(bg.id)}
-              className={`rounded border px-2 py-1 text-xs ${
+              className={`rounded-xl border px-2 py-1 text-xs ${
                 bg.id === backgroundId
                   ? 'border-cyan-400 text-cyan-300'
-                  : 'border-white/10 text-white/70 hover:border-white/30'
+                  : 'border-slate-700/60 text-white/70 hover:border-white/30'
               }`}
             >
               {bg.id === backgroundId ? '✓ ' : ''}
@@ -74,39 +100,48 @@ function GamesSettingsMenu({
         </button>
         {aboutOpen && (
           <p className="mt-1.5 text-xs text-white/60">
-            Sonny's Arcade — a small collection of games built into this
-            portfolio. Scores, ratings, and settings are saved to this browser
-            only.
+            Explore a suite of custom-engineered web experiences designed,
+            developed, and deployed independently by Sonny. Featuring optimized
+            state management, real-time leaderboard tracking, and lightweight
+            frontend architecture.
           </p>
         )}
       </div>
 
       <div className="mb-3 border-t border-white/10 pt-3">
-        <p className="mb-1.5 text-xs font-semibold text-white/50">
-          Contact developer
-        </p>
-        <div className="flex gap-1.5">
-          <button
-            type="button"
-            onClick={onOpenZoomChat}
-            className="flex-1 rounded border border-white/10 px-2 py-1.5 text-xs hover:bg-white/10"
-          >
-            Zoom Chat
-          </button>
-          <button
-            type="button"
-            onClick={onOpenGmail}
-            className="flex-1 rounded border border-white/10 px-2 py-1.5 text-xs hover:bg-white/10"
-          >
-            Gmail
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setContactOpen((prev) => !prev)}
+          className="w-full text-left text-xs font-semibold text-white/50 hover:text-white/80"
+        >
+          Contact developer {contactOpen ? '▾' : '▸'}
+        </button>
+        {contactOpen && (
+          <div className="mt-1.5 flex gap-1.5">
+            <button
+              type="button"
+              onClick={onOpenZoomChat}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-700/60 px-2 py-1.5 text-xs hover:bg-white/10"
+            >
+              <img src={iconImages['zoom-chat']} alt="" className="h-4 w-4" />
+              Zoom Chat
+            </button>
+            <button
+              type="button"
+              onClick={onOpenGmail}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-700/60 px-2 py-1.5 text-xs hover:bg-white/10"
+            >
+              <img src={iconImages.gmail} alt="" className="h-4 w-4" />
+              Gmail
+            </button>
+          </div>
+        )}
       </div>
 
       <button
         type="button"
         onClick={onLogout}
-        className="w-full rounded bg-red-500/20 px-2 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30"
+        className="w-full rounded-xl bg-red-500/20 px-2 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30"
       >
         Logout
       </button>

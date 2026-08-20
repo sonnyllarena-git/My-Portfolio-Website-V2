@@ -4,7 +4,7 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 54 complete — game cards use the real PLAY button art cropped tight to its visible pill at 45% of thumbnail width, centered on the thumbnail/description seam, 2:1 thumbnail height anchored top, pointer-cursor hovers on PLAY/ratings, clickable ratings, Arcade header reflowed, "Youtuber Memory Flip" renamed, awaiting Sonny for next steps)_`
+**Current task pointer:** `_(Phase 55 complete — Arcade settings menu redesigned with a glassmorphism panel, real Mute toggle switch, "Themes" relabel, and expandable About/Contact developer sections; Arcade header's description paragraph removed (moved into About), awaiting Sonny for next steps)_`
 **Last verified:** 2026-08-20 — `npm run verify` → PASS (0 errors, 5 pre-existing warnings, 33 tests)
 **Verify command:** `npm run verify`
 
@@ -2851,6 +2851,35 @@ grouped on the right — matching the reference screenshot's layout._
       **Pass condition:** each thumbnail's title art is fully visible at the top, not clipped;
       the gap between the PLAY button and the title/stats text is visibly tight, matching the
       reference screenshot; `verify` passes.
+
+---
+
+## PHASE 55 — ARCADE SETTINGS MENU REDESIGN (GLASSMORPHISM + TOGGLE + EXPANDABLE SECTIONS)
+
+_Requested by Sonny on 2026-08-20, from a screenshot of the settings dropdown: a real iOS-style
+toggle switch for Mute, a dark glassmorphism panel that fully covers the thumbnails behind it, the
+Background-settings section relabeled "Themes," the About text swapped for the descriptive
+paragraph moved out of the main Arcade header (which Sonny asked removed as redundant now that
+it lives here), and a new "Contact developer" expandable section (previously always-open) with
+real Zoom/Gmail icons instead of plain text buttons._
+
+- [x] **P307** — Rebuilt `src/components/games/GamesSettingsMenu.jsx`: replaced the emoji-label
+      Mute button with a real toggle switch (`SoundToggle` — sliding knob, cyan track when muted,
+      red knob when not); switched the panel to a glassmorphism style (`bg-slate-900/95`,
+      `backdrop-blur-md`, `border-slate-700/60`, `rounded-2xl`, `shadow-2xl`, `z-50`) from the
+      flat `bg-[#1a1a1a]`; relabeled "Background settings" to "Themes" with uppercase
+      tracking-wide section headers; swapped the
+      About text for the "Explore a suite of custom-engineered web experiences…" paragraph
+      (importing `iconImages` from `src/assets/icons/index.js` for the new Contact section); made
+      "Contact developer" an expandable section (mirroring the existing About `▸`/`▾` pattern)
+      showing the `zoom-chat` and `gmail` icons next to their buttons instead of plain text.
+      Removed that same paragraph from `src/components/GamesApp.jsx`'s Arcade header (now just the
+      "Arcade" heading + greeting) since it now lives in the About section instead.
+      **Pass condition:** opening Arcade shows no description paragraph under the heading; opening
+      the gear menu shows the glassmorphism panel fully opaque over the thumbnails, a working
+      toggle switch for Mute, "Themes" as the section label, and About/Contact developer both
+      collapsed by default, expanding to show the new paragraph and the Zoom/Gmail icon buttons
+      respectively; `verify` passes.
 
 ---
 
