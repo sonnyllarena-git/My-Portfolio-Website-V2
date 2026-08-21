@@ -16,7 +16,7 @@ function BlogVisitorsPanel() {
           type="text"
           placeholder="Search"
           aria-label="Search visitors"
-          className="w-full bg-transparent text-sm outline-none"
+          className="w-full bg-transparent text-sm text-slate-900 outline-none"
         />
       </div>
       {visitors.length === 0 ? (

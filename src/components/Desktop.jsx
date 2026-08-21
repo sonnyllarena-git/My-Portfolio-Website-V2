@@ -13,7 +13,6 @@ import { useGames } from '../context/GamesContext.jsx'
 import { useBlog } from '../context/BlogContext.jsx'
 import BlogNameGate from './blog/BlogNameGate.jsx'
 import BlogApp from './BlogApp.jsx'
-import { iconImages } from '../assets/icons/index.js'
 import GmailComposeApp from './GmailComposeApp.jsx'
 import PaintApp from './PaintApp.jsx'
 import VisitorArtsApp from './VisitorArtsApp.jsx'
@@ -564,24 +563,22 @@ function Desktop() {
               <Window
                 key={w.instanceId}
                 {...shared}
-                icon={
-                  <img
-                    src={iconImages.blog}
-                    className="h-4 w-4 rounded-full"
-                    alt=""
-                  />
-                }
-                title="Blog"
+                hideTitleBar
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <BlogApp
-                  onOpenContactInfo={() => handleIconOpen('contact-info')}
-                  onLogout={() => {
-                    blogLogout()
-                    shared.onClose()
-                  }}
-                />
+                {({ toggleMaximize, isMaximized }) => (
+                  <BlogApp
+                    onOpenContactInfo={() => handleIconOpen('contact-info')}
+                    onLogout={() => {
+                      blogLogout()
+                      shared.onClose()
+                    }}
+                    onClose={shared.onClose}
+                    onMaximize={toggleMaximize}
+                    isMaximized={isMaximized}
+                  />
+                )}
               </Window>
             )
           }

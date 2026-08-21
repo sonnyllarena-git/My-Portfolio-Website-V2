@@ -10,15 +10,24 @@ import {
   toggleLike as toggleLikeStorage,
   addComment as addCommentStorage,
 } from '../utils/blogInteractions.js'
+import { readActivityLog, logActivity } from '../utils/blogActivity.js'
+import { buildMockInteractionsAndActivity } from '../components/blog/data/mockBlogActivity.js'
 
 const BlogContext = createContext(null)
+const mockData = buildMockInteractionsAndActivity()
 
 export function BlogProvider({ children }) {
   const [identity, setIdentity] = useState(() => readVisitorIdentity())
   const [interactionsByPost, setInteractionsByPost] = useState({})
+  const [activity, setActivity] = useState(() =>
+    readActivityLog(mockData.activity),
+  )
 
   function getInteractions(postId) {
-    return interactionsByPost[postId] ?? readInteractions(postId)
+    return (
+      interactionsByPost[postId] ??
+      readInteractions(postId, mockData.interactionsByPost[postId])
+    )
   }
 
   const posts = blogPostSeeds.map((post) => ({
@@ -30,6 +39,7 @@ export function BlogProvider({ children }) {
     const next = { name, avatarColor }
     writeVisitorIdentity(next)
     setIdentity(next)
+    setActivity(logActivity({ type: 'join', name, avatarColor }))
   }
 
   function logout() {
@@ -39,11 +49,24 @@ export function BlogProvider({ children }) {
 
   function toggleLike(postId) {
     if (!identity) return
+    const wasLiked = getInteractions(postId).likes.some(
+      (like) => like.name === identity.name,
+    )
     const likes = toggleLikeStorage(postId, identity)
     setInteractionsByPost((prev) => ({
       ...prev,
       [postId]: { ...getInteractions(postId), likes },
     }))
+    if (!wasLiked) {
+      setActivity(
+        logActivity({
+          type: 'like',
+          name: identity.name,
+          avatarColor: identity.avatarColor,
+          postId,
+        }),
+      )
+    }
   }
 
   function addComment(postId, text) {
@@ -56,6 +79,14 @@ export function BlogProvider({ children }) {
       ...prev,
       [postId]: { ...getInteractions(postId), comments },
     }))
+    setActivity(
+      logActivity({
+        type: 'comment',
+        name: identity.name,
+        avatarColor: identity.avatarColor,
+        postId,
+      }),
+    )
   }
 
   function getAllVisitors() {
@@ -83,6 +114,7 @@ export function BlogProvider({ children }) {
         toggleLike,
         addComment,
         getAllVisitors,
+        activity,
       }}
     >
       {children}

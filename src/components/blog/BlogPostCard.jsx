@@ -18,7 +18,10 @@ function BlogPostCard({ post }) {
   }
 
   return (
-    <div className="rounded-lg bg-white p-4 shadow-sm">
+    <div
+      id={`blog-post-${post.id}`}
+      className="rounded-lg bg-white p-4 shadow-sm"
+    >
       <div className="mb-3 flex items-center gap-2">
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
           <img src={userIcon} alt="" className="h-5 w-5" />
@@ -34,7 +37,11 @@ function BlogPostCard({ post }) {
         ))}
       </div>
       <div className="mb-3 flex items-center gap-2">
-        <button type="button" onClick={() => toggleLike(post.id)}>
+        <button
+          type="button"
+          onClick={() => toggleLike(post.id)}
+          className="cursor-pointer hover:opacity-80"
+        >
           <img
             src={heartIcon}
             alt="Like"
@@ -67,9 +74,13 @@ function BlogPostCard({ post }) {
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="add comment"
           aria-label="Add a comment"
-          className="flex-1 rounded-full bg-slate-100 px-3 py-1.5 text-sm outline-none"
+          className="flex-1 rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-900 outline-none"
         />
-        <button type="submit" aria-label="Send comment">
+        <button
+          type="submit"
+          aria-label="Send comment"
+          className="cursor-pointer hover:opacity-80"
+        >
           <img src={sendIcon} alt="" className="h-5 w-5" />
         </button>
       </form>

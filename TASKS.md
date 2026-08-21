@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 56 complete — Blog app (Facebook-profile-style, with a name+avatar visitor gate and localStorage-backed likes/comments), awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 41 tests); manual Playwright browser pass also confirmed the gate flow, layout, like/comment persistence, and mobile stacking
+**Current task pointer:** `_(Phase 57 complete — Blog app theme/header/activity-feed revamp, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 41 tests); manual Playwright pass confirmed the brand-blue theme, the new user/activity dropdown menus, dragging + maximize + close with the native title bar removed, the centered/capped layout at a maximized width, and the 20-mock-visitor activity feed
 **Verify command:** `npm run verify`
 
 ---
@@ -3012,6 +3012,88 @@ verify`. Verified with a real Playwright browser pass (temporary local install, 
       Visitors) with no console errors.
       **Pass condition:** side-by-side with the mockup, layout/spacing/colors match; `npm run
 verify` passes clean.
+
+---
+
+## PHASE 57 — BLOG APP: THEME, HEADER REDESIGN, ACTIVITY FEED, MOCK DATA
+
+_Requested by Sonny on 2026-08-21, as 9 numbered changes against the just-shipped Blog app
+(commit `ab41929`). Grouped into 8 tasks below; each cites which of Sonny's numbered items it
+covers._
+
+- [x] **P321** (covers #1) — Create `src/components/blog/theme.js` exporting brand-blue Tailwind
+      class constants for RGB(24, 119, 242) (`#1877F2`). Replace every `bg-indigo-700`/
+      `bg-indigo-800`/`bg-indigo-600`/`text-indigo-200`/`focus:border-indigo-500` usage in
+      `BlogTopNav.jsx`, `BlogProfileCard.jsx`, and `BlogNameGate.jsx` with the new constants.
+      **Pass condition:** the top nav, profile card, and gate's Continue button all render in
+      `#1877F2`; `verify` passes.
+
+- [x] **P322** (covers #2, #3) — Create `src/components/blog/BlogUserMenu.jsx`: an outside-
+      click-to-close dropdown (mirroring `GamesSettingsMenu.jsx`'s pattern) anchored under the
+      header avatar, with three rows — "ABOUT" (toggles a short inline blurb), "Contact
+      Developer" (calls `onOpenContactInfo`), "Log out" (calls `onLogout`) — per Sonny's
+      screenshot. In `BlogTopNav.jsx`, remove the "Hi, {name}" text and "Log out" button; make
+      the avatar itself the clickable trigger for this menu.
+      **Pass condition:** clicking the header avatar opens the 3-row menu; each row does its
+      real action and closes the menu; `verify` passes.
+
+- [x] **P323** (covers #5) — Remove the native OS-style title bar for the Blog window: in
+      `Desktop.jsx`, add `hideTitleBar` to the Blog `<Window>` and switch to the render-prop form
+      to forward `toggleMaximize`/`isMaximized`, plus `shared.onClose`, into `BlogApp`. In
+      `BlogApp.jsx`, accept and forward `onClose`/`onMaximize`/`isMaximized`. In `BlogTopNav.jsx`,
+      give the nav bar itself the `window-title-bar cursor-move` classes (so dragging still
+      works, mirroring `ZoomChatHeader.jsx`) and add a small close/maximize button cluster
+      (`onMouseDown` `stopPropagation`'d, styled with the new brand blue) in place of the removed
+      chrome; add matching `stopPropagation` to the search input and icon buttons so clicks don't
+      trigger a drag.
+      **Pass condition:** the old dark "Blog"/minimize/maximize/close bar is gone; the window can
+      still be dragged (via the nav bar), maximized, and closed; `verify` passes. (Split into
+      `.a`/`.b` if this exceeds 50 lines.)
+
+- [x] **P324** (covers #4) — In `BlogApp.jsx`, wrap the 3-column row in a centered
+      `mx-auto w-full max-w-6xl` container so it stops stretching to the window's full width when
+      maximized, leaving even margins on both sides instead.
+      **Pass condition:** at a maximized (e.g. 1920px-wide) window size, the 3-column content is
+      capped and centered with visible side margins, not stretched edge-to-edge; `verify` passes.
+
+- [x] **P325** (covers #6) — Create `src/utils/blogActivity.js` (localStorage-backed activity
+      log, key `blog:activity`, a `readActivityLog` reader taking a seed fallback and a
+      `logActivity` writer taking `type`/`name`/`avatarColor`/`postId`, newest-first, capped
+      length). Wire `BlogContext.jsx` to log a
+      `'join'` entry from `setVisitor`, a `'like'` entry from `toggleLike` (only when newly
+      liking, not un-liking), and a `'comment'` entry from `addComment`; expose `activity` from
+      the context. Create `src/components/blog/BlogActivityPanel.jsx`: an outside-click-to-close
+      dropdown (same pattern as `BlogUserMenu.jsx`) listing activity rows (avatar + "{name}
+      entered Sonny's blog" / "liked '{post title}'" / "commented on '{post title}'", post title
+      resolved from `posts` by `postId` at render time — never duplicated into the stored
+      entry), each row clickable and scrolling the relevant post into view. Wire it to
+      `BlogTopNav.jsx`'s bell button.
+      **Pass condition:** joining, liking, and commenting each add a real, correctly-worded row
+      to the bell dropdown; clicking a post-related row scrolls that post into view; `verify`
+      passes. (Split into `.a`/`.b` if this exceeds 50 lines.)
+
+- [x] **P326** (covers #7) — Create `src/components/blog/data/mockBlogActivity.js`: 20 mock
+      visitors (name + avatar color) distributed across the 3 seed posts' likes/comments plus a
+      matching chronological activity log (deterministic fabricated timestamps, no bare
+      `Date.now()`/`new Date()`), via a `buildMockInteractionsAndActivity()` builder. Wire it in
+      `BlogContext.jsx` as the seed fallback passed to `readInteractions`/`readActivityLog` so a
+      fresh browser profile sees this mock content on first load (real interactions still persist
+      and layer on top exactly as before).
+      **Pass condition:** a cleared-localStorage load of Blog shows the mock likes/comments on
+      each post and a populated activity dropdown with at least 20 distinct mock visitors;
+      `verify` passes.
+
+- [x] **P327** (covers #8) — Darken the typed-text color (not just placeholder) in both search
+      inputs (`BlogTopNav.jsx`, `BlogVisitorsPanel.jsx`) and the comment input
+      (`BlogPostCard.jsx`) to an explicit dark class (e.g. `text-slate-900`).
+      **Pass condition:** typed text in all three inputs renders clearly dark, not light gray;
+      `verify` passes.
+
+- [x] **P328** (covers #9) — Add `cursor-pointer` (plus a subtle hover cue) to the like/heart
+      button, the comment-send button (`BlogPostCard.jsx`), the bell/activity button, and the
+      header user-avatar button (`BlogTopNav.jsx`).
+      **Pass condition:** hovering each of the four controls shows a pointer cursor; `verify`
+      passes.
 
 ---
 

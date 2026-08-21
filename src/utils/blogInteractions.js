@@ -4,12 +4,12 @@ function emptyInteractions() {
   return { likes: [], comments: [] }
 }
 
-export function readInteractions(postId) {
+export function readInteractions(postId, seedFallback) {
   const key = KEY_PREFIX + postId
   try {
     const raw = localStorage.getItem(key)
     if (!raw) {
-      const seeded = emptyInteractions()
+      const seeded = seedFallback ?? emptyInteractions()
       localStorage.setItem(key, JSON.stringify(seeded))
       return seeded
     }

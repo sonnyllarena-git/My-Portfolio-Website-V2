@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import userIcon from './assets/icons/user icon.png'
 import { AVATAR_COLORS } from './avatarColors.js'
+import { BRAND_BLUE_BG, BRAND_BLUE_FOCUS_BORDER } from './theme.js'
 
 function BlogNameGate({ onSubmit, onCancel }) {
   const [name, setName] = useState('')
@@ -35,7 +36,7 @@ function BlogNameGate({ onSubmit, onCancel }) {
           onChange={(e) => setName(e.target.value)}
           placeholder="Your name"
           aria-label="Your name"
-          className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500"
+          className={`mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ${BRAND_BLUE_FOCUS_BORDER}`}
         />
         <div className="mb-5 grid grid-cols-4 gap-2">
           {AVATAR_COLORS.map((color) => (
@@ -65,7 +66,7 @@ function BlogNameGate({ onSubmit, onCancel }) {
           <button
             type="submit"
             disabled={!canContinue}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 ${BRAND_BLUE_BG}`}
           >
             Continue
           </button>
