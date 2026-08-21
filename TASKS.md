@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 58 complete — Blog name-gate art-based login UI, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 41 tests); manual Playwright pass confirmed the gate's overlaid controls align with the art, the selected-avatar ring and disabled/enabled Login states render correctly, and both submit and cancel work end to end
+**Current task pointer:** `_(Phase 60 complete — Blog activity/user-menu white theme + mutual exclusivity, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 41 tests); manual Playwright pass confirmed both dropdowns render white with the new thin scrollbar, and opening one always closes the other
 **Verify command:** `npm run verify`
 
 ---
@@ -3115,6 +3115,70 @@ elements on top) instead of the current plain white-card modal._
       **Pass condition:** every overlaid control visually lines up with its drawn counterpart in
       the art (verified via a Playwright screenshot comparison); the gate behaves exactly as
       before (name + avatar required to submit); `verify` passes.
+
+- [x] **P330** — Sonny reported three bugs in the P329 art-based gate: (1) the art's baked-in
+      "Enter your name" text kept showing through behind typed text; (2) typed text wasn't
+      centered; (3) the Login button looked translucent/non-solid and Sonny couldn't tell why it
+      was unclickable. Sonny then replaced `blog login ui.png` itself with a version that drops
+      the baked-in input box and Login button entirely (keeping the branding/avatar-picker card),
+      removing the root cause. Rebuilt those two controls in
+      `src/components/blog/BlogNameGate.jsx` as real, fully self-styled elements in that now-empty
+      space: a bordered white input with a native (properly-hiding) centered `placeholder`, and a
+      self-rendered "Login" button — solid brand-blue `#1877F2` when enabled, solid slate-300/500
+      when disabled — plus a small hint below it ("Enter your name to continue" / "Pick an avatar
+      to continue") explaining why it's inactive.
+      **Pass condition:** typed name shows centered with no ghosting; the Login button is always
+      fully opaque and clearly clickable once both fields are set, with a hint explaining the
+      disabled state otherwise; `verify` passes.
+
+---
+
+## PHASE 59 — BLOG GATE: LOADING SCREEN
+
+_Requested by Sonny on 2026-08-21: after clicking Login on the Blog gate, show a loading screen
+overlaid on the login UI using `src/components/blog/assets/components/loading icon.png`
+(an 8-blade ring around an "S" logo), with a circling animation — Sonny's own words: "just
+change the shade color of 8 rings one by one circling animation" — before opening the Blog
+window. Mirrors the existing `GamesLoadingScreen.jsx` staging pattern (`isLoading` prop +
+`children` render slot on the name gate) exactly._
+
+- [x] **P331** — Add `src/components/blog/BlogLoadingScreen.jsx`: renders the loading icon over
+      a dimmed backdrop for 2s (`onDone` fires after `LOADING_MS`), with a `.blog-loading-sweep`
+      overlay (new `@keyframes`/class in `src/index.css`, mirroring the existing
+      `.neon-border-orange` convention) — a masked conic-gradient wedge, sized to the ring's
+      measured inner/outer radius and rotated in 8 discrete `steps()` to land on each of the 8
+      blade centers in turn, blended with `mix-blend-mode: screen` so each blade visibly
+      lightens as the highlight reaches it, circling continuously. Gave `BlogNameGate.jsx` the
+      same `isLoading`/`children` shape as `GamesNameGate.jsx` (fades and disables the form while
+      loading, renders the loading screen as a sibling overlay) and wired `Desktop.jsx`'s
+      `blogGateOpen` flow to stage the submitted identity, mount `BlogLoadingScreen`, then call
+      `setBlogVisitor`/open the Blog window from its `onDone`.
+      **Pass condition:** clicking Login shows the loading icon over the dimmed gate; a
+      Playwright screenshot comparison across three frames confirms the highlighted blade moves
+      to a different position each time (circling, not static); after ~2s the Blog window opens
+      with the submitted identity; `verify` passes.
+
+---
+
+## PHASE 60 — BLOG DROPDOWNS: WHITE THEME, MUTUAL EXCLUSIVITY
+
+_Requested by Sonny on 2026-08-21 with a reference screenshot: recolor the Activity panel and
+the User Icon (avatar) dropdown from the current dark `#18191a` styling to white, restyle the
+scrollbar, and make the two dropdowns mutually exclusive — opening one must close the other._
+
+- [x] **P332** — Recolor `BlogActivityPanel.jsx` and `BlogUserMenu.jsx` from the current dark
+      near-black theme to a white background with dark slate text and light slate separators
+      and hover states. Added a new light-scrollbar utility class to `src/index.css`, mirroring
+      the three existing scrollbar utility classes already there, and applied it to the
+      Activity panel's scrollable list. Replaced `BlogTopNav.jsx`'s two independent open-state
+      booleans (one for the user menu, one for the activity panel) with a single shared
+      open-panel state so the bell and avatar buttons both write to the same slot, meaning
+      opening one inherently closes the other.
+      **Pass condition:** both dropdowns render on a white background with visibly darker
+      separators and hover states, matching Sonny's reference screenshot; the Activity list
+      (which overflows its max-height) shows the new thin scrollbar; a Playwright pass confirms
+      opening the Activity panel then clicking the avatar closes it and opens the User menu, and
+      vice versa; the verify command passes.
 
 ---
 

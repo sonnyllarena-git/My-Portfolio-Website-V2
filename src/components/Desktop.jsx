@@ -12,6 +12,7 @@ import GamesLoadingScreen from './games/GamesLoadingScreen.jsx'
 import { useGames } from '../context/GamesContext.jsx'
 import { useBlog } from '../context/BlogContext.jsx'
 import BlogNameGate from './blog/BlogNameGate.jsx'
+import BlogLoadingScreen from './blog/BlogLoadingScreen.jsx'
 import BlogApp from './BlogApp.jsx'
 import GmailComposeApp from './GmailComposeApp.jsx'
 import PaintApp from './PaintApp.jsx'
@@ -118,6 +119,7 @@ function Desktop() {
   const [gamesGateOpen, setGamesGateOpen] = useState(false)
   const [gamesLoadingName, setGamesLoadingName] = useState(null)
   const [blogGateOpen, setBlogGateOpen] = useState(false)
+  const [blogLoadingIdentity, setBlogLoadingIdentity] = useState(null)
   const { visitorName, setVisitorName, logout } = useGames()
   const {
     visitorName: blogVisitorName,
@@ -699,13 +701,29 @@ function Desktop() {
       )}
       {blogGateOpen && (
         <BlogNameGate
-          onSubmit={(name, avatarColor) => {
-            setBlogVisitor(name, avatarColor)
+          isLoading={blogLoadingIdentity !== null}
+          onSubmit={(name, avatarColor) =>
+            setBlogLoadingIdentity({ name, avatarColor })
+          }
+          onCancel={() => {
             setBlogGateOpen(false)
-            openApp('blog')
+            setBlogLoadingIdentity(null)
           }}
-          onCancel={() => setBlogGateOpen(false)}
-        />
+        >
+          {blogLoadingIdentity !== null && (
+            <BlogLoadingScreen
+              onDone={() => {
+                setBlogVisitor(
+                  blogLoadingIdentity.name,
+                  blogLoadingIdentity.avatarColor,
+                )
+                setBlogGateOpen(false)
+                setBlogLoadingIdentity(null)
+                openApp('blog')
+              }}
+            />
+          )}
+        </BlogNameGate>
       )}
       {marqueeBox && (
         <div

@@ -35,13 +35,13 @@ function BlogActivityPanel({ onClose }) {
   return (
     <div
       ref={panelRef}
-      className="absolute top-full right-0 z-50 mt-2 max-h-96 w-80 overflow-y-auto rounded-2xl bg-[#18191a] text-sm text-white shadow-2xl"
+      className="scrollbar-light absolute top-full right-0 z-50 mt-2 max-h-96 w-80 overflow-y-auto rounded-2xl bg-white text-sm text-slate-900 shadow-2xl"
     >
-      <p className="border-b border-white/10 px-4 py-3 font-semibold">
+      <p className="border-b border-slate-200 px-4 py-3 font-semibold">
         Activity
       </p>
       {activity.length === 0 ? (
-        <p className="px-4 py-3 text-xs text-white/60">No activity yet.</p>
+        <p className="px-4 py-3 text-xs text-slate-500">No activity yet.</p>
       ) : (
         <ul>
           {activity.map((entry) => (
@@ -49,14 +49,14 @@ function BlogActivityPanel({ onClose }) {
               <button
                 type="button"
                 onClick={() => handleRowClick(entry)}
-                className="flex w-full cursor-pointer items-center gap-2 border-b border-white/10 px-4 py-2.5 text-left hover:bg-white/10"
+                className="flex w-full cursor-pointer items-center gap-2 border-b border-slate-200 px-4 py-2.5 text-left hover:bg-slate-100"
               >
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${getAvatarColorClass(entry.avatarColor)}`}
                 >
                   <img src={userIcon} alt="" className="h-4 w-4" />
                 </span>
-                <span className="text-xs text-white/80">
+                <span className="text-xs text-slate-700">
                   {describeActivity(entry, posts)}
                 </span>
               </button>

@@ -15,17 +15,17 @@ function BlogUserMenu({ onOpenContactInfo, onLogout, onClose }) {
   return (
     <div
       ref={menuRef}
-      className="absolute top-full right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl bg-[#18191a] text-sm text-white shadow-2xl"
+      className="absolute top-full right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl bg-white text-sm text-slate-900 shadow-2xl"
     >
       <button
         type="button"
         onClick={() => setAboutOpen((prev) => !prev)}
-        className="block w-full cursor-pointer px-4 py-3 text-center font-semibold hover:bg-white/10"
+        className="block w-full cursor-pointer px-4 py-3 text-center font-semibold hover:bg-slate-100"
       >
         ABOUT
       </button>
       {aboutOpen && (
-        <p className="border-t border-white/10 px-4 py-3 text-xs text-white/60">
+        <p className="border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
           Sonny's Blog — thoughts, projects, and updates from the desktop.
         </p>
       )}
@@ -35,7 +35,7 @@ function BlogUserMenu({ onOpenContactInfo, onLogout, onClose }) {
           onOpenContactInfo?.()
           onClose()
         }}
-        className="block w-full cursor-pointer border-t border-white/10 px-4 py-3 text-center font-semibold hover:bg-white/10"
+        className="block w-full cursor-pointer border-t border-slate-200 px-4 py-3 text-center font-semibold hover:bg-slate-100"
       >
         Contact Developer
       </button>
@@ -45,7 +45,7 @@ function BlogUserMenu({ onOpenContactInfo, onLogout, onClose }) {
           onLogout?.()
           onClose()
         }}
-        className="block w-full cursor-pointer border-t border-white/10 px-4 py-3 text-center font-semibold hover:bg-white/10"
+        className="block w-full cursor-pointer border-t border-slate-200 px-4 py-3 text-center font-semibold hover:bg-slate-100"
       >
         Log out
       </button>

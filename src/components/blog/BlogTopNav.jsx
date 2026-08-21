@@ -17,8 +17,7 @@ function BlogTopNav({
   isMaximized,
 }) {
   const { visitorName, visitorAvatarColor } = useBlog()
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [activityOpen, setActivityOpen] = useState(false)
+  const [openPanel, setOpenPanel] = useState(null)
 
   return (
     <div
@@ -43,14 +42,16 @@ function BlogTopNav({
       >
         <button
           type="button"
-          onClick={() => setActivityOpen((prev) => !prev)}
+          onClick={() =>
+            setOpenPanel((prev) => (prev === 'activity' ? null : 'activity'))
+          }
           aria-label="Notifications"
           className="cursor-pointer hover:opacity-80"
         >
           <img src={bellIcon} alt="" className="h-6 w-6" />
         </button>
-        {activityOpen && (
-          <BlogActivityPanel onClose={() => setActivityOpen(false)} />
+        {openPanel === 'activity' && (
+          <BlogActivityPanel onClose={() => setOpenPanel(null)} />
         )}
       </div>
       <div
@@ -59,17 +60,19 @@ function BlogTopNav({
       >
         <button
           type="button"
-          onClick={() => setUserMenuOpen((prev) => !prev)}
+          onClick={() =>
+            setOpenPanel((prev) => (prev === 'user' ? null : 'user'))
+          }
           aria-label={`Account menu for ${visitorName}`}
           className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-full hover:opacity-80 ${getAvatarColorClass(visitorAvatarColor)}`}
         >
           <img src={userIcon} alt="" className="h-5 w-5" />
         </button>
-        {userMenuOpen && (
+        {openPanel === 'user' && (
           <BlogUserMenu
             onOpenContactInfo={onOpenContactInfo}
             onLogout={onLogout}
-            onClose={() => setUserMenuOpen(false)}
+            onClose={() => setOpenPanel(null)}
           />
         )}
       </div>

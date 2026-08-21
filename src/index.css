@@ -19,6 +19,22 @@
   animation: neon-pulse-orange 2.4s ease-in-out infinite;
 }
 
+@keyframes blog-loading-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.blog-loading-sweep {
+  background: conic-gradient(
+    from -20deg,
+    rgba(224, 242, 254, 0.95) 0deg 40deg,
+    transparent 40deg 360deg
+  );
+  mix-blend-mode: screen;
+  animation: blog-loading-sweep 1.6s steps(8, end) infinite;
+}
+
 @layer utilities {
   .scrollbar-dark::-webkit-scrollbar {
     width: 8px;
@@ -64,5 +80,19 @@
   }
   .scrollbar-black::-webkit-scrollbar-thumb:hover {
     background: #404040;
+  }
+
+  .scrollbar-light::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-light::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-light::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 9999px;
+  }
+  .scrollbar-light::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
   }
 }
