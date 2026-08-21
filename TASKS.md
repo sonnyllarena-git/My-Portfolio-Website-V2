@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 61 complete — Blog mock data scaled to 150 visitors + visitor search/modal + activity timestamps, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 43 tests); manual Playwright pass confirmed exactly 150 visitors, working search in both the sidebar and the "View all" modal, and activity timestamps spanning Dec 1, 2025 to today when scrolled to the bottom
+**Current task pointer:** `_(Phase 62 complete — Blog post comments collapsed to one with a "View more" modal, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); manual Playwright pass confirmed only the latest comment shows by default, the like/comment counts read plainly with icons and no stray "+" or "comments" label, and "View more comments" opens a scrollable modal listing every comment
 **Verify command:** `npm run verify`
 
 ---
@@ -3222,6 +3222,32 @@ every Activity entry spanning from December 2025 to the present._
       them live; the total count and "View all" link read the true visitor count; the modal
       opens centered over a dimmed (not opaque) background, its own search filters the full
       list, and it closes via its close button or a backdrop click; `verify` passes.
+
+---
+
+## PHASE 62 — BLOG POST CARD: COLLAPSED COMMENTS, VIEW-MORE MODAL
+
+_Requested by Sonny on 2026-08-21 with a reference screenshot of a single collapsed comment
+under plain heart/comment-bubble stat icons: show only the latest comment by default, add a
+"View more comments" link that opens a scrollable modal of every comment, drop the "+" before
+the like count, and replace the "N comments" text with an icon matching the screenshot plus a
+bare number._
+
+- [x] **P336** — Added `src/utils/formatRelativeTime.js` (with tests) for Facebook-style
+      relative timestamps ("4h", "3d", "2mo"), and `src/components/icons/CommentIcon.jsx`, an
+      inline SVG speech-bubble outline matching the screenshot's icon — mirroring the existing
+      `src/components/icons/` convention already used elsewhere in the app rather than adding a
+      new PNG asset. In `BlogPostCard.jsx`: dropped the "+" before the like count, replaced the
+      "N comments" text with the new icon plus a bare number, collapsed the comment list to only
+      the most recently added comment (now with its relative time next to the name), and added a
+      "View more comments" link (shown only when a post has more than one comment) that opens a
+      new `BlogCommentsModal.jsx` — a centered, scrollable overlay listing every comment for that
+      post with a close button, mirroring `BlogVisitorsModal.jsx`'s structure.
+      **Pass condition:** each post shows only its single latest comment by default with a
+      relative timestamp; the like/comment stats read as icon-plus-number only, no "+" and no
+      "comments" word; clicking "View more comments" opens a centered scrollable modal listing
+      every comment for that post, closable via its close button or a backdrop click; `verify`
+      passes.
 
 ---
 

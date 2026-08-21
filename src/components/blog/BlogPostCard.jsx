@@ -4,11 +4,16 @@ import heartIcon from './assets/icons/heart icon.png'
 import sendIcon from './assets/icons/send icon.png'
 import userIcon from './assets/icons/user icon.png'
 import { getAvatarColorClass } from './avatarColors.js'
+import { formatRelativeTime } from '../../utils/formatRelativeTime.js'
+import CommentIcon from '../icons/CommentIcon.jsx'
+import BlogCommentsModal from './BlogCommentsModal.jsx'
 
 function BlogPostCard({ post }) {
   const { visitorName, toggleLike, addComment } = useBlog()
   const [commentText, setCommentText] = useState('')
+  const [showAllComments, setShowAllComments] = useState(false)
   const hasLiked = post.likes.some((like) => like.name === visitorName)
+  const latestComment = post.comments[post.comments.length - 1]
 
   function handleCommentSubmit(e) {
     e.preventDefault()
@@ -48,26 +53,44 @@ function BlogPostCard({ post }) {
             className={`h-5 w-5 ${hasLiked ? '' : 'opacity-50 grayscale'}`}
           />
         </button>
-        <span className="text-sm text-slate-600">+{post.likes.length}</span>
-        <span className="text-sm text-slate-400">
-          {post.comments.length} comments
-        </span>
+        <span className="text-sm text-slate-600">{post.likes.length}</span>
+        <CommentIcon className="h-5 w-5 text-slate-400" />
+        <span className="text-sm text-slate-400">{post.comments.length}</span>
       </div>
       <div className="mb-3 space-y-2">
-        {post.comments.map((comment) => (
-          <div key={comment.id} className="flex items-start gap-2 text-sm">
+        {post.comments.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setShowAllComments(true)}
+            className="cursor-pointer text-sm text-slate-400 hover:underline"
+          >
+            View more comments
+          </button>
+        )}
+        {latestComment && (
+          <div className="flex items-start gap-2 text-sm">
             <span
-              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${getAvatarColorClass(comment.avatarColor)}`}
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${getAvatarColorClass(latestComment.avatarColor)}`}
             >
               <img src={userIcon} alt="" className="h-4 w-4" />
             </span>
             <span>
-              <strong className="text-slate-900">{comment.name}</strong>{' '}
-              <span className="text-slate-600">{comment.text}</span>
+              <strong className="text-slate-900">{latestComment.name}</strong>{' '}
+              <span className="text-xs text-slate-400">
+                {formatRelativeTime(latestComment.timestamp)}
+              </span>
+              <br />
+              <span className="text-slate-600">{latestComment.text}</span>
             </span>
           </div>
-        ))}
+        )}
       </div>
+      {showAllComments && (
+        <BlogCommentsModal
+          comments={post.comments}
+          onClose={() => setShowAllComments(false)}
+        />
+      )}
       <form onSubmit={handleCommentSubmit} className="flex items-center gap-2">
         <input
           value={commentText}
