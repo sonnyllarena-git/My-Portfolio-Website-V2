@@ -11,9 +11,14 @@ import {
   addComment as addCommentStorage,
 } from '../utils/blogInteractions.js'
 import { readActivityLog, logActivity } from '../utils/blogActivity.js'
-import { buildMockInteractionsAndActivity } from '../components/blog/data/mockBlogActivity.js'
+import { ensureBlogSeedVersion } from '../utils/blogSeedVersion.js'
+import {
+  buildMockInteractionsAndActivity,
+  SEED_VERSION,
+} from '../components/blog/data/mockBlogActivity.js'
 
 const BlogContext = createContext(null)
+ensureBlogSeedVersion(SEED_VERSION)
 const mockData = buildMockInteractionsAndActivity()
 
 export function BlogProvider({ children }) {

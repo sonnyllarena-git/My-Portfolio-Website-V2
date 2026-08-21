@@ -1,5 +1,5 @@
 const ACTIVITY_KEY = 'blog:activity'
-const MAX_ENTRIES = 200
+const MAX_ENTRIES = 500
 
 function readStoredActivity() {
   try {

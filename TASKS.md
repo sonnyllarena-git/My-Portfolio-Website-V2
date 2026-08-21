@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 60 complete — Blog activity/user-menu white theme + mutual exclusivity, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 41 tests); manual Playwright pass confirmed both dropdowns render white with the new thin scrollbar, and opening one always closes the other
+**Current task pointer:** `_(Phase 61 complete — Blog mock data scaled to 150 visitors + visitor search/modal + activity timestamps, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 43 tests); manual Playwright pass confirmed exactly 150 visitors, working search in both the sidebar and the "View all" modal, and activity timestamps spanning Dec 1, 2025 to today when scrolled to the bottom
 **Verify command:** `npm run verify`
 
 ---
@@ -3179,6 +3179,49 @@ scrollbar, and make the two dropdowns mutually exclusive — opening one must cl
       (which overflows its max-height) shows the new thin scrollbar; a Playwright pass confirms
       opening the Activity panel then clicking the avatar closes it and opens the User menu, and
       vice versa; the verify command passes.
+
+---
+
+## PHASE 61 — BLOG: 150 MOCK VISITORS, VISITOR SEARCH, ACTIVITY TIMESTAMPS
+
+_Requested by Sonny on 2026-08-21: scale the mock data up to roughly 150 visitors with random
+comments and likes so the blog looks lived-in, add real visitor search, cap the sidebar Visitors
+list at 20 with a total count and a "View all N Visitors" modal, and add a date/time stamp to
+every Activity entry spanning from December 2025 to the present._
+
+- [x] **P333** — Rewrote `mockBlogActivity.js` to generate exactly 150 mock visitors (a
+      deterministically shuffled combination of first/last names, so results are reproducible
+      but not repetitive) using a small seeded random-number generator instead of sequential
+      ticks. Every visitor is guaranteed at least one like (so all 150 always surface as
+      visitors), with a chance of a second like and a chance of a comment drawn from a larger
+      pool of comment text. Timestamps are spread pseudo-randomly across December 1, 2025
+      through the moment the page loads, then sorted newest-first. Added
+      `src/utils/blogSeedVersion.js` (with tests) so a stored-but-stale local visitor/activity
+      seed is cleared and regenerated whenever the mock data shape changes, and wired it into
+      `BlogContext.jsx`. Raised the real activity log's storage cap in `blogActivity.js` from 200
+      to 500 — the old cap was silently truncating the seeded history to the most recent ~200
+      entries, which cut off everything before roughly April 2026 and broke the December 2025
+      start date.
+      **Pass condition:** a fresh browser profile shows exactly 150 distinct visitors; the
+      activity log's oldest entry (scrolled to the bottom) is dated December 1-2, 2025; `verify`
+      passes.
+
+- [x] **P334** — Added a formatted date/time line under every row in `BlogActivityPanel.jsx`
+      (`Aug 21, 2026, 4:12 PM` style, via a small local formatter).
+      **Pass condition:** every activity row shows a second line with a readable date and time
+      that matches its underlying timestamp; `verify` passes.
+
+- [x] **P335** — Wired real search into `BlogVisitorsPanel.jsx`'s existing (previously
+      decorative) search box, capped its visible list to 20 matches, and added a total-visitor
+      count plus a "View all N Visitors" link below the list once there are more visitors than
+      the cap. Added `BlogVisitorsModal.jsx`: a centered overlay (lightly dimmed backdrop, not
+      the heavier dimming used by the gate) with its own search box, a scrollable full visitor
+      list using the same light scrollbar utility, and a close button, dismissible by the close
+      button or by clicking the backdrop.
+      **Pass condition:** the sidebar panel never shows more than 20 rows and its search filters
+      them live; the total count and "View all" link read the true visitor count; the modal
+      opens centered over a dimmed (not opaque) background, its own search filters the full
+      list, and it closes via its close button or a backdrop click; `verify` passes.
 
 ---
 

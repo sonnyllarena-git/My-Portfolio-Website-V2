@@ -12,6 +12,18 @@ function describeActivity(entry, posts) {
   return `${entry.name} entered Sonny's blog`
 }
 
+function formatActivityTimestamp(timestamp) {
+  const date = new Date(timestamp)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
 function BlogActivityPanel({ onClose }) {
   const { activity, posts } = useBlog()
   const panelRef = useRef(null)
@@ -56,8 +68,13 @@ function BlogActivityPanel({ onClose }) {
                 >
                   <img src={userIcon} alt="" className="h-4 w-4" />
                 </span>
-                <span className="text-xs text-slate-700">
-                  {describeActivity(entry, posts)}
+                <span className="flex min-w-0 flex-col">
+                  <span className="text-xs text-slate-700">
+                    {describeActivity(entry, posts)}
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {formatActivityTimestamp(entry.timestamp)}
+                  </span>
                 </span>
               </button>
             </li>
