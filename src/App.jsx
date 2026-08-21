@@ -3,6 +3,7 @@ import { GalleryProvider } from './context/GalleryContext.jsx'
 import { MemoryWallProvider } from './context/MemoryWallContext.jsx'
 import { SystemSettingsProvider } from './context/SystemSettingsContext.jsx'
 import { GamesProvider } from './context/GamesContext.jsx'
+import { BlogProvider } from './context/BlogContext.jsx'
 
 function App() {
   return (
@@ -10,7 +11,9 @@ function App() {
       <MemoryWallProvider>
         <SystemSettingsProvider>
           <GamesProvider>
-            <Desktop />
+            <BlogProvider>
+              <Desktop />
+            </BlogProvider>
           </GamesProvider>
         </SystemSettingsProvider>
       </MemoryWallProvider>

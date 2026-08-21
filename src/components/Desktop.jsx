@@ -10,6 +10,10 @@ import GmailGuestGate from './GmailGuestGate.jsx'
 import GamesNameGate from './games/GamesNameGate.jsx'
 import GamesLoadingScreen from './games/GamesLoadingScreen.jsx'
 import { useGames } from '../context/GamesContext.jsx'
+import { useBlog } from '../context/BlogContext.jsx'
+import BlogNameGate from './blog/BlogNameGate.jsx'
+import BlogApp from './BlogApp.jsx'
+import { iconImages } from '../assets/icons/index.js'
 import GmailComposeApp from './GmailComposeApp.jsx'
 import PaintApp from './PaintApp.jsx'
 import VisitorArtsApp from './VisitorArtsApp.jsx'
@@ -92,6 +96,7 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'settings')
     return <SettingsApp onOpenGmail={() => {}} onOpenZoomChat={() => {}} />
   if (w.id === 'music-lab') return <MusicLabApp />
+  if (w.id === 'blog') return <BlogApp />
   if (w.id === 'zoom-chat') return <ZoomChatApp onOpenGmail={() => {}} />
   if (w.id === 'projects') return <ProjectsApp />
   return null
@@ -113,7 +118,13 @@ function Desktop() {
   const [gmailGuest, setGmailGuest] = useState(null)
   const [gamesGateOpen, setGamesGateOpen] = useState(false)
   const [gamesLoadingName, setGamesLoadingName] = useState(null)
+  const [blogGateOpen, setBlogGateOpen] = useState(false)
   const { visitorName, setVisitorName, logout } = useGames()
+  const {
+    visitorName: blogVisitorName,
+    setVisitor: setBlogVisitor,
+    logout: blogLogout,
+  } = useBlog()
   const column1 = desktopIcons.filter((icon) => icon.column === 1)
   const column2 = desktopIcons.filter((icon) => icon.column === 2)
   const iconRefs = useRef(new Map())
@@ -217,6 +228,10 @@ function Desktop() {
     }
     if (id === 'games' && !visitorName) {
       setGamesGateOpen(true)
+      return
+    }
+    if (id === 'blog' && !blogVisitorName) {
+      setBlogGateOpen(true)
       return
     }
     openApp(id)
@@ -544,6 +559,32 @@ function Desktop() {
               </Window>
             )
           }
+          if (w.id === 'blog') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon={
+                  <img
+                    src={iconImages.blog}
+                    className="h-4 w-4 rounded-full"
+                    alt=""
+                  />
+                }
+                title="Blog"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <BlogApp
+                  onOpenContactInfo={() => handleIconOpen('contact-info')}
+                  onLogout={() => {
+                    blogLogout()
+                    shared.onClose()
+                  }}
+                />
+              </Window>
+            )
+          }
           if (w.id === 'zoom-chat') {
             return (
               <Window
@@ -566,16 +607,7 @@ function Desktop() {
             )
           }
           const icon = desktopIcons.find((i) => i.id === w.id)
-          const isLargePlaceholder = w.id === 'blog'
-          return (
-            <Window
-              key={w.instanceId}
-              {...shared}
-              title={icon?.label}
-              defaultWidth={isLargePlaceholder ? 1200 : undefined}
-              defaultHeight={isLargePlaceholder ? 800 : undefined}
-            />
-          )
+          return <Window key={w.instanceId} {...shared} title={icon?.label} />
         })}
       </div>
       {iconMenu && (
@@ -667,6 +699,16 @@ function Desktop() {
             />
           )}
         </GamesNameGate>
+      )}
+      {blogGateOpen && (
+        <BlogNameGate
+          onSubmit={(name, avatarColor) => {
+            setBlogVisitor(name, avatarColor)
+            setBlogGateOpen(false)
+            openApp('blog')
+          }}
+          onCancel={() => setBlogGateOpen(false)}
+        />
       )}
       {marqueeBox && (
         <div

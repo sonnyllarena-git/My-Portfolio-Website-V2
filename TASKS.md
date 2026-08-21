@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 55 complete — Arcade settings menu redesigned with a glassmorphism panel, real Mute toggle switch, "Themes" relabel, and expandable About/Contact developer sections; Arcade header's description paragraph removed (moved into About), awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-20 — `npm run verify` → PASS (0 errors, 5 pre-existing warnings, 33 tests)
+**Current task pointer:** `_(Phase 56 complete — Blog app (Facebook-profile-style, with a name+avatar visitor gate and localStorage-backed likes/comments), awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 41 tests); manual Playwright browser pass also confirmed the gate flow, layout, like/comment persistence, and mobile stacking
 **Verify command:** `npm run verify`
 
 ---
@@ -2880,6 +2880,138 @@ real Zoom/Gmail icons instead of plain text buttons._
       toggle switch for Mute, "Themes" as the section label, and About/Contact developer both
       collapsed by default, expanding to show the new paragraph and the Zoom/Gmail icon buttons
       respectively; `verify` passes.
+
+---
+
+## PHASE 56 — BLOG APP (FACEBOOK-PROFILE-STYLE SCREEN)
+
+_Requested by Sonny on 2026-08-21, from a mockup screenshot (`src/components/blog/assets/
+components/blog screen.png`) and 6 icon PNGs he dropped into `src/components/blog/assets/
+icons/`. Full plan agreed in `i-create-a-folder-polymorphic-pizza.md`: a name+avatar identity
+gate before opening (mirroring the Games arcade's `GamesNameGate`/`gameVisitor.js` pattern) so
+likes/comments are attributable and persisted locally for testing; solid-color placeholder
+tiles stand in for the mockup's photo collages/Photos grid until Sonny supplies real images
+later; `blog icon.png` (blue "S") becomes the real desktop/taskbar/title-bar icon, replacing
+both the 📝 emoji and the current stock `src/assets/icons/blog.png`._
+
+- [x] **P308** — Create `src/utils/blogVisitor.js` (localStorage read/write/clear of a
+      `{name, avatarColor}` identity, key `blog:visitorIdentity`) and `src/utils/
+blogInteractions.js` (localStorage read/write of per-post `{likes: [{name,avatarColor}],
+comments: [{id,name,avatarColor,text,timestamp}]}`, key `blog:interactions:<postId>`,
+      defaulting to `{likes: [], comments: []}` when absent), mirroring the existing
+      `src/utils/gameVisitor.js` / `src/utils/gameRatings.js` shape. Add co-located
+      `blogVisitor.test.js` / `blogInteractions.test.js` (one happy-path, one failure-path each),
+      mirroring `gameVisitor.test.js` / `gameRatings.test.js`.
+      **Pass condition:** new tests cover a read-after-write round trip and a corrupt/missing-data
+      fallback for both utils; `verify` passes.
+
+- [x] **P309** — Create `src/components/blog/data/blogPostSeeds.js`: 2–3 seed posts
+      (`{id, title, authorName: 'Sonny', collageColors: [...]}`, 6–9 Tailwind background-color
+      classes standing in for the mockup's photo collage), starting with no likes/comments.
+      **Pass condition:** file exports a non-empty array matching that shape; `verify` passes.
+
+- [x] **P310** — Create `src/context/BlogContext.jsx` exporting `BlogProvider` and `useBlog()`,
+      following `src/context/GamesContext.jsx`'s shape: `visitorName`, `visitorAvatarColor`,
+      `setVisitor(name, avatarColor)`, `logout()` (backed by `blogVisitor.js`), `posts` (from
+      `blogPostSeeds.js` merged with live `blogInteractions.js` state), `toggleLike(postId)`,
+      `addComment(postId, text)`, `getAllVisitors()` (unique `{name,avatarColor}` set derived from
+      every post's likes+comments). Wrap `<Desktop />` with `<BlogProvider>` in `src/App.jsx`.
+      **Pass condition:** `useBlog()` throws outside its provider (matching `useGames()`); `verify`
+      passes.
+
+- [x] **P311** — Create `src/components/blog/BlogNameGate.jsx`: a modal (mirroring
+      `GamesNameGate.jsx`'s `onSubmit`/`onCancel` props, without its bespoke arcade art) with a
+      required name input and an avatar-color picker (~8 swatches — rose/amber/emerald/sky/
+      violet/fuchsia/orange/teal — each rendering the shared `user icon.png` silhouette centered
+      on that color's disc); `onSubmit(name, avatarColor)` fires only once both are chosen.
+      **Pass condition:** submit is disabled until a name is typed and a color is picked; `verify`
+      passes.
+
+- [x] **P312** — Create a minimal `src/components/BlogApp.jsx` (accepts
+      `onOpenContactInfo`/`onLogout` props, renders just a "Blog — Hi {visitorName}" placeholder
+      shell for now — it grows in every task through P319) and wire `src/components/Desktop.jsx`:
+      pull `visitorName`/`setVisitor`/`logout` from `useBlog()`; in `handleIconOpen`, gate `'blog'`
+      the same way `'games'` is gated (`if (id === 'blog' && !visitorName) { setBlogGateOpen(true);
+return }`); render `<BlogNameGate>` when `blogGateOpen`, calling `setVisitor` then
+      `openApp('blog')` on submit; add a real `if (w.id === 'blog')` window branch (before the
+      generic placeholder fallback, same slot as `'games'`/`'music-lab'`) rendering `<BlogApp
+onOpenContactInfo={() => handleIconOpen('contact-info')} onLogout={() => { logout();
+shared.onClose() }} />` inside `Window` (`defaultWidth={1200}`, `defaultHeight={800}`); add
+      `if (w.id === 'blog') return <BlogApp />` to `renderPreviewBody`; delete the now-dead
+      `isLargePlaceholder = w.id === 'blog'` special case.
+      **Pass condition:** opening the Blog icon with no stored identity shows the gate; submitting
+      it opens a real Blog window showing the placeholder shell; `verify` passes. (Split into
+      `.a`/`.b` if this exceeds 50 lines.)
+
+- [x] **P313** — Overwrite `src/assets/icons/blog.png` with the "S" logo currently at
+      `src/components/blog/assets/icons/blog icon.png`, then delete that now-redundant local copy
+      (everything references the one canonical `iconImages.blog`). Pass `icon={<img
+src={iconImages.blog} className="h-4 w-4 rounded-full" alt="" />}` in the P312 window
+      branch.
+      **Pass condition:** the desktop grid icon, taskbar button, and Blog window's title-bar icon
+      all show the "S" logo; `verify` passes.
+
+- [x] **P314** — Create `src/components/blog/BlogTopNav.jsx`: the "S" logo (`iconImages.blog`),
+      a white search pill using `search icon.png` (decorative for now), the `bell icon.png`
+      notification icon, and "Hi {visitorName} · Log out" using the current visitor's avatar
+      disc + `user icon.png`, wired to `useBlog()` and an `onLogout` prop; replace `BlogApp.jsx`'s
+      placeholder shell's top bar with it.
+      **Pass condition:** the open Blog window shows the real top nav with the signed-in
+      visitor's name; `verify` passes.
+
+- [x] **P315** — Create `src/components/blog/BlogProfileCard.jsx`: the plain gray `user icon.png`
+      avatar (no color disc — this represents Sonny, the blog owner, not the current visitor) +
+      "SONNY LLARENA", a stats row reading real `posts.length` "Posts" and real
+      `getAllVisitors().length` "Visitors" from `useBlog()`, an empty "About Me:" placeholder
+      section, and a "Contact me:" row that calls an `onOpenContactInfo` prop on click; introduce
+      `BlogApp.jsx`'s 3-column grid skeleton (this card in the left column; center/right columns
+      still empty for now) and forward `onOpenContactInfo` down to it.
+      **Pass condition:** the open Blog window shows the profile card with live stats in a
+      left column; `verify` passes.
+
+- [x] **P316** — Create `src/components/blog/BlogNewsWidget.jsx` (static empty placeholder card,
+      matching the mockup) and `src/components/blog/BlogPhotosWidget.jsx` (3×3 grid of solid
+      Tailwind-color placeholder tiles, no image files); stack both under the profile card in
+      `BlogApp.jsx`'s left column.
+      **Pass condition:** both render inside a white card under the profile card, matching the
+      mockup's sidebar widgets; `verify` passes.
+
+- [x] **P317** — Create `src/components/blog/BlogPostCard.jsx` (author row, a color-tile collage
+      from `collageColors`, a like button using `heart icon.png` — grayscale when the current
+      visitor hasn't liked, full color when they have, calling `toggleLike` — with a live count,
+      a comment list, and a comment input with a `send icon.png` submit button calling
+      `addComment`) and `src/components/blog/BlogFeed.jsx` (the "Sonny's Latest Blog" header card
+      plus `posts.map` rendering one `BlogPostCard` per seed post); render `BlogFeed` in
+      `BlogApp.jsx`'s center column.
+      **Pass condition:** every seed post renders in the center column; liking toggles the
+      heart's state/count live; submitting a comment appends it to the visible list; `verify`
+      passes. (Split into `.a`/`.b` if this exceeds 50 lines.)
+
+- [x] **P318** — Create `src/components/blog/BlogVisitorsPanel.jsx`: a decorative mini search
+      input plus a list rendering `useBlog().getAllVisitors()` (each row: avatar disc + name),
+      with an empty-state message ("No visitors yet — be the first to comment or like a post!")
+      when that list is empty; render it in `BlogApp.jsx`'s right column.
+      **Pass condition:** liking or commenting as a new identity makes that visitor appear in the
+      right column's list on next render; `verify` passes.
+
+- [x] **P319** — In `src/components/BlogApp.jsx`, finalize the 3-column desktop layout's spacing/
+      widths to match the mockup and add the `useIsMobile()` stacked-column fallback (profile
+      card, then feed, then visitors, in that order), matching `MemoryWallApp.jsx`'s inline-branch
+      convention.
+      **Pass condition:** desktop viewport shows the 3-column mockup layout with correct column
+      widths; a viewport under 767px shows a single usable stacked column; `verify` passes.
+
+- [x] **P320** — Full visual/mobile polish pass across all `src/components/blog/*` files (spacing,
+      colors, and proportions matched against the mockup screenshot) plus a final `npm run
+verify`. Verified with a real Playwright browser pass (temporary local install, not added to
+      `package.json`/stack): opened Blog from a clean profile, completed the name+avatar gate,
+      confirmed the 3-column desktop layout matches the mockup, liked a post and added a comment
+      (both persisted and showed live, correct counts), confirmed the new visitor appeared in the
+      Visitors panel with their chosen avatar color, then resized to a 390px mobile viewport and
+      scrolled through the full stacked column (profile card → News → Photos → all 3 feed posts →
+      Visitors) with no console errors.
+      **Pass condition:** side-by-side with the mockup, layout/spacing/colors match; `npm run
+verify` passes clean.
 
 ---
 
