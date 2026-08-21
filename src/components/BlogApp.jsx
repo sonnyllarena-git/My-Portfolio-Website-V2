@@ -3,11 +3,13 @@ import BlogTopNav from './blog/BlogTopNav.jsx'
 import BlogProfileCard from './blog/BlogProfileCard.jsx'
 import BlogNewsWidget from './blog/BlogNewsWidget.jsx'
 import BlogPhotosWidget from './blog/BlogPhotosWidget.jsx'
+import BlogSponsoredWidget from './blog/BlogSponsoredWidget.jsx'
 import BlogFeed from './blog/BlogFeed.jsx'
 import BlogVisitorsPanel from './blog/BlogVisitorsPanel.jsx'
 
 function BlogApp({
   onOpenContactInfo,
+  onOpenGames,
   onLogout,
   onClose,
   onMaximize,
@@ -32,6 +34,7 @@ function BlogApp({
             <BlogProfileCard onOpenContactInfo={onOpenContactInfo} />
             <BlogNewsWidget />
             <BlogPhotosWidget />
+            <BlogSponsoredWidget onOpenGames={onOpenGames} />
           </div>
           <BlogFeed />
           <div className={isMobile ? '' : 'w-56 shrink-0'}>

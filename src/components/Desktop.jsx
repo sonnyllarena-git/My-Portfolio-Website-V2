@@ -96,7 +96,7 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'settings')
     return <SettingsApp onOpenGmail={() => {}} onOpenZoomChat={() => {}} />
   if (w.id === 'music-lab') return <MusicLabApp />
-  if (w.id === 'blog') return <BlogApp />
+  if (w.id === 'blog') return <BlogApp onOpenGames={() => {}} />
   if (w.id === 'zoom-chat') return <ZoomChatApp onOpenGmail={() => {}} />
   if (w.id === 'projects') return <ProjectsApp />
   return null
@@ -572,6 +572,7 @@ function Desktop() {
                 {({ toggleMaximize, isMaximized }) => (
                   <BlogApp
                     onOpenContactInfo={() => handleIconOpen('contact-info')}
+                    onOpenGames={() => handleIconOpen('games')}
                     onLogout={() => {
                       blogLogout()
                       shared.onClose()

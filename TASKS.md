@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 62 complete — Blog post comments collapsed to one with a "View more" modal, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); manual Playwright pass confirmed only the latest comment shows by default, the like/comment counts read plainly with icons and no stray "+" or "comments" label, and "View more comments" opens a scrollable modal listing every comment
+**Current task pointer:** `_(Phase 63 complete — Blog Sponsored widget for the 3 arcade games, clickable to the Games login gate, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); manual Playwright pass confirmed all 3 game thumbnails render full-width/uncropped with their caption above, and clicking one opens the Games arcade's login gate
 **Verify command:** `npm run verify`
 
 ---
@@ -3248,6 +3248,34 @@ bare number._
       "comments" word; clicking "View more comments" opens a centered scrollable modal listing
       every comment for that post, closable via its close button or a backdrop click; `verify`
       passes.
+
+---
+
+## PHASE 63 — BLOG: SPONSORED WIDGET FOR THE ARCADE GAMES
+
+_Requested by Sonny on 2026-08-21 with a reference screenshot: add a "Sponsored" widget to the
+left sidebar, below Photos, showing the 3 games from the Games app — each game's own thumbnail
+card plus a short caption, with the caption text matching the screenshot exactly._
+
+- [x] **P337** — Added `src/components/blog/BlogSponsoredWidget.jsx`, reusing `gamesCatalog`
+      from `src/data/gamesCatalog.js` (the same source of truth the Games app itself reads from)
+      for each game's thumbnail image, paired with a small local caption map holding Sonny's
+      exact screenshot wording per game id ("Play the best flappy game", "Test your typing
+      speed", "Flip your favorite Youtuber") rather than reusing the existing longer in-app
+      taglines. Wired it into `BlogApp.jsx`'s left column, directly below `BlogPhotosWidget`.
+      After a first pass, Sonny asked for three refinements in the same session: a taller
+      widget with each caption sitting above a much larger (4x), full-card-width thumbnail
+      instead of a small thumbnail beside the caption; and each thumbnail made clickable
+      (pointer cursor, hover feedback) and wired through `BlogApp.jsx` and `Desktop.jsx`'s
+      existing `handleIconOpen('games')` gate — the same Games-arcade login/name-gate flow the
+      desktop icon itself uses. The first "full width" attempt used `object-cover`, which
+      cropped thumbnails whose aspect ratio didn't match the fixed box (caught from a follow-up
+      screenshot); switched to `object-contain` on a neutral background so every thumbnail shows
+      uncropped, letterboxed rather than cut off.
+      **Pass condition:** a "Sponsored" card renders below Photos with all 3 arcade game
+      thumbnails shown at full width and full height with no cropping, each with its caption
+      above it matching the screenshot verbatim; clicking a thumbnail opens the Games arcade's
+      login gate (or the Games window directly if already logged in); `verify` passes.
 
 ---
 
