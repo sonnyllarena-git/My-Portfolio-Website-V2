@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 63 complete — Blog Sponsored widget for the 3 arcade games, clickable to the Games login gate, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); manual Playwright pass confirmed all 3 game thumbnails render full-width/uncropped with their caption above, and clicking one opens the Games arcade's login gate
+**Current task pointer:** `_(Phase 66 complete — Blog header restyled as a centered blue pill on a neutral bar, pixel-aligned to the body container, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); manual Playwright pass with real DOM measurements confirmed the blue pill's left/right edges match the body container's edges exactly (0px difference), including with the body's scrollbar accounted for via a measured-width compensation, and that the Activity/User dropdowns still render uncut
 **Verify command:** `npm run verify`
 
 ---
@@ -3276,6 +3276,86 @@ card plus a short caption, with the caption text matching the screenshot exactly
       thumbnails shown at full width and full height with no cropping, each with its caption
       above it matching the screenshot verbatim; clicking a thumbnail opens the Games arcade's
       login gate (or the Games window directly if already logged in); `verify` passes.
+
+---
+
+## PHASE 64 — BLOG HEADER CLEANUP: WINDOW CONTROLS INTO USER MENU, FIXED SEARCH
+
+_Requested by Sonny on 2026-08-21: remove the Maximize and Close buttons from the Blog header
+entirely, add "Minimize" and "Maximize" as text entries in the User Icon dropdown instead
+(explicitly no "Close" entry there), stop the header search box from stretching with the window
+(fix it at twice the width of the Visitors panel's search box), and make it actually search blog
+posts instead of being decorative._
+
+- [x] **P338** — Removed the Maximize/Close icon-button cluster from `BlogTopNav.jsx`. Added
+      "Minimize" and "Maximize" text buttons to `BlogUserMenu.jsx` (between "Contact Developer"
+      and "Log out", matching the existing row style), wired through `BlogApp.jsx` to
+      `Desktop.jsx`'s existing `shared.onMinimizeToggle` and the window's `toggleMaximize` — the
+      same mechanisms every other window's native minimize/maximize already use — and removed
+      the now-fully-unused `onClose`/`isMaximized` prop plumbing between `Desktop.jsx`,
+      `BlogApp.jsx`, and `BlogTopNav.jsx` (the window can still be closed via "Log out", which
+      already closed it before this change). Changed the header search box from `flex-1`
+      (stretched to fill the header) to a fixed `w-96` — exactly twice the Visitors panel
+      search box's rendered width — and lifted a `searchQuery` state into `BlogApp.jsx` so typing
+      in it filters `BlogFeed.jsx`'s posts by title, showing a "No blogs match your search."
+      message when nothing matches.
+      **Pass condition:** the header shows no Maximize or Close button; the User Icon dropdown
+      has working "Minimize" and "Maximize" entries and no "Close" entry; the search box stays a
+      fixed width regardless of window size; typing a post's title into it shows only that post,
+      and a search with no matches shows the empty-state message; `verify` passes.
+
+---
+
+## PHASE 65 — BLOG HEADER: ALIGN CONTENT TO THE BODY CONTAINER
+
+_Requested by Sonny on 2026-08-21: after the P338 header cleanup, the logo/search sat flush
+against the window's left edge while the bell/avatar drifted next to the search box instead of
+staying pinned to the right — because removing the search box's old `flex-1` stretch also
+removed the only thing pushing the bell/avatar rightward. Sonny asked to align the header to the
+same container the body content uses, keep it non-stretchable, and pin the bell/avatar to the
+header's right edge._
+
+- [x] **P339** — Restructured `BlogTopNav.jsx`: the outer draggable bar keeps its full-width
+      blue background (title bars stay draggable edge-to-edge, matching every other window), but
+      its content is now a `mx-auto max-w-6xl justify-between` row — the same max-width container
+      the body content below already uses — split into a left group (logo + fixed-width search)
+      and a right group (bell + avatar), so the two rows line up edge-to-edge instead of the
+      header hugging the window's raw edges.
+      **Pass condition:** at a wide viewport, the header's content row shares the exact same
+      left/right edges as the body's container (verified via measured bounding boxes, not just a
+      screenshot); the bell and avatar sit at the header's right edge; the search box still does
+      not stretch; `verify` passes.
+
+---
+
+## PHASE 66 — BLOG HEADER: BLUE PILL ON A NEUTRAL BAR
+
+_Requested by Sonny on 2026-08-21 with a mockup: instead of the P339 approach (full-width blue
+bar with an aligned content row inside it), restyle so the blue background itself is confined to
+a centered pill matching the body's container width, sitting on a neutral bar matching the app's
+own background color. Sonny also flagged that the header and body containers were "not aligned"
+in his own browser after this change._
+
+- [x] **P340** — In `BlogTopNav.jsx`, moved the brand-blue background off the full-width outer
+      bar and onto the inner `max-w-6xl` content row itself (adding `rounded-lg` so it reads as
+      a pill), leaving the outer bar `bg-slate-100` — the same neutral tone `BlogApp.jsx` already
+      uses as its base background — so only a thin neutral strip shows on either side of the pill
+      on wide windows. The outer bar keeps `window-title-bar cursor-move` so the whole strip
+      (pill and neutral margins alike) stays draggable. Investigated Sonny's alignment report:
+      the body's scroll container reserves a vertical scrollbar gutter that the non-scrolling
+      header never did, so on a real browser with a classic (non-overlay) scrollbar the two
+      containers' available centering width differed by the scrollbar's width. Fixed by
+      measuring the scroll container's own reserved scrollbar width in `BlogApp.jsx` (comparing
+      its offset width against its client width, re-measured via `ResizeObserver` and on window
+      resize) and passing it down so `BlogTopNav.jsx` adds the same amount to its own right
+      padding — avoided fixing this via
+      `overflow-y-auto` directly on the header (which would have clipped the Activity/User
+      dropdowns, both absolutely positioned inside it).
+      **Pass condition:** the blue background only covers the centered pill, not the full window
+      width; the neutral bar on either side matches the app's own background; a Playwright
+      measurement confirms the pill's left/right edges match the body container's edges exactly
+      (0px difference); the Activity and User dropdowns still render in full, uncut; `verify`
+      passes.
 
 ---
 

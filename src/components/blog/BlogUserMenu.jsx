@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 
-function BlogUserMenu({ onOpenContactInfo, onLogout, onClose }) {
+function BlogUserMenu({
+  onOpenContactInfo,
+  onMinimize,
+  onMaximize,
+  onLogout,
+  onClose,
+}) {
   const menuRef = useRef(null)
   const [aboutOpen, setAboutOpen] = useState(false)
 
@@ -38,6 +44,26 @@ function BlogUserMenu({ onOpenContactInfo, onLogout, onClose }) {
         className="block w-full cursor-pointer border-t border-slate-200 px-4 py-3 text-center font-semibold hover:bg-slate-100"
       >
         Contact Developer
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          onMinimize?.()
+          onClose()
+        }}
+        className="block w-full cursor-pointer border-t border-slate-200 px-4 py-3 text-center font-semibold hover:bg-slate-100"
+      >
+        Minimize
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          onMaximize?.()
+          onClose()
+        }}
+        className="block w-full cursor-pointer border-t border-slate-200 px-4 py-3 text-center font-semibold hover:bg-slate-100"
+      >
+        Maximize
       </button>
       <button
         type="button"

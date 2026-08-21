@@ -569,17 +569,16 @@ function Desktop() {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                {({ toggleMaximize, isMaximized }) => (
+                {({ toggleMaximize }) => (
                   <BlogApp
                     onOpenContactInfo={() => handleIconOpen('contact-info')}
                     onOpenGames={() => handleIconOpen('games')}
+                    onMinimize={shared.onMinimizeToggle}
+                    onMaximize={toggleMaximize}
                     onLogout={() => {
                       blogLogout()
                       shared.onClose()
                     }}
-                    onClose={shared.onClose}
-                    onMaximize={toggleMaximize}
-                    isMaximized={isMaximized}
                   />
                 )}
               </Window>

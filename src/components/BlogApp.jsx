@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import BlogTopNav from './blog/BlogTopNav.jsx'
 import BlogProfileCard from './blog/BlogProfileCard.jsx'
@@ -10,23 +11,45 @@ import BlogVisitorsPanel from './blog/BlogVisitorsPanel.jsx'
 function BlogApp({
   onOpenContactInfo,
   onOpenGames,
-  onLogout,
-  onClose,
+  onMinimize,
   onMaximize,
-  isMaximized,
+  onLogout,
 }) {
   const isMobile = useIsMobile()
+  const [searchQuery, setSearchQuery] = useState('')
+  const scrollRef = useRef(null)
+  const [scrollbarWidth, setScrollbarWidth] = useState(0)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    function measure() {
+      setScrollbarWidth(el.offsetWidth - el.clientWidth)
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [searchQuery])
 
   return (
     <div className="flex h-full flex-col bg-slate-100">
       <BlogTopNav
         onOpenContactInfo={onOpenContactInfo}
-        onLogout={onLogout}
-        onClose={onClose}
+        onMinimize={onMinimize}
         onMaximize={onMaximize}
-        isMaximized={isMaximized}
+        onLogout={onLogout}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        scrollbarWidth={scrollbarWidth}
       />
-      <div className="flex-1 overflow-auto p-4">
+      <div ref={scrollRef} className="flex-1 overflow-auto p-4">
         <div
           className={`mx-auto flex w-full max-w-6xl gap-4 ${isMobile ? 'flex-col' : ''}`}
         >
@@ -36,7 +59,7 @@ function BlogApp({
             <BlogPhotosWidget />
             <BlogSponsoredWidget onOpenGames={onOpenGames} />
           </div>
-          <BlogFeed />
+          <BlogFeed searchQuery={searchQuery} />
           <div className={isMobile ? '' : 'w-56 shrink-0'}>
             <BlogVisitorsPanel />
           </div>
