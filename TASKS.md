@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 57 complete — Blog app theme/header/activity-feed revamp, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 41 tests); manual Playwright pass confirmed the brand-blue theme, the new user/activity dropdown menus, dragging + maximize + close with the native title bar removed, the centered/capped layout at a maximized width, and the 20-mock-visitor activity feed
+**Current task pointer:** `_(Phase 58 complete — Blog name-gate art-based login UI, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 41 tests); manual Playwright pass confirmed the gate's overlaid controls align with the art, the selected-avatar ring and disabled/enabled Login states render correctly, and both submit and cancel work end to end
 **Verify command:** `npm run verify`
 
 ---
@@ -3094,6 +3094,27 @@ covers._
       header user-avatar button (`BlogTopNav.jsx`).
       **Pass condition:** hovering each of the four controls shows a pointer cursor; `verify`
       passes.
+
+---
+
+## PHASE 58 — BLOG NAME GATE: ART-BASED LOGIN UI
+
+_Requested by Sonny on 2026-08-21: use `src/components/blog/assets/components/blog login
+ui.png` as the Blog gate's visual, mirroring the Games arcade's art-based
+`GamesNameGate.jsx` technique (background art + precisely-positioned transparent interactive
+elements on top) instead of the current plain white-card modal._
+
+- [x] **P329** — Rewrite `src/components/blog/BlogNameGate.jsx` to use `blog login ui.png` as a
+      `bg-cover` background on a `1080/500`-aspect-ratio container (mirroring
+      `GamesNameGate.jsx`'s technique), with transparent absolutely-positioned elements laid over
+      the art's own drawn boxes: the name input, the 8 avatar-color circles (mapped 1:1 to
+      `AVATAR_COLORS`' order, matching the art's row-major layout), the "Login" submit button,
+      and the "close" link. Add a visible selected-state ring on the chosen avatar circle (the
+      art has no built-in selection indicator) and a dimmed/disabled visual on the Login button
+      until both a name and an avatar are chosen.
+      **Pass condition:** every overlaid control visually lines up with its drawn counterpart in
+      the art (verified via a Playwright screenshot comparison); the gate behaves exactly as
+      before (name + avatar required to submit); `verify` passes.
 
 ---
 

@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import userIcon from './assets/icons/user icon.png'
+import loginBackground from './assets/components/blog login ui.png'
 import { AVATAR_COLORS } from './avatarColors.js'
-import { BRAND_BLUE_BG, BRAND_BLUE_FOCUS_BORDER } from './theme.js'
 
 function BlogNameGate({ onSubmit, onCancel }) {
   const [name, setName] = useState('')
@@ -22,55 +21,53 @@ function BlogNameGate({ onSubmit, onCancel }) {
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+        className="relative w-full max-w-[1080px] overflow-hidden rounded-lg bg-cover bg-center bg-no-repeat shadow-2xl"
+        style={{
+          aspectRatio: '1080 / 500',
+          backgroundImage: `url(${loginBackground})`,
+        }}
       >
-        <h2 className="mb-1 text-lg font-semibold text-slate-900">
-          Join the Blog
-        </h2>
-        <p className="mb-4 text-sm text-slate-500">
-          Pick a name and an avatar color to like and comment on posts.
-        </p>
+        <button
+          type="button"
+          onClick={onCancel}
+          aria-label="Close"
+          className="absolute top-[4%] right-[2%] h-[5%] w-[8%] cursor-pointer"
+        />
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Your name"
           aria-label="Your name"
-          className={`mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ${BRAND_BLUE_FOCUS_BORDER}`}
+          className="absolute top-[18.5%] left-[58.3%] h-[7%] w-[31.9%] rounded-lg border-none bg-transparent px-4 text-sm text-slate-900 outline-none [font-size:clamp(10px,1.6vw,16px)]"
         />
-        <div className="mb-5 grid grid-cols-4 gap-2">
-          {AVATAR_COLORS.map((color) => (
+        {AVATAR_COLORS.map((color, index) => {
+          const row = Math.floor(index / 4)
+          const col = index % 4
+          const left = 59.7 + col * 7.9
+          const top = row === 0 ? 38.9 : 50.1
+          return (
             <button
               key={color.id}
               type="button"
               onClick={() => setAvatarColor(color.id)}
               aria-label={`Avatar color ${color.id}`}
-              className={`flex h-12 w-12 items-center justify-center rounded-full ${color.bg} ${
+              className={`absolute h-[9%] w-[4.17%] cursor-pointer rounded-full ${
                 avatarColor === color.id
                   ? 'ring-2 ring-slate-900 ring-offset-2'
                   : ''
               }`}
-            >
-              <img src={userIcon} alt="" className="h-7 w-7" />
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!canContinue}
-            className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 ${BRAND_BLUE_BG}`}
-          >
-            Continue
-          </button>
-        </div>
+              style={{ left: `${left}%`, top: `${top}%` }}
+            />
+          )
+        })}
+        <button
+          type="submit"
+          disabled={!canContinue}
+          aria-label="Login"
+          className={`absolute top-[65.6%] left-[58.3%] h-[9%] w-[31.9%] cursor-pointer rounded-full ${
+            canContinue ? '' : 'bg-white/60'
+          } disabled:cursor-not-allowed`}
+        />
       </form>
     </div>
   )
