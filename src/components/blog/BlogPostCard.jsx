@@ -7,11 +7,15 @@ import { getAvatarColorClass } from './avatarColors.js'
 import { formatRelativeTime } from '../../utils/formatRelativeTime.js'
 import CommentIcon from '../icons/CommentIcon.jsx'
 import BlogCommentsModal from './BlogCommentsModal.jsx'
+import BlogArticleModal from './BlogArticleModal.jsx'
+import { blogArticles } from './data/blogArticles.js'
 
 function BlogPostCard({ post }) {
   const { visitorName, toggleLike, addComment } = useBlog()
   const [commentText, setCommentText] = useState('')
   const [showAllComments, setShowAllComments] = useState(false)
+  const [showArticle, setShowArticle] = useState(false)
+  const article = blogArticles[post.id]
   const hasLiked = post.likes.some((like) => like.name === visitorName)
   const latestComment = post.comments[post.comments.length - 1]
 
@@ -36,11 +40,35 @@ function BlogPostCard({ post }) {
         </span>
         <span className="text-sm text-slate-500">'{post.title}'</span>
       </div>
-      <div className="mb-3 grid grid-cols-4 gap-1 overflow-hidden rounded">
-        {post.collageColors.map((color, index) => (
-          <div key={index} className={`aspect-square ${color}`} />
-        ))}
-      </div>
+      {article ? (
+        <>
+          <img
+            src={article.bannerImage}
+            alt={post.title}
+            className="mb-3 aspect-video w-full rounded object-cover"
+          />
+          <button
+            type="button"
+            onClick={() => setShowArticle(true)}
+            className="mb-3 w-full cursor-pointer rounded-lg bg-slate-900 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          >
+            Read Article
+          </button>
+        </>
+      ) : (
+        <div className="mb-3 grid grid-cols-4 gap-1 overflow-hidden rounded">
+          {post.collageColors.map((color, index) => (
+            <div key={index} className={`aspect-square ${color}`} />
+          ))}
+        </div>
+      )}
+      {showArticle && (
+        <BlogArticleModal
+          post={post}
+          article={article}
+          onClose={() => setShowArticle(false)}
+        />
+      )}
       <div className="mb-3 flex items-center gap-2">
         <button
           type="button"

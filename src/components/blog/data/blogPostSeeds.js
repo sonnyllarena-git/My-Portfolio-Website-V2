@@ -1,33 +1,13 @@
 export const blogPostSeeds = [
   {
     id: 'blog-1',
-    title: 'Blog Post 1',
+    title: 'Beyond the Buzz',
     authorName: 'Sonny',
-    collageColors: [
-      'bg-sky-200',
-      'bg-sky-400',
-      'bg-amber-200',
-      'bg-emerald-300',
-      'bg-rose-200',
-      'bg-emerald-600',
-      'bg-amber-500',
-      'bg-sky-600',
-    ],
   },
   {
     id: 'blog-2',
-    title: 'Blog Post 2',
+    title: 'Vibe Coding',
     authorName: 'Sonny',
-    collageColors: [
-      'bg-violet-200',
-      'bg-violet-500',
-      'bg-teal-200',
-      'bg-orange-300',
-      'bg-teal-500',
-      'bg-orange-600',
-      'bg-violet-700',
-      'bg-teal-700',
-    ],
   },
   {
     id: 'blog-3',
