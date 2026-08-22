@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 69 complete — Blog chat widget re-docked to the content column and profile menu redesigned with icons, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-22 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright passes confirmed the chat widget's docked position at default and maximized window widths and the redesigned profile menu against Sonny's reference screenshot
+**Current task pointer:** `_(Phase 71 functionally complete — v2 boot flow (video 1 → sign-in click → video 2 → desktop) verified live; P350's asset cleanup is one file short: windows-startup.mp4 is unreferenced but still locked by a running dev server/browser tab, deferred rather than killing an unowned process)_`
+**Last verified:** 2026-08-22 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright confirmed the v2 flow end-to-end: `loading-screen-v2.mp4` plays unmuted and pauses naturally on its own last frame, the invisible Sign in button shows a pointer cursor with no box-shadow/glow, clicking it plays `loading-screen-2.mp4` unmuted, and it ends into the real desktop — zero console errors throughout
 **Verify command:** `npm run verify`
 
 ---
@@ -3458,6 +3458,100 @@ icon+chevron layout instead of the plain centered-text list it had._
       chevron on About and Contact Developer only, divider lines between rows — replacing the
       previous centered-text-only buttons. Preserved the existing About inline-expand behavior.
       **Pass condition:** live Playwright screenshot matches the reference layout; `verify` passes.
+
+---
+
+## PHASE 70 — WINDOWS-STYLE BOOT + SIGN-IN GATE BEFORE THE DESKTOP
+
+_Requested by Sonny on 2026-08-22: add a "Windows Start up" boot screen and a Windows-11-style
+"sign in screen" in front of the desktop shell — visitors land on the boot video, then a Guest
+sign-in screen, and only reach `Desktop` after clicking "Sign in" (no name/email fields, just a
+click, with a hover effect + pointer cursor on the button). Reference assets (one `.mp4`, two
+`.jpg`) were dropped untracked in `src/components/windows startup/`. Confirmed with Sonny: the
+video keeps its sound (not muted), and `startup image.jpg` is not used at all — the loading
+screen plays the video directly on a plain black backdrop instead._
+
+- [x] **P346** — Relocate the 2 used reference assets from `src/components/windows startup/` into
+      `src/components/startup/assets/`, renamed to `windows-startup.mp4` and
+      `sign-in-screen.jpg`; leave `startup image.jpg` untouched in the old folder since it isn't
+      used.
+      **Pass condition:** the 2 renamed files exist only at their new path; `git status` shows no
+      other files changed.
+
+- [x] **P347** — Add `src/components/startup/StartupLoadingScreen.jsx`: a full-screen `<video>`
+      (`autoPlay`, `playsInline`, sound on — no `muted`) that calls `onDone` on `onEnded` or
+      `onError`; since unmuted autoplay is blocked by browsers without a prior user gesture,
+      attempt `videoRef.current.play()` on mount and, if it rejects, show a "Click anywhere to
+      continue" hint and let the screen's own click handler retry `play()` (now inside a real
+      gesture); once playback actually starts (`onPlay`), arm a safety-timeout fallback so a
+      stuck video can never strand a visitor.
+      **Pass condition:** `verify` passes; component compiles and exports `onDone` as its only
+      prop.
+
+- [x] **P348** — Add `src/components/startup/SignInScreen.jsx`: renders `sign-in-screen.jpg` in a
+      16:9 CSS-contain box (`width: min(100vw, calc(100vh * 16 / 9))`, `aspectRatio: '16 / 9'` —
+      not `bg-cover` on the full viewport, which would let a vertically off-center overlay drift
+      out of alignment on non-16:9 screens) with a real, accessible `<button>` absolutely
+      positioned over the art's "Sign in" graphic, `cursor-pointer`, a blue-violet hover/
+      focus-visible glow, and an `onSignIn` prop fired on click.
+      **Pass condition:** `verify` passes; button is keyboard-focusable and fires `onSignIn` on
+      both click and Enter.
+
+- [x] **P349** — Wire `src/App.jsx` into a 3-phase state machine (`boot` → `signin` → `desktop`):
+      render `StartupLoadingScreen`, then `SignInScreen`, then the existing 5 context providers +
+      `Desktop` only once sign-in is clicked.
+      **Pass condition:** `verify` passes; loading a fresh page shows the boot video, then the
+      sign-in screen, and only mounts `Desktop` after the Sign in button is clicked.
+
+---
+
+## PHASE 71 — BOOT/SIGN-IN V2: ONE COMBINED VIDEO + A SIGNING-IN TRANSITION VIDEO
+
+_Requested by Sonny on 2026-08-22, superseding Phase 70's separate video + still-image approach.
+Sonny dropped two new videos directly into `src/components/startup/assets/`: `loading screen
+v2.mp4` (6.15s, 3840×2160) — a single boot animation that ends on the exact Guest/Sign-in frame
+the old `sign-in-screen.jpg` was a still of — and `loading screen2.mp4` (2.04s, 3840×2160) — a
+short "signing in" spinner. New flow: play video 1 unmuted, let it end and pause naturally on its
+last frame (no separate sign-in image needed anymore), reveal a plain `cursor-pointer` "Sign in"
+button over the art (no hover glow this time — confirmed with Sonny, keep the pointer cursor
+only), then on click play video 2 unmuted before mounting the real desktop. The old
+`SignInScreen.jsx`, `sign-in-screen.jpg`, and `windows-startup.mp4` are removed entirely._
+
+- [ ] **P350** — Delete `src/components/startup/SignInScreen.jsx` and the now-unused
+      `src/components/startup/assets/sign-in-screen.jpg` /
+      `src/components/startup/assets/windows-startup.mp4`; rename the 2 new videos to
+      `loading-screen-v2.mp4` and `loading-screen-2.mp4` in that same assets folder.
+      **Pass condition:** the old component and its 2 assets no longer exist; the 2 new videos
+      exist at their renamed paths; `git status` shows no other files changed.
+      _(2026-08-22: `SignInScreen.jsx`, `sign-in-screen.jpg` deleted and both videos renamed;
+      `windows-startup.mp4` is still on disk — locked by a running `npm run dev`/browser session
+      still holding it open — deletion deferred until that lock clears.)_
+
+- [x] **P351** — Add `src/components/startup/useUnmutedAutoplay.js`: a small hook (`videoRef`,
+      `needsClickToPlay`, `retryPlay`) factoring out the "attempt unmuted `play()` on mount, fall
+      back to a click-to-continue prompt on rejection" logic that both boot videos need, so it
+      isn't duplicated across the two screen components below.
+      **Pass condition:** `verify` passes; hook exports exactly those 3 values.
+
+- [x] **P352** — Rewrite `src/components/startup/StartupLoadingScreen.jsx` to play
+      `loading-screen-v2.mp4` (via the new hook) and, once it ends (or errors), reveal a plain
+      `cursor-pointer` `<button>` absolutely positioned over the video's baked-in "Sign in"
+      graphic — no hover glow — firing a new `onSignIn` prop on click; arm a safety-timeout after
+      playback starts so a stuck video can't strand a visitor before the button ever appears.
+      **Pass condition:** `verify` passes; component exports `onSignIn` as its only prop.
+
+- [x] **P353** — Add `src/components/startup/SigningInScreen.jsx`: plays `loading-screen-2.mp4`
+      (via the same hook) and calls `onDone` on `onEnded` or `onError`, with the same
+      safety-timeout pattern.
+      **Pass condition:** `verify` passes; component exports `onDone` as its only prop.
+
+- [x] **P354** — Rewire `src/App.jsx`'s phase machine to `boot` → `signing-in` → `desktop`:
+      `StartupLoadingScreen`'s `onSignIn` moves to `signing-in`, `SigningInScreen`'s `onDone` moves
+      to `desktop` (mounting the existing 5 providers + `Desktop`, unchanged).
+      **Pass condition:** `verify` passes; loading a fresh page plays video 1, pauses on its Sign
+      in frame, clicking it plays video 2, and it ends into the real desktop.
+
+---
 
 ## Backlog — DO NOT START
 

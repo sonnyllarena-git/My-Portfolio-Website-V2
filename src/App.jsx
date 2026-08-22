@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import StartupLoadingScreen from './components/startup/StartupLoadingScreen.jsx'
+import SigningInScreen from './components/startup/SigningInScreen.jsx'
 import Desktop from './components/Desktop.jsx'
 import { GalleryProvider } from './context/GalleryContext.jsx'
 import { MemoryWallProvider } from './context/MemoryWallContext.jsx'
@@ -6,6 +9,16 @@ import { GamesProvider } from './context/GamesContext.jsx'
 import { BlogProvider } from './context/BlogContext.jsx'
 
 function App() {
+  const [phase, setPhase] = useState('boot')
+
+  if (phase === 'boot') {
+    return <StartupLoadingScreen onSignIn={() => setPhase('signing-in')} />
+  }
+
+  if (phase === 'signing-in') {
+    return <SigningInScreen onDone={() => setPhase('desktop')} />
+  }
+
   return (
     <GalleryProvider>
       <MemoryWallProvider>
