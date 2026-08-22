@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 68 complete — Blog floating chat widget added, reusing the Zoom virtual-agent knowledge base, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-22 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); a live Playwright pass drove the full open/greet/reply/follow-up/minimize/reopen/close cycle plus a 375px mobile viewport, screenshots confirmed against both of Sonny's reference images
+**Current task pointer:** `_(Phase 69 complete — Blog chat widget re-docked to the content column and profile menu redesigned with icons, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-22 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright passes confirmed the chat widget's docked position at default and maximized window widths and the redesigned profile menu against Sonny's reference screenshot
 **Verify command:** `npm run verify`
 
 ---
@@ -3430,6 +3430,34 @@ icon.png`) and `src/components/blog/BlogChatMessage.jsx` (bubble rendering copyi
       where this widget now docks — renders partly behind the taskbar; unrelated to this widget
       and affects every 1200×800-default app already, not something to silently fix under a chat-
       widget task.
+
+---
+
+## PHASE 69 — BLOG: CHAT WIDGET DOCKING FIX + PROFILE MENU ICON REDESIGN
+
+_Requested by Sonny on 2026-08-22, from two screenshots: (1) the Phase 68 chat widget was
+anchoring to the Blog window's own bottom-right corner rather than the visible 3-column content,
+so on a wide/maximized window it floated in the empty gutter past the Visitors column instead of
+staying docked to it; (2) the profile ("user icon") dropdown should match a reference screenshot's
+icon+chevron layout instead of the plain centered-text list it had._
+
+- [x] **P344** — Re-anchored `BlogChatWidget.jsx` to the same centered `max-w-6xl` content box the
+      3-column layout uses (`BlogApp.jsx` now wraps it in a matching `p-4`/`mx-auto max-w-6xl`
+      positioning layer, `pointer-events-none` outside the widget itself) instead of the raw
+      window edge, confirmed via measured DOM geometry with the window maximized to 1600px wide
+      (chat button's right edge lands within ~15px of the Visitors column's right edge, not
+      ~200px out in dead space at the window's true edge). Shrunk the launcher icon from 56px to
+      50px (90%, per Sonny's updated `chat icon.png`) and swapped the chat panel header avatar
+      from the reused Zoom bot icon to the Blog app's own icon (`iconImages.blog`).
+      **Pass condition:** live Playwright pass confirms the chat button's right edge tracks the
+      Visitors column edge (not the window edge) at both default and maximized window widths;
+      launcher measures 50×50px; chat header avatar loads `blog.png`; `verify` passes.
+
+- [x] **P345** — Rebuilt `BlogUserMenu.jsx` from Sonny's reference screenshot: left-aligned inline
+      SVG icon + label per row (About/Contact Developer/Minimize/Maximize/Log out), a trailing
+      chevron on About and Contact Developer only, divider lines between rows — replacing the
+      previous centered-text-only buttons. Preserved the existing About inline-expand behavior.
+      **Pass condition:** live Playwright screenshot matches the reference layout; `verify` passes.
 
 ## Backlog — DO NOT START
 
