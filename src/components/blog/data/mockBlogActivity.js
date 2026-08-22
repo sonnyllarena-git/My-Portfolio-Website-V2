@@ -1,6 +1,6 @@
 import { AVATAR_COLORS } from '../avatarColors.js'
 
-export const SEED_VERSION = 2
+export const SEED_VERSION = 3
 
 const FIRST_NAMES = [
   'Ava',
@@ -87,7 +87,7 @@ export const MOCK_VISITORS = nameIndices.map((combinedIndex, i) => ({
   avatarColor: AVATAR_COLORS[i % AVATAR_COLORS.length].id,
 }))
 
-const POST_IDS = ['blog-1', 'blog-2', 'blog-3']
+const POST_IDS = ['blog-4', 'blog-1', 'blog-2', 'blog-3']
 
 const COMMENT_TEXTS = [
   'Love this!',
