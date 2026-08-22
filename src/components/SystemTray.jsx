@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
-
-function volumeIcon(volume) {
-  if (volume === 0) return '🔇'
-  if (volume < 50) return '🔈'
-  return '🔊'
-}
+import WifiIcon from './icons/WifiIcon.jsx'
+import SpeakerIcon from './icons/SpeakerIcon.jsx'
 
 function formatTime(date) {
-  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
 }
 
 function formatDate(date) {
-  return date.toLocaleDateString()
+  return date.toLocaleDateString('en-US')
 }
 
 function TrayButton({ label, children }) {
@@ -27,7 +26,6 @@ function TrayButton({ label, children }) {
 }
 
 function SystemTray() {
-  const { volume } = useSystemSettings()
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -38,9 +36,12 @@ function SystemTray() {
   return (
     <div className="ml-auto flex items-center gap-1 pr-2 text-sm text-white">
       <TrayButton label="Show hidden icons">^</TrayButton>
-      <TrayButton label="Wi-Fi">📶</TrayButton>
-      <TrayButton label="Volume">{volumeIcon(volume)}</TrayButton>
-      <TrayButton label="Battery">🔋</TrayButton>
+      <TrayButton label="Wi-Fi">
+        <WifiIcon className="h-4 w-4" />
+      </TrayButton>
+      <TrayButton label="Volume">
+        <SpeakerIcon className="h-4 w-4" />
+      </TrayButton>
       <div className="ml-2 text-right leading-tight">
         <div>{formatTime(now)}</div>
         <div className="text-xs text-white/70">{formatDate(now)}</div>
