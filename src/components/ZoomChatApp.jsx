@@ -3,6 +3,8 @@ import {
   NAME_PROMPT,
   getEmailPrompt,
   SUGGESTED_QUESTIONS,
+  ANYTHING_ELSE_REPLY,
+  CONTACT_CTA,
 } from '../data/zoomChatKnowledgeBase.js'
 import {
   getAutoReply,
@@ -14,12 +16,6 @@ import ZoomChatLoading from './zoomChat/ZoomChatLoading.jsx'
 import ZoomChatHeader from './zoomChat/ZoomChatHeader.jsx'
 import ZoomChatMessage from './zoomChat/ZoomChatMessage.jsx'
 import ZoomChatEmojiPicker from './zoomChat/ZoomChatEmojiPicker.jsx'
-
-const ANYTHING_ELSE_REPLY = 'Great! Is there anything else I can help you with?'
-const CONTACT_CTA = {
-  label: 'Contact Sonny directly',
-  text: "I couldn't find an answer to that. Would you like to contact Sonny directly?",
-}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const LOADING_MS = 2000

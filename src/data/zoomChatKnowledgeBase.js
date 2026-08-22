@@ -176,6 +176,14 @@ export const SUGGESTED_QUESTIONS = [
   { text: 'What technologies do you use?' },
 ]
 
+export const ANYTHING_ELSE_REPLY =
+  'Great! Is there anything else I can help you with?'
+
+export const CONTACT_CTA = {
+  label: 'Contact Sonny directly',
+  text: "I couldn't find an answer to that. Would you like to contact Sonny directly?",
+}
+
 export const NAME_PROMPT = "Hey! What's your name?"
 
 export function getEmailPrompt(guestName) {

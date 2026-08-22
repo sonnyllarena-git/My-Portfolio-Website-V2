@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 66 complete — Blog header restyled as a centered blue pill on a neutral bar, pixel-aligned to the body container, awaiting Sonny for next steps)_`
-**Last verified:** 2026-08-21 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); manual Playwright pass with real DOM measurements confirmed the blue pill's left/right edges match the body container's edges exactly (0px difference), including with the body's scrollbar accounted for via a measured-width compensation, and that the Activity/User dropdowns still render uncut
+**Current task pointer:** `_(Phase 68 complete — Blog floating chat widget added, reusing the Zoom virtual-agent knowledge base, awaiting Sonny for next steps)_`
+**Last verified:** 2026-08-22 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); a live Playwright pass drove the full open/greet/reply/follow-up/minimize/reopen/close cycle plus a 375px mobile viewport, screenshots confirmed against both of Sonny's reference images
 **Verify command:** `npm run verify`
 
 ---
@@ -3358,6 +3358,78 @@ in his own browser after this change._
       passes.
 
 ---
+
+## PHASE 67 — BLOG: RECOLOR HEADER PILL AND PROFILE CARD TO REFERENCE BLUE
+
+_Requested by Sonny on 2026-08-21: use the color from
+`src/components/blog/assets/components/blog color.jpg` for the header pill and the profile card
+("the first container")._
+
+- [x] **P341** — Sampled the reference image's exact pixel color via a headless-browser canvas
+      (`#3E51A0`, a muted indigo-blue, distinct from the previous Facebook-blue `#1877F2`) rather
+      than eyeballing it, then updated `BRAND_BLUE_BG` in `src/components/blog/theme.js` — the
+      single source of truth already consumed by exactly the two elements Sonny meant
+      (`BlogProfileCard.jsx`'s card background and `BlogTopNav.jsx`'s header pill) and nothing
+      else, so no other blue accents (the gate's Login button, the "View all Visitors" link,
+      etc., which hardcode their own hex rather than importing this token) were affected.
+      **Pass condition:** the header pill and the profile card both render the sampled `#3E51A0`
+      background color, verified via a live Playwright color check; `verify` passes.
+
+---
+
+## PHASE 68 — BLOG: FLOATING CHAT WIDGET (SHARED VIRTUAL-AGENT KNOWLEDGE)
+
+_Requested by Sonny on 2026-08-22, from two reference screenshots: a floating Messenger-style
+chat bubble and launcher icon inside the Blog app (assets already dropped at
+`src/components/blog/assets/icons/chat bubbles template.png` and `chat icon.png`), copying that
+visual design, fixed-positioned, with the icon docked at the bottom of the bubble when it's open.
+Sonny asked for the "same chat knowledge as Zoom chat" and said more knowledge would be added
+later — read as: reuse the existing Sonny-virtual-agent bot/knowledge base
+(`src/data/zoomChatKnowledgeBase.js` + `src/utils/zoomChatBot.js`) as the single source of truth
+behind both surfaces, rather than fork a second copy, since Sonny will keep growing it. Skips
+Zoom Chat's loading/gate/name/email phases entirely — the Blog visitor already gave their name via
+`BlogNameGate` before reaching the widget, so it opens straight into a time-based greeting._
+
+- [x] **P342** — Created `src/components/blog/BlogChatButton.jsx` (the floating launcher, `chat
+icon.png`) and `src/components/blog/BlogChatMessage.jsx` (bubble rendering copying the
+      reference template: right-aligned blue bubbles, left-aligned gray bubbles, a centered
+      gray timestamp divider shown only across a >60s gap instead of Zoom Chat's per-message
+      timestamp, plus the same suggestion-chip/CTA/multiple-choice shapes Zoom Chat already
+      renders). Added `BRAND_BLUE_MESSAGE_BG` to `src/components/blog/theme.js` (the existing
+      `#1877F2` interactive blue already used for links/buttons elsewhere in the app, distinct
+      from the indigo `BRAND_BLUE_BG` brand color) as the bubble/CTA color's single source of
+      truth. Created `src/components/blog/BlogChatWidget.jsx` composing both into a fixed
+      bottom-right stack (bubble window above, launcher icon anchored directly below it, matching
+      the reference's docked layout) and mounted it in `src/components/BlogApp.jsx` (root div made
+      `relative` to anchor it).
+      **Pass condition:** opening Blog shows the floating launcher icon fixed at the bottom-right
+      of the window; clicking it opens an empty bubble window matching the reference template's
+      header/input chrome; `verify` passes.
+
+- [x] **P343** — Moved `ANYTHING_ELSE_REPLY`/`CONTACT_CTA` out of `ZoomChatApp.jsx` and into
+      `src/data/zoomChatKnowledgeBase.js` (one copy, both surfaces import it — CLAUDE.md §5's "one
+      source of truth per concept"). Wired `BlogChatWidget.jsx` to the shared bot: opening the
+      widget for the first time greets with `getTimeBasedGreeting(visitorName)` (the Blog
+      identity from `BlogContext`) plus `SUGGESTED_QUESTIONS`; submitting a message runs the same
+      auto-reply → pending-follow-up → category-match → fallback-with-suggestions →
+      two-consecutive-misses-triggers-contact-CTA chain Zoom Chat already uses. The CTA's "Send
+      project details"/"Contact Sonny directly" buttons open Gmail compose via a new
+      `onOpenGmail` prop threaded `Desktop.jsx` → `BlogApp.jsx` → `BlogChatWidget.jsx` (mirroring
+      Zoom Chat's own `onOpenGmail` wiring, including the `renderPreviewBody` inert-callback
+      branch). Minimize (−) hides the bubble and keeps the conversation; Close (×) hides it and
+      resets the conversation so reopening re-greets. Sized the bubble responsively via the
+      existing `useIsMobile()` hook (a fixed `w-80`/`h-[440px]` on desktop, a near-full-width
+      `w-[calc(100vw-2rem)]`/`h-[65vh]` on mobile) per the standing mobile-adaptation requirement.
+      **Pass condition:** a live Playwright pass — open, greet-by-name, ask "how much does a
+      project cost", see the matched category reply + follow-up multiple-choice options, minimize
+      (conversation preserved on reopen), close (conversation resets) — all behave as described at
+      both a desktop and a 375px-wide viewport; `verify` passes. Flagged to Sonny, not fixed here
+      (outside this task's scope): at viewport heights ≈ the window's own default height (e.g.
+      1200×800 apps on an 800px-tall viewport), `Window.jsx`'s centering math
+      (`(innerHeight - TASKBAR_HEIGHT - height) / 2`) goes negative and the window's bottom edge —
+      where this widget now docks — renders partly behind the taskbar; unrelated to this widget
+      and affects every 1200×800-default app already, not something to silently fix under a chat-
+      widget task.
 
 ## Backlog — DO NOT START
 

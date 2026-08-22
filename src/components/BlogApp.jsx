@@ -7,10 +7,12 @@ import BlogPhotosWidget from './blog/BlogPhotosWidget.jsx'
 import BlogSponsoredWidget from './blog/BlogSponsoredWidget.jsx'
 import BlogFeed from './blog/BlogFeed.jsx'
 import BlogVisitorsPanel from './blog/BlogVisitorsPanel.jsx'
+import BlogChatWidget from './blog/BlogChatWidget.jsx'
 
 function BlogApp({
   onOpenContactInfo,
   onOpenGames,
+  onOpenGmail,
   onMinimize,
   onMaximize,
   onLogout,
@@ -39,7 +41,7 @@ function BlogApp({
   }, [searchQuery])
 
   return (
-    <div className="flex h-full flex-col bg-slate-100">
+    <div className="relative flex h-full flex-col bg-slate-100">
       <BlogTopNav
         onOpenContactInfo={onOpenContactInfo}
         onMinimize={onMinimize}
@@ -63,6 +65,11 @@ function BlogApp({
           <div className={isMobile ? '' : 'w-56 shrink-0'}>
             <BlogVisitorsPanel />
           </div>
+        </div>
+      </div>
+      <div className="pointer-events-none absolute inset-0 z-40 p-4">
+        <div className="relative mx-auto h-full w-full max-w-6xl">
+          <BlogChatWidget onOpenGmail={onOpenGmail} />
         </div>
       </div>
     </div>

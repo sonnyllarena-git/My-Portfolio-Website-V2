@@ -1,6 +1,7 @@
-export const BRAND_BLUE_BG = 'bg-[#1877F2]'
+export const BRAND_BLUE_BG = 'bg-[#3E51A0]'
 export const BRAND_BLUE_TEXT = 'text-[#1877F2]'
 export const BRAND_BLUE_BORDER = 'border-[#1877F2]'
 export const BRAND_BLUE_FOCUS_BORDER = 'focus:border-[#1877F2]'
 export const BRAND_BLUE_HOVER_BG = 'hover:bg-[#1462cc]'
 export const BRAND_BLUE_MUTED_TEXT = 'text-blue-100'
+export const BRAND_BLUE_MESSAGE_BG = 'bg-[#1877F2]'
