@@ -6,7 +6,7 @@ export const storeProducts = [
   {
     id: 'vibe-coder',
     name: 'VIBE CODER',
-    title: 'Vibe Coder Unisex Heavyweight Fleece Pullover Hoodie',
+    title: 'VIBE CODER Unisex Heavyweight Fleece Pullover Hoodie',
     description:
       'This unisex heavyweight fleece pullover hoodie features a modern streetwear style with a relaxed fit and dropped shoulders, designed with a bold white "VIBE CODER" block typography centered across the chest while keeping the back and sleeves completely plain for a clean, minimalist aesthetic.',
     gender: 'Unisex',
@@ -17,7 +17,6 @@ export const storeProducts = [
     style: 'Hoodie',
     image: vibeCoderFront,
     badge: 'Best Seller',
-    subline: 'Top Rated Streetwear Pick',
     rating: 4.5,
     reviewCount: '171.2K',
     boughtCount: '4K+ bought in past month',

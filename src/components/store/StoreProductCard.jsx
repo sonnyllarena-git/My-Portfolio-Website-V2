@@ -1,14 +1,23 @@
+import { useEffect, useRef, useState } from 'react'
 import {
   STORE_BADGE_BG,
   STORE_STAR_COLOR,
   STORE_LINK_BLUE,
-  STORE_TITLE_LINK_BLUE,
   STORE_SECONDARY_TEXT,
   STORE_GOLD_CTA_BG,
-  STORE_BODY_TEXT,
+  STORE_GOLD_CTA_HOVER_BG,
 } from './theme.js'
 
 function StoreProductCard({ product }) {
+  const descriptionRef = useRef(null)
+  const [isTruncated, setIsTruncated] = useState(false)
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false)
+
+  useEffect(() => {
+    const el = descriptionRef.current
+    if (el) setIsTruncated(el.scrollHeight > el.clientHeight)
+  }, [product.description])
+
   return (
     <div className="group flex flex-col gap-2 bg-white p-3 transition-shadow duration-200 hover:shadow-lg">
       <div className="relative overflow-hidden">
@@ -24,17 +33,27 @@ function StoreProductCard({ product }) {
         />
       </div>
 
-      <a href="#" className={`text-sm ${STORE_TITLE_LINK_BLUE} line-clamp-3`}>
+      <a
+        href="#"
+        className="line-clamp-3 cursor-pointer text-base font-bold text-black hover:text-orange-500"
+      >
         {product.title}
       </a>
 
-      <div className={`text-sm font-semibold ${STORE_BODY_TEXT}`}>
-        {product.subline}
+      <div>
+        <p ref={descriptionRef} className="line-clamp-3 text-sm text-black">
+          {product.description}
+        </p>
+        {isTruncated && (
+          <span
+            className={`cursor-pointer text-sm ${STORE_LINK_BLUE}`}
+            onMouseEnter={() => setShowDescriptionModal(true)}
+            onMouseLeave={() => setShowDescriptionModal(false)}
+          >
+            See more
+          </span>
+        )}
       </div>
-
-      <p className="line-clamp-3 text-sm text-black group-hover:line-clamp-none">
-        {product.description}
-      </p>
 
       <div className="flex items-center gap-1 text-sm">
         <span className={STORE_STAR_COLOR}>★ {product.rating}</span>
@@ -56,10 +75,21 @@ function StoreProductCard({ product }) {
       </div>
 
       <button
-        className={`mt-1 rounded-full py-1.5 text-sm font-medium ${STORE_GOLD_CTA_BG}`}
+        className={`mt-1 cursor-pointer rounded-full py-1.5 text-sm font-medium transition-colors duration-150 ${STORE_GOLD_CTA_BG} ${STORE_GOLD_CTA_HOVER_BG}`}
       >
         Add to cart
       </button>
+
+      {showDescriptionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            <h3 className="mb-2 text-lg font-bold text-black">
+              {product.title}
+            </h3>
+            <p className="text-sm text-black">{product.description}</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

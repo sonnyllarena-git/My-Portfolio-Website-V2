@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Store landing page (P355–P375) complete and verified live — desktop + mobile layouts, header/nav sizing polish, product-card description + hover effects, all 4 grid slots filled; P350's asset cleanup is still one file short and remains deferred as noted below)_`
-**Last verified:** 2026-08-23 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright confirmed the Store window end-to-end at 1440px: taller/narrower white search bar with a drawn US flag, a visibly taller secondary nav bar with every link legible, 4 Vibe Coder product cards each with a black description that expands on hover, a pointer cursor over the product image, and zero console errors
+**Current task pointer:** `_(Store landing page (P355–P379) complete and verified live — desktop + mobile layouts, header/nav sizing polish, and product-card polish (name styling/casing, dropped unsourced subline, fixed-size card with hover-modal description, darker Add to cart hover); P350's asset cleanup is still one file short and remains deferred as noted below)_`
+**Last verified:** 2026-08-23 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright confirmed the Store window end-to-end at 1440px: the product name is bold/black and turns orange on hover, the clamped description shows a "See more" that opens a centered modal with the full text on hover (card size unchanged), the Add to cart button darkens on hover with a pointer cursor, and zero console errors
 **Verify command:** `npm run verify`
 
 ---
@@ -3697,6 +3697,43 @@ duplicating the one real product across all 4 grid slots._
       the page scrolls as a whole instead of compressing its own chrome.
       **Pass condition:** `verify` passes; a live screenshot shows the full-height secondary nav
       bar with all its links legible.
+
+_Requested by Sonny on 2026-08-23 after a further review of the product card: name styling/
+casing, dropping an unsourced placeholder line, a fixed-size card with a hover-modal for the full
+description, and a darker Add to cart hover state._
+
+- [x] **P376** — In `StoreProductCard.jsx`, restyle the product name link: bigger
+      (`text-base`), bold, default black, hover turns orange
+      (`hover:text-orange-500`), replacing the always-blue link style. In
+      `storeProducts.js`, fix the `title` string so the product's short name
+      is in ALL CAPS and the rest stays Start Case (`"VIBE CODER Unisex
+Heavyweight Fleece Pullover Hoodie"`).
+      **Pass condition:** `verify` passes; a live screenshot shows the bigger
+      bold black name turning orange on hover.
+
+- [x] **P377** — Remove the unsourced `subline` ("Top Rated Streetwear Pick")
+      from `StoreProductCard.jsx` and delete the now-unused `subline` field
+      from `storeProducts.js`.
+      **Pass condition:** `verify` passes; the card no longer renders that
+      line.
+
+- [x] **P378** — In `StoreProductCard.jsx`: drop the previous hover-expand
+      behavior on the description (the card must stay a fixed size), keep it
+      permanently clamped to 3 lines, detect real truncation via a ref
+      (`scrollHeight > clientHeight`), and show a "See more" text only when
+      truncated; hovering "See more" opens a centered modal (matching the
+      existing `fixed inset-0 ... bg-black/30` pattern from
+      `BlogArticleModal.jsx`) showing the full description, closing on
+      mouse-leave.
+      **Pass condition:** `verify` passes; the card's size no longer changes
+      on hover, and hovering "See more" shows the full description in a
+      modal.
+
+- [x] **P379** — Add a darker gold hover state to the "Add to cart" button in
+      `StoreProductCard.jsx` (`STORE_GOLD_CTA_HOVER_BG` in `theme.js`) plus an
+      explicit pointer cursor.
+      **Pass condition:** `verify` passes; hovering the button shows a
+      visibly darker gold with a pointer cursor.
 
 ---
 
