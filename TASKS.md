@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Phase 71 functionally complete — v2 boot flow (video 1 → sign-in click → video 2 → desktop) verified live; P350's asset cleanup is one file short: windows-startup.mp4 is unreferenced but still locked by a running dev server/browser tab, deferred rather than killing an unowned process)_`
-**Last verified:** 2026-08-22 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright confirmed the v2 flow end-to-end: `loading-screen-v2.mp4` plays unmuted and pauses naturally on its own last frame, the invisible Sign in button shows a pointer cursor with no box-shadow/glow, clicking it plays `loading-screen-2.mp4` unmuted, and it ends into the real desktop — zero console errors throughout
+**Current task pointer:** `_(Store landing page (P355–P370) complete and verified live — desktop + mobile layouts, sidebar checkbox/swatch toggles, no console errors; P350's asset cleanup is still one file short and remains deferred as noted below)_`
+**Last verified:** 2026-08-23 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright confirmed the Store window end-to-end at desktop (1440px) and mobile (390px) widths: header/nav/sidebar/product grid/footer all render with correct colors and legible text, the mobile "Filters" toggle expands, a sidebar checkbox and color swatch visibly toggle selected state, and there is zero horizontal page overflow and zero console errors
 **Verify command:** `npm run verify`
 
 ---
@@ -3550,6 +3550,113 @@ only), then on click play video 2 unmuted before mounting the real desktop. The 
       to `desktop` (mounting the existing 5 providers + `Desktop`, unchanged).
       **Pass condition:** `verify` passes; loading a fresh page plays video 1, pauses on its Sign
       in frame, clicking it plays video 2, and it ends into the real desktop.
+
+---
+
+_Requested by Sonny on 2026-08-23: build the Store app's landing page from the mockup in
+`src/components/store/assets/components/store landing page.png` (an Amazon-style layout reskinned
+as "Sonny's" store) plus the header icons in `src/components/store/assets/icons/` and the one
+seeded product in `src/components/store/product/VIBE CODER/`. Confirmed scope: the product grid
+shows the 1 real product plus grayed-out "Coming soon" tiles for the rest; "Add to cart" and the
+sidebar filters are visual only for now — cart state and real filtering are separate future work._
+
+- [x] **P355** — Create `src/components/store/data/storeProducts.js`: export the seeded product
+      array transcribed from `VIBE CODER.txt` (name, description, gender, colors, sizes, material,
+      sleeveType, style, image import from `Vibe Coder Front.png`) plus placeholder display fields
+      the mockup needs but the txt doesn't provide (badge, rating, reviewCount, boughtCount,
+      deliveryEstimate — commented as placeholder dressing), and a `STORE_GRID_SIZE = 4` constant.
+      **Pass condition:** `verify` passes; the module exports 1 product object with every field.
+
+- [x] **P356** — Create `src/components/store/theme.js`: brand color constants sampled exactly
+      from `store landing page.png` (header navy, secondary/footer navy, gold search-button, gold
+      "Add to cart" CTA, "Best Seller" ribbon, star-rating orange, link-text blue, body/secondary
+      text gray, page background gray), matching `blog/theme.js`'s plain Tailwind-class-string
+      convention.
+      **Pass condition:** `verify` passes; every color matches its source region in the mockup.
+
+- [x] **P357** — Create `src/components/store/StoreHeader.jsx` (desktop layout only): navy header
+      bar with the Sonny logo (`sonny store logo.png`), "Deliver to / Philippines" block (using
+      `pin address.png`), a search bar with an "All" dropdown and gold search button
+      (`search.png`), EN/flag text, "Hello, Sign in" / "Returns & Orders" links, and a cart icon
+      (`cart.png`) + label.
+      **Pass condition:** `verify` passes; rendering `StoreHeader` standalone shows every element
+      from the mockup's header.
+
+- [x] **P358** — Create `src/components/store/StoreNav.jsx` (desktop layout only): secondary navy
+      bar with a hamburger "All" trigger and the link row (Sonny Promo, Today's Deals, Customer
+      Service, Prime Video, Gift Cards, Sell, Registry).
+      **Pass condition:** `verify` passes.
+
+- [x] **P359** — Add mobile layout to `StoreHeader.jsx` and `StoreNav.jsx` via `useIsMobile()`:
+      header collapses to logo + full-width search + cart icon on one row (deliver-to/sign-in/
+      returns/language move below or hide), nav's link row becomes horizontally scrollable.
+      **Pass condition:** `verify` passes; a mobile-width viewport shows no horizontal page
+      overflow and every header/nav element stays reachable.
+
+- [x] **P360** — Create `src/components/store/StoreProductCard.jsx`: presentational card from a
+      `product` prop — image, "Best Seller" ribbon, title, subline, star rating + review count,
+      social-proof line, "Click to see price" link, delivery estimate, gold "Add to cart" button
+      (no click handler yet, per Sonny's confirmed visual-only scope).
+      **Pass condition:** `verify` passes; rendering with the seeded Vibe Coder product shows every
+      field from the mockup's card.
+
+- [x] **P361** — Create `src/components/store/StoreComingSoonCard.jsx`: a grayed-out placeholder
+      tile matching `StoreProductCard`'s footprint with a centered "Coming soon" label.
+      **Pass condition:** `verify` passes.
+
+- [x] **P362** — Create `src/components/store/StoreProductGrid.jsx` (desktop layout only): renders
+      one `StoreProductCard` per `storeProducts.js` entry, then `StoreComingSoonCard` tiles up to
+      `STORE_GRID_SIZE`, in a 4-column grid.
+      **Pass condition:** `verify` passes; the grid shows 1 real card + 3 "Coming soon" tiles.
+
+- [x] **P363** — Add mobile layout to `StoreProductGrid.jsx` via `useIsMobile()`: single-column
+      grid, full-width cards.
+      **Pass condition:** `verify` passes; a mobile-width viewport shows stacked cards with no
+      horizontal overflow.
+
+- [x] **P364** — Create `src/components/store/StoreSidebar.jsx` (desktop layout only): "Popular
+      Shopping Ideas" tags + "See more", "Free Shipping by Amazon" checkbox, "Gender" checkbox
+      group, "Color" swatch grid, "Customer Reviews" star filter — checkboxes/swatches only toggle
+      their own local selected look, no grid filtering wired yet (per Sonny's confirmed scope).
+      **Pass condition:** `verify` passes; clicking a checkbox/swatch visibly toggles its selected
+      state.
+
+- [x] **P365** — Add mobile layout to `StoreSidebar.jsx` via `useIsMobile()`: collapse the panel
+      into a `<details>`-style "Filters" toggle above the grid, collapsed by default.
+      **Pass condition:** `verify` passes; a mobile-width viewport shows the collapsed toggle
+      instead of the full sidebar, expanding on click.
+
+- [x] **P366** — Create `src/components/store/StoreFooter.jsx` (desktop layout only): 4-column
+      dark footer ("Get to Know Us", "Make Money with Us", "Payment Products", "Let Us Help You")
+      with static placeholder link labels.
+      **Pass condition:** `verify` passes.
+
+- [x] **P367** — Add mobile layout to `StoreFooter.jsx` via `useIsMobile()`: stack the 4 columns
+      vertically.
+      **Pass condition:** `verify` passes; a mobile-width viewport shows stacked footer columns.
+
+- [x] **P368** — Create `src/components/StoreApp.jsx`: thin orchestrator composing `StoreHeader` +
+      `StoreNav` + a body row (`StoreSidebar` + `StoreProductGrid`) + `StoreFooter` in a scrollable
+      page container, switching the body row row→column via `useIsMobile()` the same way
+      `BlogApp.jsx` does.
+      **Pass condition:** `verify` passes; rendering `StoreApp` standalone shows the full landing
+      page top to bottom.
+
+- [x] **P369** — Wire the Store icon in `src/components/Desktop.jsx`: import `StoreApp`, add
+      `store: [1200, 800]` to `WINDOW_PREVIEW_SIZES`, add a `store` branch to `renderPreviewBody`,
+      and add a `w.id === 'store'` branch in the open-window switch rendering
+      `<Window icon="🛒" title="Store" defaultWidth={1200} defaultHeight={800}><StoreApp /></Window>`.
+      **Pass condition:** `verify` passes; double-clicking the Store desktop icon opens the full
+      landing page inside a real window.
+
+- [x] **P370** — Polish caught during a real-browser check of the finished Store landing page:
+      `StoreSidebar.jsx`'s headings and checkbox labels ("Popular Shopping Ideas", "Free Shipping
+      by Amazon", "Gender", "Color", "Customer Reviews", and every option label) had no explicit
+      text color, so they inherited `Window.jsx`'s chrome-wide `text-white` and rendered invisible
+      against the sidebar's white background. Add `STORE_BODY_TEXT` to both the desktop and mobile
+      `<details>` sidebar containers.
+      **Pass condition:** `verify` passes; a live screenshot shows every sidebar heading/label
+      legible against the white background.
 
 ---
 

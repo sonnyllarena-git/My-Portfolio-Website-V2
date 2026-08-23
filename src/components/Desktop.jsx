@@ -23,6 +23,7 @@ import SettingsApp from './SettingsApp.jsx'
 import MusicLabApp from './MusicLabApp.jsx'
 import ZoomChatApp from './ZoomChatApp.jsx'
 import ProjectsApp from './ProjectsApp.jsx'
+import StoreApp from './StoreApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
@@ -60,6 +61,7 @@ const WINDOW_PREVIEW_SIZES = {
   'developer-lab': [1200, 800],
   projects: [1200, 800],
   resume: [420, 560],
+  store: [1200, 800],
 }
 
 function renderPreviewBody(w, gmailGuest) {
@@ -100,6 +102,7 @@ function renderPreviewBody(w, gmailGuest) {
     return <BlogApp onOpenGames={() => {}} onOpenGmail={() => {}} />
   if (w.id === 'zoom-chat') return <ZoomChatApp onOpenGmail={() => {}} />
   if (w.id === 'projects') return <ProjectsApp />
+  if (w.id === 'store') return <StoreApp />
   return null
 }
 
@@ -506,6 +509,20 @@ function Desktop() {
                 defaultHeight={650}
               >
                 <MemoryWallApp />
+              </Window>
+            )
+          }
+          if (w.id === 'store') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🛒"
+                title="Store"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <StoreApp />
               </Window>
             )
           }

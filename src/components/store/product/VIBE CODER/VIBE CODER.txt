@@ -1,0 +1,12 @@
+Product name: VIBE CODER
+Description: This unisex heavyweight fleece pullover hoodie features
+a modern streetwear style with a relaxed fit and dropped shoulders,
+designed with a bold white "VIBE CODER" block typography centered across
+the chest while keeping the back and sleeves completely plain for a clean,
+minimalist aesthetic.
+Gender: Unisex
+Color: Charcoal Grey, Navy Blue, Black, White, Heather Grey
+Sizes: XS, S, M, L, XL, XXL
+Material: Cotton
+Sleeve type:Long Sleeve
+Style: Hoodie
