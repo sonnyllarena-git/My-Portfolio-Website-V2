@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useIsMobile } from '../../hooks/useIsMobile.js'
 import {
   STORE_BADGE_BG,
   STORE_STAR_COLOR,
@@ -9,6 +10,7 @@ import {
 } from './theme.js'
 
 function StoreProductCard({ product }) {
+  const isMobile = useIsMobile()
   const descriptionRef = useRef(null)
   const [isTruncated, setIsTruncated] = useState(false)
   const [showDescriptionModal, setShowDescriptionModal] = useState(false)
@@ -17,6 +19,16 @@ function StoreProductCard({ product }) {
     const el = descriptionRef.current
     if (el) setIsTruncated(el.scrollHeight > el.clientHeight)
   }, [product.description])
+
+  // Touch has no real hover, so mobile opens/closes the modal on tap instead — the modal itself
+  // stays pointer-events-none on desktop (even the inner box) so it can never sit on top of the
+  // "See more" trigger and steal its hover state, which was causing the open/close flicker.
+  const seeMoreHandlers = isMobile
+    ? { onClick: () => setShowDescriptionModal(true) }
+    : {
+        onMouseEnter: () => setShowDescriptionModal(true),
+        onMouseLeave: () => setShowDescriptionModal(false),
+      }
 
   return (
     <div className="group flex flex-col gap-2 bg-white p-3 transition-shadow duration-200 hover:shadow-lg">
@@ -40,18 +52,37 @@ function StoreProductCard({ product }) {
         {product.title}
       </a>
 
-      <div>
+      <div className="relative">
         <p ref={descriptionRef} className="line-clamp-3 text-sm text-black">
           {product.description}
         </p>
         {isTruncated && (
           <span
-            className={`cursor-pointer text-sm ${STORE_LINK_BLUE}`}
-            onMouseEnter={() => setShowDescriptionModal(true)}
-            onMouseLeave={() => setShowDescriptionModal(false)}
+            className={`-mx-2 -my-1 inline-block cursor-pointer rounded px-2 py-1 text-sm ${STORE_LINK_BLUE}`}
+            {...seeMoreHandlers}
           >
             See more
           </span>
+        )}
+
+        {showDescriptionModal && (
+          <div
+            className={`pointer-events-none absolute left-0 right-0 top-0 z-20 rounded-lg border border-gray-200 bg-white p-3 shadow-lg ${isMobile ? 'pointer-events-auto' : ''}`}
+          >
+            {isMobile && (
+              <div className="mb-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowDescriptionModal(false)}
+                  aria-label="Close"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-base text-black hover:bg-gray-100"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            <p className="text-sm text-black">{product.description}</p>
+          </div>
         )}
       </div>
 
@@ -79,17 +110,6 @@ function StoreProductCard({ product }) {
       >
         Add to cart
       </button>
-
-      {showDescriptionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="max-w-md rounded-xl bg-white p-6 shadow-2xl">
-            <h3 className="mb-2 text-lg font-bold text-black">
-              {product.title}
-            </h3>
-            <p className="text-sm text-black">{product.description}</p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

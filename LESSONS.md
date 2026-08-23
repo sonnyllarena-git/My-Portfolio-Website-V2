@@ -99,6 +99,7 @@ _Framework-specific behaviour that bit us: lifecycle, state, rendering, routing,
   panel inside a `Window` must set its own explicit text color at the container level, never rely
   on the inherited default.
 - [2026-08-22] A `<video>` with no `loop` attribute needs no special handling to "pause at the end" — it fires `ended` and simply stays on its own last frame automatically, confirmed live (`currentTime === duration`, `paused: true` after `ended`) → when a video's final frame is itself the intended static screen (v2's boot video ends on the baked-in Guest/Sign-in art), just overlay the interactive control on `ended`; no extra pause-and-hold logic is needed.
+- [2026-08-23] `chromium-cli` isn't installed in this environment; raw Playwright from the npx cache works (`npx playwright --version` warms it, then `require()` its absolute `node_modules/playwright` path), but `page.waitForSelector('text=Sign in')` after the boot video timed out unpredictably (worked once, then failed twice at 30s and 90s) even though a screenshot taken at the same instant showed the button rendered — likely sandbox/CPU contention from multiple concurrent `npm run dev` instances (each grabs the next free port, so it's easy to accidentally end up with 2-3 running) → for this project's boot sequence, use fixed `waitForTimeout` + coordinate clicks (click anywhere ~1s in, then the Sign-in button at ~15s after that) instead of text-selector waits, and check `Get-NetTCPConnection -State Listen` before starting another `npm run dev` to avoid stacking dev servers.
 
 ---
 

@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Store landing page (P355–P379) complete and verified live — desktop + mobile layouts, header/nav sizing polish, and product-card polish (name styling/casing, dropped unsourced subline, fixed-size card with hover-modal description, darker Add to cart hover); P350's asset cleanup is still one file short and remains deferred as noted below)_`
-**Last verified:** 2026-08-23 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright confirmed the Store window end-to-end at 1440px: the product name is bold/black and turns orange on hover, the clamped description shows a "See more" that opens a centered modal with the full text on hover (card size unchanged), the Add to cart button darkens on hover with a pointer cursor, and zero console errors
+**Current task pointer:** `_(Store landing page (P355–P380) complete and verified live, plus real Gender/Color filtering + name+description search now wired end-to-end (P381–P385); P350's asset cleanup is still one file short and remains deferred as noted below)_`
+**Last verified:** 2026-08-23 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 49 tests); live Playwright confirmed the Store window end-to-end at 1440px: checking "Unisex" keeps the Vibe Coder cards visible, checking "Men" alone empties the grid to a "No products match your search." message, typing "xyz" in search shows the same empty state, and typing "vibe" brings the cards back — zero console errors
 **Verify command:** `npm run verify`
 
 ---
@@ -3734,6 +3734,82 @@ Heavyweight Fleece Pullover Hoodie"`).
       explicit pointer cursor.
       **Pass condition:** `verify` passes; hovering the button shows a
       visibly darker gold with a pointer cursor.
+
+- [x] **P380** — Fix caught after Sonny tested P378's "See more" hover-modal live: the modal
+      covered the trigger, so the browser saw the mouse leave "See more" the instant it appeared,
+      hiding it again and re-triggering `onMouseEnter` — an open/close flicker loop. In
+      `StoreProductCard.jsx`, make the modal fully `pointer-events-none` on desktop (outer overlay
+      and inner box) so it can never steal the hover, enlarge the "See more" hit area with
+      padding + a matching negative margin, and switch to tap-to-open/tap-to-close (with an
+      explicit × button) on mobile via `useIsMobile()`, since touch has no real hover state to
+      drive open/close.
+      **Pass condition:** `verify` passes; hovering "See more" on desktop shows a stable
+      (non-flickering) modal, and on a mobile-width viewport tapping "See more" opens it and the ×
+      button closes it.
+
+---
+
+_Requested by Sonny on 2026-08-23, after a brainstorm on using each product's
+`product details.txt` notepad (Gender/Color/Sizes/Material/Sleeve type/Style, plus Name/
+Description) as the source of the Store's filter facets and search fields. Confirmed scope:
+`StoreSidebar.jsx`'s Gender + Color filters and `StoreHeader.jsx`'s search (name + description
+only) get wired to real data; Free Shipping and Customer Reviews stay cosmetic since no notepad
+field backs them; results sort by `rating` descending — `reviewCount` is left out of the sort
+since it's a placeholder string ("171.2K") with no real numeric data yet, not worth parsing for a
+value that's about to be replaced._
+
+- [x] **P381** — Create `src/components/store/filterStoreProducts.js`: pure function
+      `filterStoreProducts(products, { genders, color, query })` — filters by `genders` (a `Set`;
+      empty = no filter, else `genders.has(product.gender)`), by `color` (a name string; `null` =
+      no filter, else `product.colors.includes(color)`), and by `query` (case-insensitive
+      substring match against `product.name`, `product.title`, and `product.description`; empty =
+      no filter) — then sorts the surviving products by `rating` descending. Add
+      `filterStoreProducts.test.js` beside it: one happy-path test (mixed gender/color/query
+      combination returns the expected subset, sorted by rating) and one failure-path test (a
+      query matching nothing returns `[]` with no error).
+      **Pass condition:** `npm run verify` passes with both new tests green.
+
+- [x] **P382** — In `StoreSidebar.jsx`: replace the internal `selectedGenders`/`selectedColor`
+      `useState` calls with controlled props (`selectedGenders`, `onToggleGender`, `selectedColor`,
+      `onSelectColor`) from a parent; change `COLORS` from a flat hex array to `{ hex, name }`
+      pairs (names matching `storeProducts.js`'s `colors` strings, e.g. `'Black'`, `'Navy Blue'`),
+      rendering `aria-label={color.name}` and comparing `selectedColor === color.name`. Leave
+      `freeShipping` as local state — no product field backs it yet, so it stays cosmetic.
+      **Pass condition:** `verify` passes; rendering `StoreSidebar` with props supplied from a
+      parent stub shows the passed-in selection state, and clicking a swatch/checkbox calls the
+      passed-in handler instead of touching local state.
+
+- [x] **P383** — In `StoreHeader.jsx`: accept `searchQuery`/`onSearchChange` props and make the
+      search `<input>` controlled (`value={searchQuery}`, `onChange={(e) =>
+onSearchChange(e.target.value)}`).
+      **Pass condition:** `verify` passes; typing in the search input calls `onSearchChange` with
+      the new value on every keystroke.
+
+- [x] **P384** — In `StoreProductGrid.jsx`: accept a `products` prop instead of importing
+      `storeProducts` directly. When `products` is empty, render a centered "No products match
+      your search." message instead of the grid (guards the existing `% storeProducts.length`
+      cycle logic from a divide-by-zero); otherwise keep cycling through `products` to fill
+      `STORE_GRID_SIZE` slots as today.
+      **Pass condition:** `verify` passes; passing `products={[]}` renders the message with no
+      console error; passing a 1-item array still fills 4 grid slots by cycling.
+
+- [x] **P385** — In `StoreApp.jsx`: lift `selectedGenders` (Set), `selectedColor`, and
+      `searchQuery` state; pass the filter props into `StoreSidebar` (P382) and the search props
+      into `StoreHeader` (P383); call `filterStoreProducts(storeProducts, { genders:
+selectedGenders, color: selectedColor, query: searchQuery })` (P381) and pass the result into
+      `StoreProductGrid` as `products` (P384).
+      **Pass condition:** `verify` passes; live in the Store window, checking "Unisex" keeps the
+      Vibe Coder card visible while checking any other single gender empties the grid, and typing
+      "xyz" into search shows the "No products match" message.
+
+- [x] **P386** — Fix caught after Sonny tested P380's scoped "See more" popover live: it still
+      covered the whole card behind a `bg-black/30` backdrop, dimming the image/price/Add to cart
+      just to show more text. In `StoreProductCard.jsx`, move the popover inside the description's
+      own `relative` wrapper (`absolute left-0 right-0 top-0`, no backdrop, bordered white box) so
+      it only overlays the description area, leaving the rest of the card fully visible.
+      **Pass condition:** `verify` passes; hovering "See more" shows a compact bordered popover
+      over just the description, with the product image and Add to cart button still visible at
+      full opacity.
 
 ---
 

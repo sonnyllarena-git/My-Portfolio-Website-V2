@@ -18,7 +18,7 @@ function UsFlagIcon() {
   )
 }
 
-function StoreHeader() {
+function StoreHeader({ searchQuery = '', onSearchChange = () => {} }) {
   const isMobile = useIsMobile()
 
   const searchBar = (
@@ -31,6 +31,8 @@ function StoreHeader() {
         <input
           type="text"
           placeholder="Search Sonny's Store"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
           className="min-w-0 flex-1 bg-white px-3 text-sm text-black outline-none"
         />
         <button

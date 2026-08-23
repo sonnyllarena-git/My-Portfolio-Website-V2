@@ -5,36 +5,31 @@ import { STORE_LINK_BLUE, STORE_STAR_COLOR, STORE_BODY_TEXT } from './theme.js'
 const POPULAR_IDEAS = ['Pullover', 'Fleece', 'Gray', 'Brown']
 const GENDERS = ['Men', 'Women', 'Boys', 'Girls', 'Babies', 'Unisex']
 const COLORS = [
-  '#000000',
-  '#808080',
-  '#2563eb',
-  '#ffffff',
-  '#78350f',
-  '#d2b48c',
-  '#dc2626',
-  '#ec4899',
-  '#f97316',
-  '#facc15',
-  '#fefce8',
-  '#16a34a',
-  '#7c3aed',
-  '#a3a3a3',
-  '#bae6fd',
+  { hex: '#000000', name: 'Black' },
+  { hex: '#808080', name: 'Heather Grey' },
+  { hex: '#2563eb', name: 'Blue' },
+  { hex: '#ffffff', name: 'White' },
+  { hex: '#78350f', name: 'Brown' },
+  { hex: '#d2b48c', name: 'Tan' },
+  { hex: '#dc2626', name: 'Red' },
+  { hex: '#ec4899', name: 'Pink' },
+  { hex: '#f97316', name: 'Orange' },
+  { hex: '#facc15', name: 'Yellow' },
+  { hex: '#fefce8', name: 'Ivory' },
+  { hex: '#16a34a', name: 'Green' },
+  { hex: '#7c3aed', name: 'Purple' },
+  { hex: '#a3a3a3', name: 'Silver' },
+  { hex: '#bae6fd', name: 'Sky Blue' },
 ]
 
-function StoreSidebar() {
+function StoreSidebar({
+  selectedGenders = new Set(),
+  onToggleGender = () => {},
+  selectedColor = null,
+  onSelectColor = () => {},
+}) {
   const isMobile = useIsMobile()
   const [freeShipping, setFreeShipping] = useState(false)
-  const [selectedGenders, setSelectedGenders] = useState(new Set())
-  const [selectedColor, setSelectedColor] = useState(null)
-
-  function toggleGender(gender) {
-    setSelectedGenders((prev) => {
-      const next = new Set(prev)
-      next.has(gender) ? next.delete(gender) : next.add(gender)
-      return next
-    })
-  }
 
   const filters = (
     <>
@@ -68,7 +63,7 @@ function StoreSidebar() {
               <input
                 type="checkbox"
                 checked={selectedGenders.has(gender)}
-                onChange={() => toggleGender(gender)}
+                onChange={() => onToggleGender(gender)}
               />
               {gender}
             </label>
@@ -81,12 +76,12 @@ function StoreSidebar() {
         <div className="grid grid-cols-6 gap-2">
           {COLORS.map((color) => (
             <button
-              key={color}
-              aria-label={color}
-              onClick={() => setSelectedColor(color)}
-              style={{ backgroundColor: color }}
+              key={color.name}
+              aria-label={color.name}
+              onClick={() => onSelectColor(color.name)}
+              style={{ backgroundColor: color.hex }}
               className={`h-6 w-6 rounded-full border ${
-                selectedColor === color
+                selectedColor === color.name
                   ? 'ring-2 ring-offset-1 ring-blue-500'
                   : 'border-gray-300'
               }`}
