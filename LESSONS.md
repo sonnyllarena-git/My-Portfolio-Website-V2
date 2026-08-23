@@ -83,6 +83,14 @@ _Framework-specific behaviour that bit us: lifecycle, state, rendering, routing,
 - [2026-08-20] `react-rnd`'s `minWidth`/`minHeight` props silently clamp the rendered size back up even when the `size` prop is set smaller — forcing `Window.jsx` windows to fill a 390px mobile viewport via `size={{width: window.innerWidth, ...}}` still rendered at the desktop `MIN_WIDTH` (480px), clipping the title-bar buttons and toolbar off-screen, with `npm run verify` fully green throughout since nothing about it is unit-testable → whenever a `Rnd`'s intended size can go below its own `minWidth`/`minHeight` (e.g. a mobile full-screen mode), pass `0` for those props in that mode instead of assuming the `size` prop wins; this class of bug only surfaces by actually loading the page at the target viewport, never from `verify`.
 - [2026-08-22] A full-bleed `bg-cover`/`background-position:center` background only keeps an overlay's percentage position pixel-exact on the axis where nothing gets cropped — any overlay target off-center on the _cropped_ axis drifts as viewport aspect ratio changes → for a full-viewport background image with a precisely-positioned overlay control (`SignInScreen.jsx`), size an inner box to `width: min(100vw, calc(100vh * <ratio>))` + `aspectRatio: '<ratio>'` (a CSS-only `object-fit: contain` box) instead, so percentage positions inside it are exact on every viewport with no JS measurement needed.
 - [2026-08-22] Chromium (and every major browser) blocks unmuted `<video autoPlay>` with no prior user gesture on the page — confirmed live: with the default autoplay policy, `StartupLoadingScreen.jsx`'s boot video loads paused at `currentTime: 0`; only after a real click does `play()` succeed with sound → an unmuted autoplay video needs a `.play().catch()` on mount plus a click-to-continue fallback that retries `play()` inside a real user gesture, not just the `autoPlay` attribute alone.
+- [2026-08-23] A `flex h-full flex-col overflow-auto` page wrapper (`StoreApp.jsx`) only scrolls
+  when its children can't shrink — any child left at the default `flex-shrink: 1` with a non-zero
+  basis (a plain header/nav/footer div) gets compressed by the flexbox algorithm instead, while a
+  same-level `flex-1` (basis 0) sibling absorbs none of that compression → once the Store page's
+  content grew taller than its 800px window (taller header + per-card descriptions), `StoreNav`
+  shrank to invisible with `verify` fully green throughout, caught only by a live screenshot; every
+  top-level child of a scrollable flex-column page needs `shrink-0` so the container overflows
+  (and scrolls) instead of quietly crushing its own chrome.
 - [2026-08-23] `Window.jsx`'s chrome wrapper sets `text-white` on the div containing every app's
   children, so any app content that sits on a light/white background (e.g. `StoreSidebar.jsx`'s
   white filter panel) needs an explicit text color on its own container — otherwise headings/

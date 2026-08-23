@@ -25,7 +25,7 @@ function StoreFooter() {
 
   return (
     <div
-      className={`grid gap-4 px-6 py-6 text-white ${isMobile ? 'grid-cols-1' : 'grid-cols-4'} ${STORE_FOOTER_BG}`}
+      className={`grid shrink-0 gap-4 px-6 py-6 text-white ${isMobile ? 'grid-cols-1' : 'grid-cols-4'} ${STORE_FOOTER_BG}`}
     >
       {FOOTER_COLUMNS.map((column) => (
         <div key={column.title}>

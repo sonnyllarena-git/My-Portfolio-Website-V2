@@ -13,7 +13,7 @@ const NAV_LINKS = [
 function StoreNav() {
   return (
     <div
-      className={`flex items-center gap-4 overflow-x-auto px-4 py-1.5 text-sm text-white ${STORE_NAV_BG}`}
+      className={`flex h-10 shrink-0 items-center gap-4 overflow-x-auto px-4 text-sm text-white ${STORE_NAV_BG}`}
     >
       <button className="flex shrink-0 items-center gap-1 font-semibold">
         <span>☰</span>

@@ -5,26 +5,41 @@ import cartIcon from './assets/icons/cart.png'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
 import { STORE_HEADER_BG, STORE_GOLD_SEARCH_BG } from './theme.js'
 
+// Countries beyond the US will become a real selector later — flag only, for now.
+function UsFlagIcon() {
+  return (
+    <svg viewBox="0 0 20 14" className="h-4 w-5 shrink-0" aria-hidden="true">
+      <rect width="20" height="14" fill="#B22234" />
+      <rect y="2" width="20" height="2" fill="#fff" />
+      <rect y="6" width="20" height="2" fill="#fff" />
+      <rect y="10" width="20" height="2" fill="#fff" />
+      <rect width="8" height="8" fill="#3C3B6E" />
+    </svg>
+  )
+}
+
 function StoreHeader() {
   const isMobile = useIsMobile()
 
   const searchBar = (
-    <div className="flex min-w-0 flex-1 items-stretch overflow-hidden rounded">
-      <button className="flex shrink-0 items-center gap-1 bg-gray-100 px-2 text-sm text-black">
-        All
-        <span className="text-xs">▾</span>
-      </button>
-      <input
-        type="text"
-        placeholder="Search Sonny's Store"
-        className="min-w-0 flex-1 px-3 text-sm text-black outline-none"
-      />
-      <button
-        aria-label="Search"
-        className={`flex shrink-0 items-center justify-center px-3 ${STORE_GOLD_SEARCH_BG}`}
-      >
-        <img src={searchIcon} alt="" className="h-4 w-4" />
-      </button>
+    <div className="flex min-w-0 flex-1 items-stretch">
+      <div className="flex h-12 w-[90%] items-stretch overflow-hidden rounded">
+        <button className="flex shrink-0 items-center gap-1 bg-gray-200 px-2 text-sm text-black">
+          All
+          <span className="text-xs">▾</span>
+        </button>
+        <input
+          type="text"
+          placeholder="Search Sonny's Store"
+          className="min-w-0 flex-1 bg-white px-3 text-sm text-black outline-none"
+        />
+        <button
+          aria-label="Search"
+          className={`flex shrink-0 items-center justify-center px-3 ${STORE_GOLD_SEARCH_BG}`}
+        >
+          <img src={searchIcon} alt="" className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   )
 
@@ -38,7 +53,7 @@ function StoreHeader() {
   if (isMobile) {
     return (
       <div
-        className={`flex flex-col gap-2 px-3 py-2 text-white ${STORE_HEADER_BG}`}
+        className={`flex shrink-0 flex-col gap-2 px-3 py-2 text-white ${STORE_HEADER_BG}`}
       >
         <div className="flex items-center justify-between gap-3">
           <img src={logo} alt="Sonny" className="h-6 shrink-0" />
@@ -51,7 +66,7 @@ function StoreHeader() {
 
   return (
     <div
-      className={`flex items-center gap-4 px-4 py-2 text-white ${STORE_HEADER_BG}`}
+      className={`flex shrink-0 items-center gap-4 px-4 py-2 text-white ${STORE_HEADER_BG}`}
     >
       <img src={logo} alt="Sonny" className="h-8 shrink-0" />
 
@@ -66,7 +81,7 @@ function StoreHeader() {
       {searchBar}
 
       <div className="flex shrink-0 cursor-pointer items-center gap-1 text-sm">
-        <span>🇺🇸</span>
+        <UsFlagIcon />
         <span>EN</span>
         <span className="text-xs">▾</span>
       </div>

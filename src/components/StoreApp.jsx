@@ -13,7 +13,7 @@ function StoreApp() {
     <div className={`flex h-full flex-col overflow-auto ${STORE_PAGE_BG}`}>
       <StoreHeader />
       <StoreNav />
-      <div className={`flex flex-1 gap-3 p-3 ${isMobile ? 'flex-col' : ''}`}>
+      <div className={`flex shrink-0 gap-3 p-3 ${isMobile ? 'flex-col' : ''}`}>
         <StoreSidebar />
         <StoreProductGrid />
       </div>

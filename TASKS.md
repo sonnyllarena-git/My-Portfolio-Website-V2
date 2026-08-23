@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Store landing page (P355–P370) complete and verified live — desktop + mobile layouts, sidebar checkbox/swatch toggles, no console errors; P350's asset cleanup is still one file short and remains deferred as noted below)_`
-**Last verified:** 2026-08-23 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright confirmed the Store window end-to-end at desktop (1440px) and mobile (390px) widths: header/nav/sidebar/product grid/footer all render with correct colors and legible text, the mobile "Filters" toggle expands, a sidebar checkbox and color swatch visibly toggle selected state, and there is zero horizontal page overflow and zero console errors
+**Current task pointer:** `_(Store landing page (P355–P375) complete and verified live — desktop + mobile layouts, header/nav sizing polish, product-card description + hover effects, all 4 grid slots filled; P350's asset cleanup is still one file short and remains deferred as noted below)_`
+**Last verified:** 2026-08-23 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 47 tests); live Playwright confirmed the Store window end-to-end at 1440px: taller/narrower white search bar with a drawn US flag, a visibly taller secondary nav bar with every link legible, 4 Vibe Coder product cards each with a black description that expands on hover, a pointer cursor over the product image, and zero console errors
 **Verify command:** `npm run verify`
 
 ---
@@ -3657,6 +3657,46 @@ sidebar filters are visual only for now — cart state and real filtering are se
       `<details>` sidebar containers.
       **Pass condition:** `verify` passes; a live screenshot shows every sidebar heading/label
       legible against the white background.
+
+_Requested by Sonny on 2026-08-23 after reviewing the live Store page: header search-bar sizing/
+colors, secondary-nav height, product-card description + hover affordances, and temporarily
+duplicating the one real product across all 4 grid slots._
+
+- [x] **P371** — Adjust `StoreHeader.jsx`'s search bar: explicit white input background, gray
+      (`bg-gray-200`) "All" dropdown, +50% bar height, shrink the visible pill to 90% width
+      (leaving a gap before the language block), and replace the flag emoji (which falls back to
+      literal "US" text without a color-emoji font) with an inline SVG `UsFlagIcon` — a real
+      country selector is future work.
+      **Pass condition:** `verify` passes; a live screenshot shows a white search input, gray "All"
+      dropdown, taller/narrower search bar, and a drawn US flag with no "US"/"us" fallback text.
+
+- [x] **P372** — Increase `StoreNav.jsx`'s bar height by ~25% (the "Sonny Promo" / secondary nav
+      row).
+      **Pass condition:** `verify` passes; a live screenshot shows a visibly taller secondary nav
+      bar than before.
+
+- [x] **P373** — In `StoreProductCard.jsx`: render `product.description` in black text, clamped by
+      default and expanding to the full text on hover; add a hover effect to the card container;
+      add `cursor-pointer` plus a hover effect to the product image.
+      **Pass condition:** `verify` passes; a live screenshot/interaction shows the description
+      present in black, expanding on hover, the card reacting on hover, and a pointer cursor with a
+      visible hover effect over the product image.
+
+- [x] **P374** — In `StoreProductGrid.jsx`, fill every grid slot up to `STORE_GRID_SIZE` by cycling
+      through `storeProducts` (currently just the Vibe Coder hoodie repeated) instead of rendering
+      `StoreComingSoonCard` placeholders; delete `StoreComingSoonCard.jsx` since it becomes unused.
+      **Pass condition:** `verify` passes; the grid shows 4 Vibe Coder cards, no "Coming soon"
+      tiles.
+
+- [x] **P375** — Fix caught during a real-browser re-check of P371–P374: taller header/nav plus
+      the new per-card description made the Store page's total content taller than the 800px
+      window, and because `StoreApp.jsx`'s `StoreHeader`/`StoreNav`/`StoreFooter` (and their body
+      row) had no `shrink-0`, flexbox shrank them instead of letting the outer `overflow-auto`
+      scroll — `StoreNav`'s "Sonny Promo" bar was squeezed to invisible. Add `shrink-0` to
+      `StoreHeader.jsx`, `StoreNav.jsx`, `StoreFooter.jsx`, and the body row in `StoreApp.jsx` so
+      the page scrolls as a whole instead of compressing its own chrome.
+      **Pass condition:** `verify` passes; a live screenshot shows the full-height secondary nav
+      bar with all its links legible.
 
 ---
 
