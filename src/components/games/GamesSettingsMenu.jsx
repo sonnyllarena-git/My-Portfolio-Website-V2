@@ -9,25 +9,17 @@ function SoundToggle({ soundMuted, setSoundMuted }) {
       onClick={() => setSoundMuted(!soundMuted)}
       className="flex w-full items-center justify-between rounded-xl border border-slate-700/60 px-2 py-1.5 hover:bg-white/10"
     >
-      <span className="flex items-center gap-1.5">
-        <span aria-hidden="true">{soundMuted ? '🔇' : '🔊'}</span>
-        Mute all sound
-      </span>
-      <span className="flex items-center gap-1.5">
+      <span>Sound</span>
+      <span
+        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+          soundMuted ? 'bg-white/10' : 'bg-cyan-500'
+        }`}
+      >
         <span
-          className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-            soundMuted ? 'bg-cyan-500' : 'bg-white/10'
+          className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full transition-transform ${
+            soundMuted ? 'translate-x-0 bg-red-500' : 'translate-x-4 bg-white'
           }`}
-        >
-          <span
-            className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full transition-transform ${
-              soundMuted ? 'translate-x-4 bg-white' : 'translate-x-0 bg-red-500'
-            }`}
-          />
-        </span>
-        <span className="w-5 text-xs text-white/60">
-          {soundMuted ? 'On' : 'Off'}
-        </span>
+        />
       </span>
     </button>
   )
