@@ -3,6 +3,7 @@ import StoreHeader from './store/StoreHeader.jsx'
 import StoreNav from './store/StoreNav.jsx'
 import StoreSidebar from './store/StoreSidebar.jsx'
 import StoreProductGrid from './store/StoreProductGrid.jsx'
+import StoreProductDetails from './store/StoreProductDetails.jsx'
 import StoreFooter from './store/StoreFooter.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { STORE_PAGE_BG } from './store/theme.js'
@@ -14,6 +15,7 @@ function StoreApp() {
   const [selectedGenders, setSelectedGenders] = useState(new Set())
   const [selectedColor, setSelectedColor] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedProductId, setSelectedProductId] = useState(null)
 
   function toggleGender(gender) {
     setSelectedGenders((prev) => {
@@ -29,19 +31,35 @@ function StoreApp() {
     query: searchQuery,
   })
 
+  const selectedProduct = storeProducts.find(
+    (product) => product.id === selectedProductId,
+  )
+
   return (
     <div className={`flex h-full flex-col overflow-auto ${STORE_PAGE_BG}`}>
       <StoreHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <StoreNav />
-      <div className={`flex shrink-0 gap-3 p-3 ${isMobile ? 'flex-col' : ''}`}>
-        <StoreSidebar
-          selectedGenders={selectedGenders}
-          onToggleGender={toggleGender}
-          selectedColor={selectedColor}
-          onSelectColor={setSelectedColor}
+      {selectedProduct ? (
+        <StoreProductDetails
+          product={selectedProduct}
+          onBack={() => setSelectedProductId(null)}
         />
-        <StoreProductGrid products={filteredProducts} />
-      </div>
+      ) : (
+        <div
+          className={`flex shrink-0 gap-3 p-3 ${isMobile ? 'flex-col' : ''}`}
+        >
+          <StoreSidebar
+            selectedGenders={selectedGenders}
+            onToggleGender={toggleGender}
+            selectedColor={selectedColor}
+            onSelectColor={setSelectedColor}
+          />
+          <StoreProductGrid
+            products={filteredProducts}
+            onSelect={setSelectedProductId}
+          />
+        </div>
+      )}
       <StoreFooter />
     </div>
   )

@@ -10,6 +10,10 @@ dist-ssr/
 .env.local
 .env.*.local
 
+# admin portal local data (backend/.env is also covered by the .env rule above)
+backend/data/
+backend/uploads/
+
 # editor/OS junk
 .DS_Store
 Thumbs.db

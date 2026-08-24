@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node --env-file=backend/.env backend/server.js",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -14,7 +15,10 @@
     "verify": "npm run format:check && npm run lint && npm run build && npm run test"
   },
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "express": "^5.2.1",
     "framer-motion": "^13.1.0",
+    "multer": "^2.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-rnd": "^10.5.3"

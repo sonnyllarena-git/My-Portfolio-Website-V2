@@ -4,8 +4,8 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Store landing page (P355–P380) complete and verified live, plus real Gender/Color filtering + name+description search now wired end-to-end (P381–P385); P350's asset cleanup is still one file short and remains deferred as noted below)_`
-**Last verified:** 2026-08-23 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 49 tests); live Playwright confirmed the Store window end-to-end at 1440px: checking "Unisex" keeps the Vibe Coder cards visible, checking "Men" alone empties the grid to a "No products match your search." message, typing "xyz" in search shows the same empty state, and typing "vibe" brings the cards back — zero console errors
+**Current task pointer:** `_(Store PDP complete through P403A, including the mobile layout pass (P400) — the local admin portal (P404–P422: backend + local SQLite database + Shopify-styled /admin UI, explicitly approved per CLAUDE.md §2) is now complete and verified live end-to-end; P350's asset cleanup remains deferred as noted below; no new unchecked task follows P422 as of 2026-08-24)_`
+**Last verified:** 2026-08-24 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 49 tests); live Playwright confirmed the full PDP flow at 1440px and at a 390px mobile viewport with zero console errors throughout: grid → details navigation, thumbnail hover/tap crossfade, color/size selection, all 3 accordions expanding with lined rows, the Size Chart modal, the bordered buy-box card (including Add to List), the white details background, and the magnifier lens tracking the cursor over the main image
 **Verify command:** `npm run verify`
 
 ---
@@ -3810,6 +3810,280 @@ selectedGenders, color: selectedColor, query: searchQuery })` (P381) and pass th
       **Pass condition:** `verify` passes; hovering "See more" shows a compact bordered popover
       over just the description, with the product image and Add to cart button still visible at
       full opacity.
+
+---
+
+_Requested by Sonny on 2026-08-24: wire a product details page (PDP), reached by clicking a
+product's image or name on the Store landing grid, replicating
+`src/components/store/assets/components/Product details page v1.png` (collapsed) and `v2.png`
+(expanded), plus `Size Chart Modal Screen.png`, using the real facts in
+`src/components/store/product/VIBE CODER/product details.txt` (includes the real price, PHP
+1750.00). Confirmed scope: full buy-box visual fidelity but with the real price, not the mockup's
+fake one; all 5 real colors get swatches but every swatch still shows the existing Black photos
+(no invented per-color photography); the image gallery column stays `sticky` while the details +
+buy-box columns scroll under it; no new window — `StoreApp.jsx` swaps its own body between grid
+and details view._
+
+- [x] **P387** — In `src/components/store/data/storeProducts.js`: add `price: 1750`, import
+      `Vibe Coder Back.png`/`Vibe Coder Side.png` and add an `images` array holding the front,
+      back, and side imports, add `careInstructions: 'Machine Wash'`, add the Style-section
+      facts not already modeled (`neckStyle`, `styleName`, `fitType`, `pattern`, `theme`,
+      `seasons`, `hemlineForm`, `occasion`, `sweaterForm`), and the Item-details facts not already
+      modeled (`ageRangeDescription`, `modelName`, `itemTypeName`) — all transcribed verbatim from
+      `product details.txt`.
+      **Pass condition:** `verify` passes; the product object exports every new field with the
+      exact notepad values.
+
+- [x] **P388** — Requested by Sonny once the notepad's real price landed: in
+      `StoreProductCard.jsx`, replace the placeholder "Click to see price" link with the real
+      price, bold and sized like a real price tag (`PHP 1,750.00` formatted from the new
+      `product.price` field added in P387).
+      **Pass condition:** `verify` passes; every card on the Store landing grid shows "PHP
+      1,750.00" instead of "Click to see price".
+
+- [x] **P389** — In `src/components/store/theme.js`: add `STORE_INSTOCK_GREEN`, `STORE_BUYNOW_BG`,
+      `STORE_BUYNOW_HOVER_BG` sampled from Amazon's real in-stock green and Buy Now orange
+      (matching this file's existing "sample the real brand token" convention).
+      **Pass condition:** `verify` passes.
+
+- [x] **P390** — Create `src/components/store/StoreDetailsAccordion.jsx`: reusable collapsible
+      section taking `title`, `rows` (`{label, value}[]`), and optional `children`; header row has
+      the title plus a down-arrow toggle button (`cursor-pointer`, hover background, rotates 180°
+      when open); collapsed by default; open state renders a `divide-y` label/value row grid (bold
+      label, plain value) followed by `children` if provided.
+      **Pass condition:** `verify` passes; rendering it standalone with 2 rows starts collapsed,
+      and clicking the arrow reveals both rows separated by a divider line.
+
+- [x] **P391** — Create `src/components/store/StoreProductGallery.jsx` (desktop layout only):
+      vertical thumbnail strip (from `product.images`) beside a larger main image; local
+      `activeImageIndex` state defaulting to 0, thumbnail `onMouseEnter` swaps the main image.
+      **Pass condition:** `verify` passes; rendering it standalone and hovering the 2nd/3rd
+      thumbnail swaps the main image to Back/Side.
+
+- [x] **P392** — Create `src/components/store/StoreSizeChartModal.jsx`: same modal shell as
+      `blog/BlogCommentsModal.jsx` (`fixed inset-0 bg-black/30` backdrop closes on click, centered
+      white card, × button), containing the "US Mens Hoodies" size table (Brand Size/Chest/Sleeve
+      Length/Shoulder/Center back length, S–4XL) transcribed from `Size Chart Modal Screen.png`.
+      **Pass condition:** `verify` passes; rendering it standalone shows the full table and calling
+      `onClose` (backdrop click or × ) is wired.
+
+- [x] **P393** — Create `src/components/store/StoreProductBuyBox.jsx` (desktop layout only): price
+      (`PHP 1,750.00` from `product.price`), delivery estimate + green "In Stock" line (reusing
+      `product.deliveryEstimate`), a quantity `<select>` (1–10, decorative), Add to Cart/Buy Now
+      buttons (decorative, no cart logic — matching `StoreProductCard.jsx`'s existing Add to Cart),
+      and Ships from/Sold by/Returns/Payment/Gift options lines genericized to "Sonny's Store", plus
+      an Add to List button.
+      **Pass condition:** `verify` passes; rendering it standalone shows the formatted price and
+      every buy-box line.
+
+- [x] **P394** — Create `src/components/store/StoreProductInfo.jsx` (desktop layout only): title,
+      rating/review-count link, bought-count line, color swatches (hex dot per `product.colors`
+      entry, ring on the selected one, same visual language as `StoreSidebar.jsx`'s color filter),
+      size buttons (from `product.sizes`) plus a "Size Chart" link that opens
+      `StoreSizeChartModal` (P392), then a "Product details" heading with 3 `StoreDetailsAccordion`
+      (P390) instances — Top highlights (Fabric type from `product.material`, Care instructions,
+      plus the description as an "About this item" paragraph via `children`), Style (Color from
+      the selected-color prop, then the Style-section fields), Item details (Product name from
+      `product.name`, Age Range Description, Model Name, Item Type Name, Customer Reviews from
+      `product.rating`/`reviewCount`).
+      **Pass condition:** `verify` passes; rendering it standalone shows all 3 accordions collapsed
+      by default, each expanding to the correct rows from the notepad.
+
+- [x] **P395** — Create `src/components/store/StoreProductDetails.jsx` (desktop layout only):
+      orchestrator owning `selectedColor` (default `product.colors[0]`) and `selectedSize` state;
+      renders a "← Back to results" link (calls `onBack` prop), then a flex row with
+      `StoreProductGallery` (P391) in a `sticky top-4 self-start` column and a flex-1 row holding
+      `StoreProductInfo` (P394) and `StoreProductBuyBox` (P393).
+      **Pass condition:** `verify` passes; rendering it standalone with the seeded product shows
+      gallery + info + buy box side by side, and scrolling the page keeps the gallery in place
+      while info/buy-box scroll underneath.
+
+- [x] **P396** — In `StoreProductCard.jsx`: add an `onSelect` prop; wire it into the image and
+      title `<a href="#">` elements' `onClick` (`e.preventDefault(); onSelect(product.id)`).
+      **Pass condition:** `verify` passes; clicking either element calls `onSelect` with the
+      product's id.
+
+- [x] **P397** — In `StoreProductGrid.jsx`: accept an `onSelect` prop and forward it to every
+      `StoreProductCard` (P396).
+      **Pass condition:** `verify` passes.
+
+- [x] **P398** — In `StoreApp.jsx`: add `selectedProductId` state; when set, render
+      `StoreProductDetails` (P395) for the matching `storeProducts` entry with an `onBack` prop
+      that clears the selection, in place of the `StoreSidebar`+`StoreProductGrid` row; pass
+      `setSelectedProductId` as `StoreProductGrid`'s `onSelect` (P397). Header/Nav/Footer stay
+      rendered either way.
+      **Pass condition:** `verify` passes; live in the Store window, clicking the product image or
+      name swaps the grid for the details view, and "← Back to results" returns to the grid with
+      filters intact.
+
+- [x] **P399** — Add mobile layout to `StoreProductGallery.jsx` and `StoreProductDetails.jsx` via
+      `useIsMobile()`: gallery drops the vertical strip for a horizontal thumbnail row and swaps
+      the main image on tap instead of hover; details stacks gallery → info → buy box in normal
+      flow with no `sticky`.
+      **Pass condition:** `verify` passes; at a mobile viewport the page is a single scrolling
+      column and tapping a thumbnail swaps the main image.
+
+- [x] **P400** — Add mobile layout to `StoreProductInfo.jsx` and `StoreProductBuyBox.jsx` via
+      `useIsMobile()`: full-width stacked sections, size/color rows wrap instead of overflowing.
+      **Pass condition:** `verify` passes; at a mobile viewport every section in both components
+      reads full-width with no horizontal overflow.
+
+- [x] **P401** — Fix caught after Sonny reviewed the live PDP: in `StoreProductDetails.jsx`, give
+      the root container an explicit `bg-white` so the details page reads white like the rest of
+      the Store's content surfaces (product cards, sidebar), instead of inheriting the page's gray
+      `STORE_PAGE_BG`.
+      **Pass condition:** `verify` passes; the details view's background is white.
+
+- [x] **P402** — Fix caught after Sonny reviewed the live PDP: in `StoreProductBuyBox.jsx`, wrap
+      the price through Add to List in a bordered, slightly rounded container — Sonny first asked
+      for Add to List to sit outside the border, then corrected that to include it inside.
+      **Pass condition:** `verify` passes; the buy box shows one rounded border around everything
+      from the price down through Add to List.
+
+- [x] **P403** — Fix caught after Sonny reviewed the live PDP: in `StoreProductGallery.jsx`, give
+      the main image a fade in/out crossfade when swapping between thumbnails, using
+      `framer-motion`'s `AnimatePresence` + `motion.img` (already a project dependency; matches the
+      fade convention already used in `Window.jsx`) instead of an instant `src` swap.
+      **Pass condition:** `verify` passes; hovering (desktop) or tapping (mobile) a different
+      thumbnail crossfades the main image instead of swapping instantly.
+
+- [x] **P403A** — Requested by Sonny live on the PDP: in `StoreProductGallery.jsx`, add a
+      magnifier hover effect to the main image (desktop only, no hover on touch) — a small square
+      lens follows the cursor over the image, showing a zoomed-in (~2.5x) crop of the same image
+      under the cursor via a background-image lens, `cursor-zoom-in` on the image itself.
+      **Pass condition:** `verify` passes; hovering the main image on desktop shows a lens that
+      tracks the cursor and displays a magnified crop; nothing changes on mobile.
+
+---
+
+_Requested by Sonny on 2026-08-24: build a local admin portal so Sonny can manage the product
+catalog through a login-gated UI backed by a real local database, structured so it can point at a
+hosted database later without a rebuild. Confirmed scope (see the approved plan): build-it-yourself
+(Express + better-sqlite3 + multer, no managed CMS), mock login credentials (real auth is later
+hardening, not now), a minimalist/modern Shopify-admin-styled UI reusing the existing
+`sonny store logo.png`, and product codes auto-generated by the server on create and immutable on
+edit. This is a new backend + database architectural layer — explicitly approved by Sonny per
+CLAUDE.md §2. Nothing here touches `storeProducts.js` or the public Store pages; wiring the public
+site to this database is a separate future task. (P400 has since been completed by the parallel
+Store PDP work below/above — this note originally deferred it, kept here only for history.)_
+
+- [x] **P404** — Scaffold backend config: create `backend/.env.example` (placeholders for `PORT`,
+      `ADMIN_USERNAME`, `ADMIN_PASSWORD`), add `backend/data/` and `backend/uploads/` to
+      `.gitignore`, and add a second `files: ['backend/**/*.js']` block to `eslint.config.js` using
+      `globals.node` instead of `globals.browser`.
+      **Pass condition:** `verify` passes.
+
+- [x] **P405** — Install `express`, `better-sqlite3`, and `multer` as dependencies in
+      `package.json`.
+      **Pass condition:** `npm run build` and `npm run test` still pass (nothing imports them yet);
+      real installed versions recorded in the task's closing report. Installed:
+      `express@5.2.1`, `better-sqlite3@13.0.3`, `multer@2.2.0`.
+
+- [x] **P406** — Create `backend/db.js`: opens/creates `backend/data/catalog.db` via
+      `better-sqlite3` and runs an idempotent `CREATE TABLE IF NOT EXISTS products` schema
+      (flat columns mirroring `storeProducts.js`'s fields; `colors`/`sizes`/`images` as JSON-text
+      columns; `code TEXT UNIQUE`, `id` auto-increment primary key).
+      **Pass condition:** running the module creates `backend/data/catalog.db` with the `products`
+      table, no errors; `verify` passes.
+
+- [x] **P407** — Create `backend/productCode.js` (`generateProductCode(id)` →
+      `'PRD-' + String(id).padStart(4, '0')`; `stripImmutableFields(body)` removes `code`/`id` from
+      an incoming update body) plus `backend/productCode.test.js` covering the happy path and the
+      "client tries to send a code" rejection path.
+      **Pass condition:** `npm run test` passes including the two new tests.
+
+- [x] **P408** — Create `backend/middleware/requireAuth.js` (checks a bearer token against the
+      mock session) and `backend/routes/auth.js` (`POST /api/login` checks the env-configured mock
+      `ADMIN_USERNAME`/`ADMIN_PASSWORD` and returns a token on success).
+      **Pass condition:** `verify` passes (not yet mounted into a server).
+
+- [x] **P409** — Add `GET /api/products` and `GET /api/products/:code` handlers to
+      `backend/routes/products.js`, reading from `backend/db.js` (public read, no auth needed).
+      **Pass condition:** `verify` passes.
+
+- [x] **P410** — Add `POST /api/products` to `backend/routes/products.js`: gated by
+      `requireAuth`, inserts the row, then assigns `code` via `generateProductCode(id)`.
+      **Pass condition:** `verify` passes.
+
+- [x] **P411** — Add `PUT /api/products/:code` and `DELETE /api/products/:code` to
+      `backend/routes/products.js`: both gated by `requireAuth`; `PUT` runs the incoming body
+      through `stripImmutableFields()` before saving so `code` can never be overwritten.
+      **Pass condition:** `verify` passes.
+
+- [x] **P412** — Create `backend/server.js`: Express app mounting the auth and products routers,
+      serving `backend/uploads/` statically at `/uploads`, `multer` configured for the photo
+      upload field(s), listening on `process.env.PORT`. Photo uploads go through a dedicated
+      `POST /api/uploads` route (multer, returns saved file URLs) rather than mixed into the
+      JSON-based product routes.
+      **Pass condition:** `node --env-file=backend/.env backend/server.js` starts; a GET request
+      to `/api/products` returns `[]` on an empty catalog. Verified live: server logged
+      "Admin portal API listening on port 4000" and a GET to `/api/products` returned `[]` (200).
+
+- [x] **P413** — Add a `server.proxy` entry to `vite.config.js` (`/api` and `/uploads` →
+      `http://localhost:<PORT>`) and an npm `"server"` script running
+      `node --env-file=backend/.env backend/server.js`.
+      **Pass condition:** with both `npm run dev` and `npm run server` running, a `fetch` to
+      `/api/products` from the Vite dev origin returns the backend's response. Verified live:
+      `curl http://localhost:5173/api/products` returned `[]` (200) while both were running.
+
+- [x] **P414** — Create `src/admin/adminTheme.js` (Shopify-style color tokens: light background,
+      white sidebar, `#008060` accent — same pattern as `src/components/store/theme.js`) and
+      `src/admin/AdminLayout.jsx` (static sidebar using `sonny store logo.png` + nav placeholder,
+      topbar) — no data wiring yet.
+      **Pass condition:** `verify` passes.
+
+- [x] **P415** — Create `src/admin/api.js` (fetch helper attaching the stored token) and
+      `src/admin/AdminLogin.jsx` (form posting to `/api/login`, stores the returned token in
+      `sessionStorage` on success).
+      **Pass condition:** `verify` passes.
+
+- [x] **P416** — Create `src/admin/AdminApp.jsx` (renders `AdminLogin` or `AdminLayout` based on
+      whether a token is in `sessionStorage`) and wire it into `src/main.jsx` via a
+      `window.location.pathname.startsWith('/admin')` check at the render root.
+      **Pass condition:** `verify` passes; visiting `/admin` shows the login form instead of the
+      desktop boot sequence. Verified live via Playwright: `/admin` renders "Admin sign in", not
+      the desktop boot video.
+
+- [x] **P417** — Create `src/admin/AdminProductsPage.jsx`: fetches `GET /api/products` and renders
+      them as a table; mount it inside `AdminLayout` as the default logged-in view.
+      **Pass condition:** `verify` passes; logging into `/admin` shows an (empty) products table.
+      Verified live via Playwright: logging in with the mock credentials renders the Products
+      table with "No products yet."
+
+- [x] **P418** — Create `src/admin/AdminProductForm.jsx` with Basic Info + Variants sections,
+      wired to `POST /api/products` from an "Add product" action on `AdminProductsPage.jsx`.
+      **Pass condition:** `verify` passes; submitting the form creates a product that appears in
+      the table with an auto-generated `PRD-000x` code. Verified live via Playwright: submitting
+      "Test Hoodie" produced code `PRD-0001` in the table (test data removed afterward).
+
+- [x] **P419** — Add a Photos section to `AdminProductForm.jsx`: multi-file upload input with
+      thumbnail previews, submitted as `multipart/form-data` to the `multer`-backed
+      `POST /api/uploads` endpoint (uploaded first, then its returned URLs go into the product's
+      JSON `images` field).
+      **Pass condition:** `verify` passes; uploaded photos show as thumbnails and are retrievable
+      from `/uploads/...` after saving. Verified live via Playwright: uploading a photo showed a
+      preview thumbnail, and after saving, the file was present on disk and returned 200 from
+      `/uploads/<filename>` (test artifacts removed afterward).
+
+- [x] **P420** — Add the Product Details section (Top Highlights / Style / Item Details, matching
+      the existing product notepad structure) to `AdminProductForm.jsx`; wire an edit mode using
+      `PUT /api/products/:code` with the code field shown read-only.
+      **Pass condition:** `verify` passes; editing a product and changing any other field leaves
+      its code unchanged. Verified live via Playwright: created `PRD-0001`, edited its name and
+      price, code remained `PRD-0001` throughout (test artifacts removed afterward).
+
+- [x] **P421** — Add a delete action (with a confirm step) to `AdminProductsPage.jsx`'s table,
+      calling `DELETE /api/products/:code`.
+      **Pass condition:** `verify` passes; deleting a product removes it from both the table and
+      `catalog.db`. Verified live via Playwright: created then deleted "Delete Test Hoodie",
+      table showed "No products yet." and `GET /api/products` returned `[]` afterward.
+
+- [x] **P422** — Append LESSONS.md entries for anything that surprised us across P404–P421 (e.g.
+      `better-sqlite3` native-module build behavior on Windows, `--env-file` quirks), or note
+      "none" if nothing did.
+      **Pass condition:** `npm run verify` still green. Logged: the destructure-to-omit
+      `no-unused-vars` lint trap, and the background-task/TaskStop "completed" status not proving
+      an `npm run <script>`-spawned process actually exited on this setup.
 
 ---
 

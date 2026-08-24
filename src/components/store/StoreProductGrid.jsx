@@ -2,7 +2,7 @@ import { STORE_GRID_SIZE } from './data/storeProducts.js'
 import StoreProductCard from './StoreProductCard.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
 
-function StoreProductGrid({ products }) {
+function StoreProductGrid({ products, onSelect }) {
   const isMobile = useIsMobile()
 
   if (products.length === 0) {
@@ -25,7 +25,11 @@ function StoreProductGrid({ products }) {
       className={`grid flex-1 gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-4'}`}
     >
       {gridProducts.map((product, index) => (
-        <StoreProductCard key={`${product.id}-${index}`} product={product} />
+        <StoreProductCard
+          key={`${product.id}-${index}`}
+          product={product}
+          onSelect={onSelect}
+        />
       ))}
     </div>
   )

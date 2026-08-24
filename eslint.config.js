@@ -29,5 +29,11 @@ export default [
       ],
     },
   },
+  {
+    files: ['backend/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
   eslintConfigPrettier,
 ]

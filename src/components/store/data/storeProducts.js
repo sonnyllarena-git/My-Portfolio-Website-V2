@@ -1,4 +1,6 @@
 import vibeCoderFront from '../product/VIBE CODER/Vibe Coder Front.png'
+import vibeCoderBack from '../product/VIBE CODER/Vibe Coder Back.png'
+import vibeCoderSide from '../product/VIBE CODER/Vibe Coder Side.png'
 
 // rating/reviewCount/boughtCount/deliveryEstimate are placeholder display dressing (the mockup
 // needs them, Sonny's product spec doesn't provide real ones yet) — swap for real numbers later.
@@ -16,11 +18,26 @@ export const storeProducts = [
     sleeveType: 'Long Sleeve',
     style: 'Hoodie',
     image: vibeCoderFront,
+    images: [vibeCoderFront, vibeCoderBack, vibeCoderSide],
     badge: 'Best Seller',
     rating: 4.5,
     reviewCount: '171.2K',
     boughtCount: '4K+ bought in past month',
     deliveryEstimate: 'Delivery Sep 1 - 14 to Philippines',
+    price: 1750,
+    careInstructions: 'Machine Wash',
+    neckStyle: 'Hooded Neck',
+    styleName: 'Casual',
+    fitType: 'Regular',
+    pattern: 'Solid',
+    theme: 'Sport',
+    seasons: 'Fall, Winter, Spring',
+    hemlineForm: 'Ribbed',
+    occasion: 'Daily Wear',
+    sweaterForm: 'Sweater Pullover',
+    ageRangeDescription: 'Adult',
+    modelName: 'Ztj009559',
+    itemTypeName: 'Hooded Sweatshirt',
   },
 ]
 

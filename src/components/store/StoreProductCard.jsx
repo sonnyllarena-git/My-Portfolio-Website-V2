@@ -9,7 +9,7 @@ import {
   STORE_GOLD_CTA_HOVER_BG,
 } from './theme.js'
 
-function StoreProductCard({ product }) {
+function StoreProductCard({ product, onSelect }) {
   const isMobile = useIsMobile()
   const descriptionRef = useRef(null)
   const [isTruncated, setIsTruncated] = useState(false)
@@ -41,12 +41,17 @@ function StoreProductCard({ product }) {
         <img
           src={product.image}
           alt={product.name}
+          onClick={() => onSelect(product.id)}
           className="aspect-square w-full cursor-pointer object-cover transition-transform duration-200 hover:scale-105"
         />
       </div>
 
       <a
         href="#"
+        onClick={(e) => {
+          e.preventDefault()
+          onSelect(product.id)
+        }}
         className="line-clamp-3 cursor-pointer text-base font-bold text-black hover:text-orange-500"
       >
         {product.title}
@@ -97,9 +102,12 @@ function StoreProductCard({ product }) {
         {product.boughtCount}
       </div>
 
-      <a href="#" className={`text-sm ${STORE_LINK_BLUE}`}>
-        Click to see price
-      </a>
+      <div className="text-lg font-bold text-black">
+        PHP{' '}
+        {product.price.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+        })}
+      </div>
 
       <div className={`text-xs ${STORE_SECONDARY_TEXT}`}>
         {product.deliveryEstimate}

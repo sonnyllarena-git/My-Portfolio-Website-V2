@@ -1,12 +1,37 @@
-Product name: VIBE CODER
-Description: This unisex heavyweight fleece pullover hoodie features
+1. Product name: VIBE CODER
+2. Description: This unisex heavyweight fleece pullover hoodie features
 a modern streetwear style with a relaxed fit and dropped shoulders,
 designed with a bold white "VIBE CODER" block typography centered across
 the chest while keeping the back and sleeves completely plain for a clean,
 minimalist aesthetic.
-Gender: Unisex
-Color: Charcoal Grey, Navy Blue, Black, White, Heather Grey
-Sizes: XS, S, M, L, XL, XXL
-Material: Cotton
-Sleeve type:Long Sleeve
-Style: Hoodie
+3. Gender: Unisex
+4. Color: Charcoal Grey, Navy Blue, Black, White, Heather Grey
+5. Sizes: XS, S, M, L, XL, XXL
+6. Style: Hoodie
+
+7. Product Details
+
+a. Top Highlights
+Fabric type: Cotton
+Care instructions: Machine Wash
+About this item = 'Description'
+
+b. Style
+Neck Style:Hooded Neck
+Style Name:Casual
+Fit Type:Regular
+Pattern:Solid
+Theme:Sport
+Seasons:Fall, Winter, Spring
+Sleeve Type: Long Sleeve
+Hemline Form:Ribbed
+Occasion:Daily Wear
+Sweater Form: Sweater Pullover
+
+c. Item details
+Product name: VIBE CODER
+Age Range Description: Adult
+Model Name: Ztj009559
+Item Type Name: Hooded Sweatshirt
+Customer Reviews: Real reviews here (Average Stars, review count) 
+Price: Php 1750.00
