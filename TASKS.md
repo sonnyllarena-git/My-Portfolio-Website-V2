@@ -4337,6 +4337,91 @@ white page — the navy header is the only place it currently reads correctly._
 
 ---
 
+## PHASE 73 — STORE CHECKOUT (MOCK, NO REAL PAYMENT)
+
+_Requested by Sonny on 2026-08-24, with an Amazon "Payment Options" checkout reference screenshot
+(5-step indicator: Shipping Address / Shipping Options / Payment Options (active) / Gift Options /
+Place Order; a white card with a two-column credit-card form + gift-card/bank-account column;
+Back/Next buttons). Confirmed scope: reuse the existing `StoreHeader`/`StoreNav` chrome (no
+separate simplified logo bar); stub all 5 steps so the flow is fully clickable end-to-end, with
+Payment Options built out to match the screenshot in detail; Back/Next are functional and the
+Place Order step shows real order details pulled from the cart plus a mock "Place your order"
+action — no real payment gateway or order backend, per the §2/Backlog ban on payments and new
+architectural layers. Card-network badges (Visa/Mastercard/etc.) are plain text badges, not real
+logos, since no icon library or image assets exist for them and neither can be added._
+
+- [x] **P444** — Create `src/components/store/StoreCheckoutSteps.jsx`: export a `CHECKOUT_STEPS`
+      array (5 entries — `shipping-address`, `shipping-options`, `payment`, `gift-options`,
+      `place-order` — each `{ key, label, heading }`) and a component rendering the numbered step
+      row ("01 Shipping Address" … "05 Place Order"), active step bold + `STORE_STAR_COLOR`, other
+      steps `STORE_SECONDARY_TEXT`, with a `border-b border-gray-200 pb-3` beneath the row.
+      **Pass condition:** `npm run verify` passes; rendering with `activeStep="payment"` bolds only
+      "03 Payment Options" in orange.
+
+- [x] **P445** — Create `src/components/store/StoreCheckoutPlaceholderStep.jsx`: a small reusable
+      stub body (one descriptive paragraph, `text-sm text-gray-600`) shared by the three
+      not-yet-built steps (Shipping Address, Shipping Options, Gift Options) so their placeholder
+      markup isn't duplicated three times.
+      **Pass condition:** `npm run verify` passes.
+
+- [x] **P446** — Create `src/components/store/StoreCheckoutPaymentStep.jsx`: the detailed Payment
+      Options body matching the screenshot — two-column `grid md:grid-cols-2` (right column
+      `md:border-l md:border-gray-200 md:pl-8`); left column "Credit or Debit Card" with Name on
+      card / Card Number / Security Code + Expiration month+year `<select>`s, styled like
+      `StoreSignInPage.jsx`'s inputs; right column "Gift Cards & Promotional Codes" (`STORE_LINK_BLUE`
+      link text) and "Add a Bank Account" heading; bottom small print ("Sonny's Store accepts all
+      major credit and debit cards") plus a row of plain bordered text badges (VISA, Mastercard,
+      Amex, Discover, JCB, UnionPay).
+      **Pass condition:** `npm run verify` passes.
+      _(2026-08-24: landed at ~95 lines, over the §4.4 ≤50-line guideline — the two-column
+      credit-card form is one cohesive visual unit, same call as `PaintToolbar.jsx`'s logged
+      precedent to keep a single control cluster whole rather than fragment it across files.)_
+
+- [x] **P447** — Create `src/components/store/StoreCheckoutPlaceOrderStep.jsx`: reuse the
+      `useStoreCart()` + `storeProducts.find` join from `StoreCartPage.jsx` to list order line
+      items (thumbnail, title, qty, price) and a subtotal, plus a "Place your order" button that
+      flips local state to an inline mock confirmation ("Order placed — this is a demo, no real
+      order was submitted"), matching the no-backend precedent set by Sign In/Sign Up.
+      **Pass condition:** `npm run verify` passes; with items in the cart, the step lists them and
+      clicking "Place your order" shows the mock confirmation.
+
+- [x] **P448** — Create `src/components/store/StoreCheckoutPage.jsx`: orchestrator with internal
+      `step` state (`useState('shipping-address')`) over `CHECKOUT_STEPS`; gray page wrapper
+      (`shrink-0 flex-1 p-4 ${STORE_PAGE_BG} ${STORE_BODY_TEXT}`) rendering `StoreCheckoutSteps`,
+      then a white card (`mx-auto mt-3 max-w-5xl rounded-lg bg-white p-6 shadow-sm`) whose header
+      row shows the current step's `heading` plus a light-gray "Next" button advancing `step`
+      (except on `place-order`, which renders `StoreCheckoutPlaceOrderStep`'s own action instead);
+      body switches on `step` across the placeholder/payment/place-order components; a `← Back`
+      link below the card steps back through `CHECKOUT_STEPS` or calls the `onExitToCart` prop on
+      the first step.
+      **Pass condition:** `npm run verify` passes; clicking Next/Back moves through all 5 steps in
+      order.
+
+- [x] **P449** — Wire it into `StoreApp.jsx` (add `'checkout'` to the `view` union and render
+      `<StoreCheckoutPage onExitToCart={() => setView('cart')} />` when active) and
+      `StoreCartPage.jsx` (add an `onCheckout` prop wired to the existing inert "Proceed to
+      Checkout" button, passed from `StoreApp.jsx` as `() => setView('checkout')`).
+      **Pass condition:** `npm run verify` passes; from the Cart page, clicking "Proceed to
+      Checkout" opens the checkout flow at Shipping Address.
+
+- [x] **P450** — Verify the full flow live in the running dev app: Cart → Proceed to Checkout →
+      Next through all 5 steps → Payment Options visually matches the reference screenshot's
+      structure → Place Order shows the actual cart items/subtotal → "Place your order" shows the
+      mock confirmation → Back steps back through the flow, and Back from step 1 returns to Cart.
+      **Pass condition:** every step in the click-through above behaves as described.
+      _(2026-08-24: verified end-to-end with a Playwright script against the real dev build —
+      added item to cart, Proceed to Checkout, stepped through all 5 headings via Next, Payment
+      Options screenshot matches the reference mockup's structure (steps bar, two-column form,
+      gift-card/bank-account column, card-network badges), Place Order listed the real cart line
+      item/qty/total, Place your order showed the mock confirmation, and 5x Back correctly
+      unwound Place Order → … → Shipping Address → Shopping Cart. Caught and fixed one bug this
+      pass missed if it had only been visual: the year `<select>` clipped to "202" instead of
+      "2026" because it inherited `w-full` from a shared `INPUT_CLASS` inside an unconstrained
+      flex row — split the shared class so `w-full` is applied only at each call site that needs
+      it, with `w-16`/`w-20` on the month/year selects instead.)_
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.

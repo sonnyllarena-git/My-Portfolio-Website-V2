@@ -11,7 +11,7 @@ import {
   STORE_BUYNOW_HOVER_BG,
 } from './theme.js'
 
-function StoreCartPage({ onBack, onSelectProduct }) {
+function StoreCartPage({ onBack, onSelectProduct, onCheckout }) {
   const isMobile = useIsMobile()
   const { items, updateQuantity, removeItem } = useStoreCart()
 
@@ -160,6 +160,7 @@ function StoreCartPage({ onBack, onSelectProduct }) {
               </p>
               <button
                 type="button"
+                onClick={onCheckout}
                 className={`w-full max-w-xs cursor-pointer rounded-full py-2 font-medium text-white transition-colors duration-150 ${STORE_BUYNOW_BG} ${STORE_BUYNOW_HOVER_BG}`}
               >
                 Proceed to Checkout

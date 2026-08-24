@@ -5,6 +5,7 @@ import StoreSidebar from './store/StoreSidebar.jsx'
 import StoreProductGrid from './store/StoreProductGrid.jsx'
 import StoreProductDetails from './store/StoreProductDetails.jsx'
 import StoreCartPage from './store/StoreCartPage.jsx'
+import StoreCheckoutPage from './store/StoreCheckoutPage.jsx'
 import StoreSignInPage from './store/StoreSignInPage.jsx'
 import StoreSignUpPage from './store/StoreSignUpPage.jsx'
 import StoreFooter from './store/StoreFooter.jsx'
@@ -21,7 +22,7 @@ function StoreApp() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProductId, setSelectedProductId] = useState(null)
   const [userName, setUserName] = useState(null)
-  const [view, setView] = useState('grid') // 'grid' | 'details' | 'cart' | 'signin' | 'signup'
+  const [view, setView] = useState('grid') // 'grid' | 'details' | 'cart' | 'checkout' | 'signin' | 'signup'
 
   function completeSignIn(name) {
     setUserName(name)
@@ -80,7 +81,11 @@ function StoreApp() {
           <StoreCartPage
             onBack={() => setView('grid')}
             onSelectProduct={openProduct}
+            onCheckout={() => setView('checkout')}
           />
+        )}
+        {view === 'checkout' && (
+          <StoreCheckoutPage onExitToCart={() => setView('cart')} />
         )}
         {view === 'details' && selectedProduct && (
           <StoreProductDetails
