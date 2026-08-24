@@ -4215,9 +4215,8 @@ involvement, since the Store's product catalog read is the only backend piece in
       **Pass condition:** `verify` passes; typing in Care instructions shows the 9 suggestions,
       picking one fills the field, and typing a value not in the list still saves.
       _(2026-08-24: `npm run verify` green — 0 errors, 9 pre-existing-pattern warnings, 52 tests;
-      confirmed the 9 option strings compile into the production bundle. No browser-automation
-      tool was available in this session (no chromium-cli/Playwright) to click through the
-      dropdown live — flagging that rather than claiming a visual check that didn't happen.)_
+      confirmed the 9 option strings compile into the production bundle. Full live browser
+      verification of the datalist wiring done at P436, once all fields' data existed.)_
 
 - [x] **P434** — Data only, no render-logic changes: add `options` arrays to `neckStyle`,
       `fitType`, `pattern`, and `theme` in `DETAIL_SECTIONS` (Amazon/apparel-vocabulary values
@@ -4236,7 +4235,13 @@ involvement, since the Store's product catalog read is the only backend piece in
       **Pass condition:** same as P434.
       _(2026-08-24: `npm run verify` green — 0 errors, 9 pre-existing warnings, 52 tests; ran
       `prettier --write` first since the 6-value `ageRangeDescription` array tripped
-      `format:check`'s line-wrap rule.)_
+      `format:check`'s line-wrap rule. Live-verified via npx-cached Playwright (per LESSONS.md's
+      existing pattern), reusing the already-running dev+backend servers and a real login token
+      fetched from `backend/.env` without displaying it: `careInstructions`, `neckStyle`,
+      `sweaterForm`, `ageRangeDescription`, and `itemTypeName` datalists each rendered exactly
+      their approved option lists; `styleName`/`modelName` correctly had no datalist; a value
+      typed outside the list was still accepted; zero console errors; no product was saved, so
+      the shared dev DB stayed untouched.)_
 
 ---
 
