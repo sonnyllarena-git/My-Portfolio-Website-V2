@@ -62,7 +62,7 @@ function StoreCartPage({ onBack, onSelectProduct }) {
                   key={`${line.productId}-${line.color}-${line.size}`}
                   className={`flex gap-4 py-6 ${isMobile ? 'flex-col' : ''}`}
                 >
-                  <div className="flex h-[32rem] w-[32rem] max-w-full shrink-0 items-center justify-center">
+                  <div className="flex h-96 w-96 max-w-full shrink-0 items-center justify-center">
                     <img
                       src={line.product.image}
                       alt={line.product.name}

@@ -4261,6 +4261,10 @@ white page with a small thumbnail, not matching the `Shopping cart landing page.
       to a working (inert) "Proceed to Checkout" button — `npm run verify` green throughout (52
       tests).
 
+- [x] **P438** — `StoreCartPage.jsx`: Sonny asked to cut the P437 thumbnail size by 25% — `32rem`
+      (512px) → `24rem`/`h-96`/`w-96` (384px).
+      **Pass condition:** `npm run verify` passes.
+
 ---
 
 ## Backlog — DO NOT START
