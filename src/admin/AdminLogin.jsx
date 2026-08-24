@@ -4,10 +4,7 @@ import { apiFetch, setToken } from './api.js'
 import {
   ADMIN_ACCENT_BG,
   ADMIN_ACCENT_HOVER_BG,
-  ADMIN_BODY_TEXT,
-  ADMIN_SECONDARY_TEXT,
-  ADMIN_CARD_BORDER,
-  ADMIN_PAGE_BG,
+  ADMIN_LOGIN_BG,
 } from './adminTheme.js'
 
 export default function AdminLogin({ onLogin }) {
@@ -32,14 +29,14 @@ export default function AdminLogin({ onLogin }) {
 
   return (
     <div
-      className={`flex min-h-screen items-center justify-center ${ADMIN_PAGE_BG}`}
+      className={`flex min-h-screen items-center justify-center ${ADMIN_LOGIN_BG}`}
     >
       <form
         onSubmit={handleSubmit}
-        className={`flex w-80 flex-col gap-4 rounded-lg border ${ADMIN_CARD_BORDER} bg-white p-6`}
+        className={`flex w-80 flex-col gap-4 rounded-lg border border-white/10 ${ADMIN_LOGIN_BG} p-6`}
       >
         <img src={logo} alt="Sonny" className="h-7 self-center" />
-        <h1 className={`text-center text-sm font-semibold ${ADMIN_BODY_TEXT}`}>
+        <h1 className="text-center text-sm font-semibold text-white">
           Admin sign in
         </h1>
         <input
@@ -47,23 +44,23 @@ export default function AdminLogin({ onLogin }) {
           placeholder="Username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
-          className={`rounded border ${ADMIN_CARD_BORDER} px-3 py-2 text-sm`}
+          className="rounded border border-transparent bg-white px-3 py-2 text-sm text-gray-900"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className={`rounded border ${ADMIN_CARD_BORDER} px-3 py-2 text-sm`}
+          className="rounded border border-transparent bg-white px-3 py-2 text-sm text-gray-900"
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
         <button
           type="submit"
           className={`rounded ${ADMIN_ACCENT_BG} ${ADMIN_ACCENT_HOVER_BG} px-3 py-2 text-sm font-medium text-white`}
         >
           Sign in
         </button>
-        <p className={`text-center text-xs ${ADMIN_SECONDARY_TEXT}`}>
+        <p className="text-center text-xs text-white/60">
           Mock credentials — local practice only.
         </p>
       </form>

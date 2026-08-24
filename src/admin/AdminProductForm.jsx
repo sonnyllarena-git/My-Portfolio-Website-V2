@@ -4,34 +4,237 @@ import {
   ADMIN_CARD_BORDER,
   ADMIN_ACCENT_BG,
   ADMIN_ACCENT_HOVER_BG,
+  ADMIN_SECONDARY_TEXT,
+  ADMIN_ACCENT_FILE_BUTTON_BG,
+  ADMIN_ACCENT_FILE_BUTTON_HOVER,
 } from './adminTheme.js'
 
 const DETAIL_SECTIONS = [
   {
     title: 'Top Highlights',
-    fields: [{ key: 'careInstructions', label: 'Care instructions' }],
+    fields: [
+      {
+        key: 'careInstructions',
+        label: 'Care instructions',
+        options: [
+          'Machine Wash Cold, Tumble Dry Low',
+          'Machine Wash Cold, Do Not Bleach, Tumble Dry Low, Do Not Iron',
+          'Machine Wash Warm, Tumble Dry Low, Do Not Bleach',
+          'Hand Wash Only, Lay Flat to Dry',
+          'Hand Wash Cold, Do Not Bleach, Dry Flat, Do Not Iron',
+          'Hand Wash Cold, Line Dry',
+          'Dry Clean Only',
+          'Machine Washable, Do Not Tumble Dry',
+          'Spot Clean Only',
+        ],
+      },
+    ],
   },
   {
     title: 'Style',
     fields: [
-      { key: 'neckStyle', label: 'Neck style' },
+      {
+        key: 'neckStyle',
+        label: 'Neck style',
+        options: [
+          'Crew Neck',
+          'V-Neck',
+          'Mock Neck',
+          'Turtleneck',
+          'Scoop Neck',
+          'Boat Neck',
+          'Cowl Neck',
+          'Henley Neck',
+          'High Neck',
+          'Hooded Neck',
+          'Jewel Neck',
+          'Keyhole Neck',
+          'Off-Shoulder',
+          'One-Shoulder',
+          'Plunging Neck',
+          'Square Neck',
+          'Surplice Neck',
+          'Sweetheart Neck',
+          'Tie Neck',
+          'Choker Neck',
+          'Collared Neck',
+        ],
+      },
       { key: 'styleName', label: 'Style name' },
-      { key: 'fitType', label: 'Fit type' },
-      { key: 'pattern', label: 'Pattern' },
-      { key: 'theme', label: 'Theme' },
-      { key: 'seasons', label: 'Seasons' },
-      { key: 'sleeveType', label: 'Sleeve type' },
-      { key: 'hemlineForm', label: 'Hemline form' },
-      { key: 'occasion', label: 'Occasion' },
-      { key: 'sweaterForm', label: 'Sweater form' },
+      {
+        key: 'fitType',
+        label: 'Fit type',
+        options: [
+          'Slim',
+          'Regular',
+          'Relaxed',
+          'Athletic',
+          'Oversized',
+          'Loose',
+          'Fitted',
+          'Boxy',
+          'Flowy',
+          'Skinny',
+          'Snug',
+          'Straight',
+        ],
+      },
+      {
+        key: 'pattern',
+        label: 'Pattern',
+        options: [
+          'Solid',
+          'Striped',
+          'Floral',
+          'Plaid',
+          'Animal Print',
+          'Argyle',
+          'Camouflage',
+          'Checkered',
+          'Chevron',
+          'Geometric',
+          'Herringbone',
+          'Houndstooth',
+          'Paisley',
+          'Polka Dot',
+          'Colorblock',
+          'Heathered',
+          'Cable Knit',
+          'Graphic Print',
+        ],
+      },
+      {
+        key: 'theme',
+        label: 'Theme',
+        options: [
+          'Solid/Basic',
+          'Holiday',
+          'Christmas',
+          'Halloween',
+          'Graphic',
+          'Novelty',
+          'Nautical',
+          'Fair Isle',
+          'Western',
+          'Varsity',
+          'Floral',
+        ],
+      },
+      {
+        key: 'seasons',
+        label: 'Seasons',
+        options: [
+          'Spring',
+          'Summer',
+          'Fall',
+          'Winter',
+          'All Season',
+          'Spring/Summer',
+          'Fall/Winter',
+          'Holiday',
+        ],
+      },
+      {
+        key: 'sleeveType',
+        label: 'Sleeve type',
+        options: [
+          'Sleeveless',
+          'Short Sleeve',
+          '3/4 Sleeve',
+          'Long Sleeve',
+          'Cap Sleeve',
+          'Raglan Sleeve',
+          'Bell Sleeve',
+          'Balloon Sleeve',
+          'Batwing Sleeve',
+          'Bishop Sleeve',
+          'Butterfly Sleeve',
+          'Cold-Shoulder',
+          'Puff Sleeve',
+          'Kimono Sleeve',
+          'Lantern Sleeve',
+        ],
+      },
+      {
+        key: 'hemlineForm',
+        label: 'Hemline form',
+        options: [
+          'Straight Hem',
+          'Curved Hem',
+          'High-Low Hem',
+          'Asymmetrical Hem',
+          'Ribbed Hem',
+          'Side-Slit Hem',
+          'Drawstring Hem',
+          'Rounded Hem',
+        ],
+      },
+      {
+        key: 'occasion',
+        label: 'Occasion',
+        options: [
+          'Casual',
+          'Business Casual',
+          'Formal',
+          'Party',
+          'Cocktail',
+          'Evening',
+          'Wedding',
+          'Holiday',
+          'Everyday',
+          'Vacation',
+          'Outdoor',
+          'Loungewear',
+        ],
+      },
+      {
+        key: 'sweaterForm',
+        label: 'Sweater form',
+        options: [
+          'Pullover',
+          'Cardigan',
+          'Sweater Vest',
+          'Turtleneck Sweater',
+          'Shrug',
+          'Poncho',
+          'Wrap Sweater',
+          'Cape',
+        ],
+      },
     ],
   },
   {
     title: 'Item details',
     fields: [
-      { key: 'ageRangeDescription', label: 'Age range description' },
+      {
+        key: 'ageRangeDescription',
+        label: 'Age range description',
+        options: [
+          'Adult',
+          'Teen',
+          'Big Kid',
+          'Little Kid',
+          'Toddler',
+          'Infant',
+        ],
+      },
       { key: 'modelName', label: 'Model name' },
-      { key: 'itemTypeName', label: 'Item type name' },
+      {
+        key: 'itemTypeName',
+        label: 'Item type name',
+        options: [
+          'Sweater',
+          'Cardigan',
+          'Pullover',
+          'Hoodie',
+          'T-Shirt',
+          'Turtleneck',
+          'Vest',
+          'Jacket',
+          'Coat',
+          'Tunic',
+        ],
+      },
     ],
   },
 ]
@@ -191,6 +394,7 @@ export default function AdminProductForm({ product, onSaved, onCancel }) {
         accept="image/*"
         multiple
         onChange={handleFilesChange}
+        className={`text-sm ${ADMIN_SECONDARY_TEXT} file:mr-3 file:cursor-pointer file:rounded file:border-0 ${ADMIN_ACCENT_FILE_BUTTON_BG} file:px-3 file:py-2 file:text-sm file:font-medium file:text-white ${ADMIN_ACCENT_FILE_BUTTON_HOVER}`}
       />
       {previews.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -209,16 +413,25 @@ export default function AdminProductForm({ product, onSaved, onCancel }) {
         <div key={section.title} className="flex flex-col gap-2">
           <h2 className="text-sm font-semibold">{section.title}</h2>
           {section.fields.map((field) => (
-            <input
-              key={field.key}
-              type="text"
-              placeholder={field.label}
-              value={details[field.key]}
-              onChange={(event) =>
-                handleDetailChange(field.key, event.target.value)
-              }
-              className={`rounded border ${ADMIN_CARD_BORDER} px-3 py-2 text-sm`}
-            />
+            <div key={field.key}>
+              <input
+                type="text"
+                list={field.options ? `${field.key}-options` : undefined}
+                placeholder={field.label}
+                value={details[field.key]}
+                onChange={(event) =>
+                  handleDetailChange(field.key, event.target.value)
+                }
+                className={`w-full rounded border ${ADMIN_CARD_BORDER} px-3 py-2 text-sm`}
+              />
+              {field.options && (
+                <datalist id={`${field.key}-options`}>
+                  {field.options.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
+              )}
+            </div>
           ))}
         </div>
       ))}
