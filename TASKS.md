@@ -4245,6 +4245,24 @@ involvement, since the Store's product catalog read is the only backend piece in
 
 ---
 
+_Requested by Sonny on 2026-08-24, after trying the live Shopping Cart page: it read as a plain
+white page with a small thumbnail, not matching the `Shopping cart landing page.png` reference
+(gray page behind a white cart card) — and there was no checkout entry point yet._
+
+- [x] **P437** — `StoreCartPage.jsx`: switch the page background to `STORE_PAGE_BG` (gray, matching
+      the rest of the Store) with the cart content in its own white rounded card (per the reference
+      mockup), enlarge each line's product thumbnail to a `32rem` centered box (~4x the prior
+      `h-32`/`w-32`), and add an inert "Proceed to Checkout" button next to the subtotal (its own
+      landing page comes later).
+      **Pass condition:** `verify` passes; the cart page shows a gray backdrop behind a white card,
+      a substantially larger centered product photo, and a Checkout button. Verified live via
+      Playwright: gray page visible around the white card in both a normal and a maximized window,
+      the thumbnail rendered far larger than before, and scrolling down revealed the subtotal next
+      to a working (inert) "Proceed to Checkout" button — `npm run verify` green throughout (52
+      tests).
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.
