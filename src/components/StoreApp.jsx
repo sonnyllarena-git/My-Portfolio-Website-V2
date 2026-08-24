@@ -11,12 +11,16 @@ import StoreSignUpPage from './store/StoreSignUpPage.jsx'
 import StoreFooter from './store/StoreFooter.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { StoreCartProvider } from '../context/StoreCartContext.jsx'
+import {
+  StoreCatalogProvider,
+  useStoreCatalog,
+} from '../context/StoreCatalogContext.jsx'
 import { STORE_PAGE_BG } from './store/theme.js'
-import { storeProducts } from './store/data/storeProducts.js'
 import { filterStoreProducts } from './store/filterStoreProducts.js'
 
-function StoreApp() {
+function StoreAppContent() {
   const isMobile = useIsMobile()
+  const { products: storeProducts, error } = useStoreCatalog()
   const [selectedGenders, setSelectedGenders] = useState(new Set())
   const [selectedColor, setSelectedColor] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -103,15 +107,30 @@ function StoreApp() {
               selectedColor={selectedColor}
               onSelectColor={setSelectedColor}
             />
-            <StoreProductGrid
-              products={filteredProducts}
-              onSelect={openProduct}
-            />
+            <div className="flex flex-1 flex-col gap-3">
+              {error && (
+                <p className="rounded bg-red-50 p-2 text-center text-sm text-red-600">
+                  {error}
+                </p>
+              )}
+              <StoreProductGrid
+                products={filteredProducts}
+                onSelect={openProduct}
+              />
+            </div>
           </div>
         )}
         <StoreFooter />
       </div>
     </StoreCartProvider>
+  )
+}
+
+function StoreApp() {
+  return (
+    <StoreCatalogProvider>
+      <StoreAppContent />
+    </StoreCatalogProvider>
   )
 }
 

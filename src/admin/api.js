@@ -21,6 +21,13 @@ export async function apiFetch(path, options = {}) {
   }
 
   const response = await fetch(`/api${path}`, { ...options, headers })
+  // A Bearer token can go stale without any client-side signal — the backend keeps valid
+  // tokens in memory only, so restarting it (a routine part of local dev) silently logs
+  // everyone out server-side while the token still looks valid in sessionStorage.
+  if (response.status === 401 && token) {
+    clearToken()
+    window.dispatchEvent(new Event('admin:unauthorized'))
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
     throw new Error(body.error || `Request failed: ${response.status}`)

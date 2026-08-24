@@ -35,11 +35,13 @@ function StoreProductCard({ product, onSelect }) {
   return (
     <div className="group flex flex-col gap-2 bg-white p-3 transition-shadow duration-200 hover:shadow-lg">
       <div className="relative overflow-hidden">
-        <span
-          className={`absolute left-0 top-0 px-2 py-0.5 text-xs font-semibold text-white ${STORE_BADGE_BG}`}
-        >
-          {product.badge}
-        </span>
+        {product.badge && (
+          <span
+            className={`absolute left-0 top-0 px-2 py-0.5 text-xs font-semibold text-white ${STORE_BADGE_BG}`}
+          >
+            {product.badge}
+          </span>
+        )}
         <img
           src={product.image}
           alt={product.name}

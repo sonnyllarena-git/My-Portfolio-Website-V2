@@ -35,6 +35,7 @@ function deserializeProduct(row) {
     colors: JSON.parse(row.colors || '[]'),
     sizes: JSON.parse(row.sizes || '[]'),
     images: JSON.parse(row.images || '[]'),
+    published: Boolean(row.published),
   }
 }
 
@@ -48,7 +49,12 @@ function serializeInput(body) {
 }
 
 router.get('/', (req, res) => {
-  const rows = db.prepare('SELECT * FROM products ORDER BY id').all()
+  const rows =
+    req.query.published === 'true'
+      ? db
+          .prepare('SELECT * FROM products WHERE published = 1 ORDER BY id')
+          .all()
+      : db.prepare('SELECT * FROM products ORDER BY id').all()
   res.json(rows.map(deserializeProduct))
 })
 
@@ -105,6 +111,22 @@ router.put('/:code', requireAuth, (req, res) => {
   db.prepare(
     `UPDATE products SET ${setColumns.map((column) => `${column} = ?`).join(', ')}, updatedAt = ? WHERE code = ?`,
   ).run(...setColumns.map((column) => values[column]), now, req.params.code)
+
+  const row = db
+    .prepare('SELECT * FROM products WHERE code = ?')
+    .get(req.params.code)
+  res.json(deserializeProduct(row))
+})
+
+router.patch('/:code/publish', requireAuth, (req, res) => {
+  const existing = db
+    .prepare('SELECT * FROM products WHERE code = ?')
+    .get(req.params.code)
+  if (!existing) return res.status(404).json({ error: 'Product not found' })
+
+  db.prepare(
+    'UPDATE products SET published = 1, updatedAt = ? WHERE code = ?',
+  ).run(new Date().toISOString(), req.params.code)
 
   const row = db
     .prepare('SELECT * FROM products WHERE code = ?')

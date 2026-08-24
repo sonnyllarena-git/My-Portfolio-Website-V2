@@ -1,6 +1,6 @@
 import { useStoreCart } from '../../context/StoreCartContext.jsx'
+import { useStoreCatalog } from '../../context/StoreCatalogContext.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
-import { storeProducts } from './data/storeProducts.js'
 import {
   STORE_LINK_BLUE,
   STORE_BODY_TEXT,
@@ -14,6 +14,7 @@ import {
 function StoreCartPage({ onBack, onSelectProduct, onCheckout }) {
   const isMobile = useIsMobile()
   const { items, updateQuantity, removeItem } = useStoreCart()
+  const { products: storeProducts } = useStoreCatalog()
 
   const lines = items
     .map((item) => ({

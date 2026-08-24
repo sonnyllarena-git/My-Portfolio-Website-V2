@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import logo from './assets/components/sonny store logo.png'
 import {
-  STORE_HEADER_BG,
   STORE_GOLD_CTA_BG,
   STORE_GOLD_CTA_HOVER_BG,
   STORE_LINK_BLUE,
@@ -11,12 +9,8 @@ function StoreSignUpPage({ onSignUp = () => {}, onSignIn = () => {} }) {
   const [name, setName] = useState('')
 
   return (
-    <div
-      className={`flex flex-1 flex-col items-center px-4 py-10 text-white ${STORE_HEADER_BG}`}
-    >
-      <img src={logo} alt="Sonny" className="h-10" />
-
-      <div className="mt-6 w-full max-w-sm rounded border border-white/20 bg-white p-6 text-black">
+    <div className="flex flex-1 flex-col items-center bg-white px-4 py-10 text-black">
+      <div className="mt-6 w-full max-w-sm rounded border border-gray-300 p-6">
         <h1 className="mb-3 text-2xl">Create account</h1>
 
         <label
@@ -59,7 +53,7 @@ function StoreSignUpPage({ onSignUp = () => {}, onSignIn = () => {} }) {
         </button>
       </div>
 
-      <div className="mt-8 flex gap-4 text-xs text-white/70">
+      <div className="mt-8 flex gap-4 text-xs text-gray-500">
         <span>Conditions of Use</span>
         <span>Privacy Notice</span>
         <span>Help</span>

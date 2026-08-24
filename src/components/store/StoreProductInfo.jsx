@@ -44,11 +44,13 @@ function StoreProductInfo({
     { label: 'Age Range Description', value: product.ageRangeDescription },
     { label: 'Model Name', value: product.modelName },
     { label: 'Item Type Name', value: product.itemTypeName },
-    {
+  ]
+  if (product.rating != null && product.reviewCount != null) {
+    itemDetailRows.push({
       label: 'Customer Reviews',
       value: `${product.rating} ★ (${product.reviewCount} reviews)`,
-    },
-  ]
+    })
+  }
 
   return (
     <div className={`flex-1 text-sm ${STORE_BODY_TEXT}`}>

@@ -4315,6 +4315,9 @@ white page — the navy header is the only place it currently reads correctly._
       `onSignIn`.
       **Pass condition:** `npm run verify` passes; typing a name and clicking Continue calls
       `onSignUp` with that name.
+      _(2026-08-24: Sonny asked for Sign in and Create account to share the same plain white
+      background with no logo on either — dropped the navy background and the logo from this
+      page, matching `StoreSignInPage.jsx`'s style exactly.)_
 
 - [x] **P442** — Wire it together in `StoreApp.jsx`: add a `userName` state and `'signin'` /
       `'signup'` values to `view`; the header flyout's two props switch to those views; each page's
@@ -4419,6 +4422,114 @@ logos, since no icon library or image assets exist for them and neither can be a
       "2026" because it inherited `w-full` from a shared `INPUT_CLASS` inside an unconstrained
       flex row — split the shared class so `w-full` is applied only at each call site that needs
       it, with `w-16`/`w-20` on the month/year selects instead.)_
+
+---
+
+## PHASE 75 — ADMIN PORTAL: STALE-SESSION BUG + STYLE NAME AUTOCOMPLETE
+
+_Sonny asked on 2026-08-24 where the admin catalog saves locally and reported "Product is not
+working," plus asked for the "Style name" field to get autocomplete like its sibling fields.
+Diagnosis: the catalog is a real SQLite file at `backend/data/catalog.db` (created by `db.js`
+relative to its own location, not the cwd) — confirmed by inspection, no bug there. "Product is
+not working" traced to two possible causes: (1) the backend (`npm run server`) not running at all
+— `npm run dev` only starts the Vite frontend, so if the API is down, login itself fails with a
+cryptic "Request failed: 502"; (2) a real bug — `backend/middleware/requireAuth.js` keeps valid
+tokens in an in-memory `Set` with no persistence, so restarting the backend (routine during local
+dev, no nodemon configured) silently invalidates every session server-side while the token in
+`sessionStorage` still looks valid to `AdminApp.jsx`, which only checks "is there a token string,"
+never validating it against the server. The products list still loads fine (`GET /products` has no
+auth), so the page looks normal — but every write (add/edit/delete a product, upload a photo) then
+fails with an unexplained "Unauthorized," which is indistinguishable from "broken" to a user with
+no reason to suspect a stale token. Reproduced both failure modes end-to-end with Playwright against
+the real dev build before fixing._
+
+- [x] **P451** — `src/admin/api.js`: when `apiFetch` gets a 401 back on a request that carried a
+      Bearer token, clear the token and dispatch a `window` `'admin:unauthorized'` event (a plain
+      login failure, which never carries a token, is unaffected). Wire `AdminApp.jsx` to listen for
+      that event and drop back to `AdminLogin`; `AdminLogin.jsx` takes a new `notice` prop and shows
+      it above the form.
+      **Pass condition:** `npm run verify` passes; overwriting `sessionStorage`'s token with a
+      value the backend never issued, then trying to save a product, bounces to the login screen
+      showing "Session expired — please sign in again." instead of a bare unexplained error.
+- [x] **P452** — `src/admin/AdminProductForm.jsx`: give the `styleName` field an `options` list
+      (researched real apparel "style name" vocabulary — Baseball, Henley, Rugby, Bolero, Camisole,
+      Duster, Peplum, etc. — distinct from the existing Neck style/Item type lists) so it gets the
+      same native-`<datalist>` autocomplete as its sibling Style-section fields; no other code
+      change needed since the JSX already renders a `<datalist>` whenever `field.options` exists.
+      **Pass condition:** `npm run verify` passes; the Style name field's datalist contains the new
+      options.
+      _(Verified both end-to-end with Playwright against the real dev build; test rows created
+      during diagnosis — PRD-0001–0003 — were deleted from `backend/data/catalog.db` at Sonny's
+      request afterward.)_
+
+---
+
+## PHASE 76 — CONNECT THE STORE TO THE ADMIN CATALOG (DRAFT → PREVIEW → PUBLISH)
+
+_Sonny asked on 2026-08-24 how a product saved in admin gets onto the Store — answer: it didn't,
+the Store rendered a hardcoded static file (`src/components/store/data/storeProducts.js`,
+1 product: VIBE CODER) completely disconnected from `backend/data/catalog.db`. Confirmed scope
+after a plan-mode design pass (see chat): admin Save creates a Draft (admin-only); a Preview button
+renders the actual Store product page inline in the admin Products page; a separate Publish action
+is what makes a product visible on the real Store. VIBE CODER is removed from the Store, not
+migrated — the Store shows its existing empty state until Sonny publishes something himself. No
+"unpublish" endpoint (not requested); the color-swatch hex dictionary staying tied to the 5 mock
+color names (admin-entered colors outside that list get an uncolored swatch, not a crash) is a
+known, accepted gap, not fixed here._
+
+- [x] **P453** — `backend/db.js`: add `published INTEGER NOT NULL DEFAULT 0` to the products table
+      (fresh installs) plus a `PRAGMA table_info` migration guard that `ALTER TABLE`s it in for the
+      already-existing `catalog.db`. `backend/routes/products.js`: `deserializeProduct` exposes
+      `published` as a boolean; `GET /` filters to `published = 1` when `?published=true` is passed
+      (admin's own fetch, with no query param, is unaffected — still sees every row); new
+      `PATCH /:code/publish` (behind `requireAuth`) flips it to published. `published` is
+      deliberately excluded from `PRODUCT_FIELDS` so the regular Save/Edit flow can never touch it.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P454** — Create `src/utils/mapCatalogProduct.js` (`mapCatalogProductToStoreProduct`), the
+      one place that turns a catalog DB row into the shape every Store component expects —
+      guarantees `colors`/`sizes`/`images` are always arrays, derives the singular `image` from
+      `images[0]`, and leaves `rating`/`reviewCount`/`boughtCount`/`badge`/`deliveryEstimate`
+      undefined (no real data source; existing components render fine without them, apart from 2
+      small guards added below). Used by both the Store's live fetch and the admin preview.
+      **Pass condition:** `npm run verify` passes; happy-path and missing-fields unit tests pass.
+- [x] **P455** — `src/components/store/StoreProductInfo.jsx`: only add the "Customer Reviews" row
+      when both `rating`/`reviewCount` are present (was a raw template string that printed the
+      literal text "undefined ★ (undefined reviews)"). `src/components/store/StoreProductCard.jsx`:
+      wrap the badge ribbon in `{product.badge && (...)}` so a missing badge renders nothing
+      instead of an empty colored box.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P456** — Create `src/context/StoreCatalogContext.jsx` (`StoreCatalogProvider` +
+      `useStoreCatalog`, mirroring `StoreCartContext.jsx`'s pattern exactly): fetches
+      `GET /api/products?published=true` once on mount, maps rows via P454's mapper, exposes
+      `{ products, loading, error }` (a failed fetch — e.g. the backend not running — sets a short
+      error string instead of silently rendering an empty grid).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P457** — Wire the Store off the static file: split `StoreApp.jsx` into a thin outer
+      `StoreApp` (renders `StoreCatalogProvider`) and `StoreAppContent` (reads `products` from
+      `useStoreCatalog()`, shows the `error` string inline above the grid if set); swap the same
+      hook into `StoreCartPage.jsx` and `StoreCheckoutPlaceOrderStep.jsx` in place of the static
+      import; `StoreProductGrid.jsx`'s `STORE_GRID_SIZE` becomes a local constant (its only
+      remaining consumer). Delete `src/components/store/data/storeProducts.js` (the VIBE CODER
+      image assets under `src/components/store/product/VIBE CODER/` are left on disk, orphaned but
+      harmless).
+      **Pass condition:** `npm run verify` passes; with an empty catalog the Store grid shows "No
+      products match your search."
+- [x] **P458** — Create `src/admin/AdminProductPreview.jsx`: maps the given product via P454 and
+      renders the real `StoreProductDetails` inline (wrapped in a local `StoreCartProvider` so Add
+      to cart/Buy Now don't crash — `StoreProductDetails`/`StoreProductBuyBox` call `useStoreCart()`
+      unconditionally), with a header bar showing draft/published status plus Publish (hidden once
+      published) and Close buttons. Wire `AdminProductsPage.jsx`: a Status column (Draft/Published
+      badge), a Preview button per row, and `handlePublish` (`PATCH /:code/publish`) updating both
+      the row and the open preview on success.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P459** — Verify the full flow end-to-end against the real dev build with Playwright: Store
+      grid empty with zero published rows → create a draft in admin → Preview renders the real
+      product page inline with no "undefined"/empty-badge artifacts → Store still shows the empty
+      grid (draft isn't public) → Publish → Store now shows the product in the grid and its detail
+      page → Add to cart → Cart page resolves the line item's name/price/subtotal correctly (no
+      "undefined"/"NaN"). Confirmed all of the above; test row deleted afterward.
+      **Pass condition:** every step above behaves as described; `npm run verify` green throughout
+      (21 test files, 54 tests).
 
 ---
 

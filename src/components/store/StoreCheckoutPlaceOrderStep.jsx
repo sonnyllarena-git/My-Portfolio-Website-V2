@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useStoreCart } from '../../context/StoreCartContext.jsx'
-import { storeProducts } from './data/storeProducts.js'
+import { useStoreCatalog } from '../../context/StoreCatalogContext.jsx'
 import { STORE_BUYNOW_BG, STORE_BUYNOW_HOVER_BG } from './theme.js'
 
 function StoreCheckoutPlaceOrderStep() {
   const { items } = useStoreCart()
+  const { products: storeProducts } = useStoreCatalog()
   const [orderPlaced, setOrderPlaced] = useState(false)
 
   const lines = items

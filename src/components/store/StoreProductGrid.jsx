@@ -1,6 +1,7 @@
-import { STORE_GRID_SIZE } from './data/storeProducts.js'
 import StoreProductCard from './StoreProductCard.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
+
+const STORE_GRID_SIZE = 4
 
 function StoreProductGrid({ products, onSelect }) {
   const isMobile = useIsMobile()

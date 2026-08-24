@@ -7,7 +7,7 @@ import {
   ADMIN_LOGIN_BG,
 } from './adminTheme.js'
 
-export default function AdminLogin({ onLogin }) {
+export default function AdminLogin({ onLogin, notice = '' }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -39,6 +39,9 @@ export default function AdminLogin({ onLogin }) {
         <h1 className="text-center text-sm font-semibold text-white">
           Admin sign in
         </h1>
+        {notice && (
+          <p className="text-center text-sm text-amber-400">{notice}</p>
+        )}
         <input
           type="text"
           placeholder="Username"

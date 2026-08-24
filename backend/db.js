@@ -36,9 +36,17 @@ db.exec(`
     colors TEXT,
     sizes TEXT,
     images TEXT,
+    published INTEGER NOT NULL DEFAULT 0,
     createdAt TEXT NOT NULL,
     updatedAt TEXT NOT NULL
   )
 `)
+
+const productColumns = db.prepare('PRAGMA table_info(products)').all()
+if (!productColumns.some((column) => column.name === 'published')) {
+  db.exec(
+    'ALTER TABLE products ADD COLUMN published INTEGER NOT NULL DEFAULT 0',
+  )
+}
 
 export default db
