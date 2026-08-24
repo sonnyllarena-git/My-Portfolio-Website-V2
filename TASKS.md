@@ -3517,15 +3517,14 @@ button over the art (no hover glow this time — confirmed with Sonny, keep the 
 only), then on click play video 2 unmuted before mounting the real desktop. The old
 `SignInScreen.jsx`, `sign-in-screen.jpg`, and `windows-startup.mp4` are removed entirely._
 
-- [ ] **P350** — Delete `src/components/startup/SignInScreen.jsx` and the now-unused
+- [x] **P350** — Delete `src/components/startup/SignInScreen.jsx` and the now-unused
       `src/components/startup/assets/sign-in-screen.jpg` /
       `src/components/startup/assets/windows-startup.mp4`; rename the 2 new videos to
       `loading-screen-v2.mp4` and `loading-screen-2.mp4` in that same assets folder.
       **Pass condition:** the old component and its 2 assets no longer exist; the 2 new videos
       exist at their renamed paths; `git status` shows no other files changed.
-      _(2026-08-22: `SignInScreen.jsx`, `sign-in-screen.jpg` deleted and both videos renamed;
-      `windows-startup.mp4` is still on disk — locked by a running `npm run dev`/browser session
-      still holding it open — deletion deferred until that lock clears.)_
+      _(2026-08-24: confirmed `windows-startup.mp4`'s file lock cleared — it's gone from disk and
+      nothing references it. All 3 old files removed, both videos renamed.)_
 
 - [x] **P351** — Add `src/components/startup/useUnmutedAutoplay.js`: a small hook (`videoRef`,
       `needsClickToPlay`, `retryPlay`) factoring out the "attempt unmuted `play()` on mount, fall
@@ -4264,6 +4263,77 @@ white page with a small thumbnail, not matching the `Shopping cart landing page.
 - [x] **P438** — `StoreCartPage.jsx`: Sonny asked to cut the P437 thumbnail size by 25% — `32rem`
       (512px) → `24rem`/`h-96`/`w-96` (384px).
       **Pass condition:** `npm run verify` passes.
+
+---
+
+## PHASE 72 — STORE SIGN IN / ACCOUNT (MOCK, NO REAL AUTH)
+
+_Requested by Sonny on 2026-08-24, with 3 Amazon reference screenshots: a hover flyout under the
+header's "Hello, sign in" block (yellow "Sign in" button + "New customer? Start here." link), and
+a full-page sign-in card (logo, heading, single field, yellow "Continue" button, footer links).
+Confirmed scope: no real authentication — a visitor just types a name, which becomes the header's
+greeting. Sign-in asks "Enter name"; sign-up asks "Enter name to create account" and sits on a navy
+background instead of white, because the "Sonny" logo's lettering is white and disappears on a
+white page — the navy header is the only place it currently reads correctly._
+
+- [x] **P439** — Add a hover flyout under the "Hello, sign in" block in `StoreHeader.jsx`: a small
+      white card (shown on `group-hover`, positioned below the block) containing a yellow "Sign
+      in" button and a "New customer? Start here." link, firing new `onSignInClick` /
+      `onSignUpClick` props.
+      **Pass condition:** `npm run verify` passes; hovering the block reveals the card and each
+      control fires its prop on click.
+      _(2026-08-24: Sonny reported the pure-`group-hover` version could close before he reached the
+      button — the small gap between trigger and flyout briefly hovers neither. Reworked to
+      JS-driven open/close state with a close delay (cancelled by re-entering either element), plus
+      a `bg-black/50` backdrop dimming the page below the header while it's open, matching the
+      reference screenshots. Follow-up rounds: shortened the delay 2s → 1s; added an
+      outside-mousedown listener that closes the menu immediately; fixed the backdrop only dimming
+      a sliver the width of the trigger (it was `inset-x-0` on the *trigger's* own narrow box —
+      moved it to the full-width header container instead); discovered `StoreHeader`'s root is a
+      flex item of `StoreApp`'s column flex container, so a bare `position:relative` with no
+      z-index falls back to DOM order for flex-item stacking — `StoreNav`/the product grid, being
+      later siblings, painted over the header's backdrop regardless of the backdrop's own `z-40`;
+      fixed by giving the header root itself an explicit `z-40`. Also fixed the menu staying stuck
+      open (backdrop and all) after clicking "Sign in"/"Start here." navigated to a different page,
+      since moving into a descendant button never fires the trigger's `onMouseLeave` — both clicks
+      now explicitly close the menu before firing their nav callback. Verified end-to-end with a
+      Playwright script driving the real dev build.)_
+
+- [x] **P440** — Create `src/components/store/StoreSignInPage.jsx`: centered white card on the
+      page background — "Sonny" logo, "Sign in" heading, "Enter name" label + text input, yellow
+      "Continue" button that calls `onSignIn(name)` (disabled/no-op while the field is empty), and
+      a "New customer? Start here." link calling `onSignUp`.
+      **Pass condition:** `npm run verify` passes; typing a name and clicking Continue calls
+      `onSignIn` with that name.
+      _(2026-08-24: Sonny asked to drop the "Sonny" logo from this page — the "Sonny" wordmark
+      renders white-on-transparent, so on this page's white background it was invisible anyway.)_
+
+- [x] **P441** — Create `src/components/store/StoreSignUpPage.jsx`: same card layout as P440 but
+      the page background is the header's navy (`STORE_HEADER_BG`) so the logo's white lettering
+      is visible; heading "Create account", label "Enter name to create account" + text input,
+      yellow "Continue" button calling `onSignUp(name)`, and a link back to sign in calling
+      `onSignIn`.
+      **Pass condition:** `npm run verify` passes; typing a name and clicking Continue calls
+      `onSignUp` with that name.
+
+- [x] **P442** — Wire it together in `StoreApp.jsx`: add a `userName` state and `'signin'` /
+      `'signup'` values to `view`; the header flyout's two props switch to those views; each page's
+      success callback sets `userName` and returns to `'grid'`; pass a `userName` prop into
+      `StoreHeader.jsx` so the block reads "Hello, {userName}" (bold line becomes "Account") once
+      signed in instead of "Hello, sign in" / "Sign in".
+      **Pass condition:** `npm run verify` passes; clicking Sign in → entering a name → Continue
+      returns to the store grid with the header greeting showing that name.
+
+- [x] **P443** — `StoreHeader.jsx`: make the signed-in "Hello, {userName} / Account" block
+      click-to-toggle (not hover) a small flyout with a "Sign out" button, calling a new
+      `onSignOutClick` prop; wire `StoreApp.jsx` to clear `userName` on sign-out.
+      **Pass condition:** `npm run verify` passes; clicking "Account" reveals "Sign out", and
+      clicking it returns the header to "Hello, sign in" / "Sign in".
+      _(2026-08-24: reused the existing account-menu state/backdrop/outside-click machinery from
+      P439 rather than a second implementation. Whole P439-P443 flow — hover open with delay,
+      outside-click close, sign in → sign up → sign in → complete sign-in → open Account → sign out
+      — verified end-to-end with a Playwright script against the real dev build; `npm run verify`
+      green throughout (52 tests).)_
 
 ---
 

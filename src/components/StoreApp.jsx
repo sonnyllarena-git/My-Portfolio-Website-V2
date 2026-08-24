@@ -5,6 +5,8 @@ import StoreSidebar from './store/StoreSidebar.jsx'
 import StoreProductGrid from './store/StoreProductGrid.jsx'
 import StoreProductDetails from './store/StoreProductDetails.jsx'
 import StoreCartPage from './store/StoreCartPage.jsx'
+import StoreSignInPage from './store/StoreSignInPage.jsx'
+import StoreSignUpPage from './store/StoreSignUpPage.jsx'
 import StoreFooter from './store/StoreFooter.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { StoreCartProvider } from '../context/StoreCartContext.jsx'
@@ -18,7 +20,13 @@ function StoreApp() {
   const [selectedColor, setSelectedColor] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProductId, setSelectedProductId] = useState(null)
-  const [view, setView] = useState('grid') // 'grid' | 'details' | 'cart'
+  const [userName, setUserName] = useState(null)
+  const [view, setView] = useState('grid') // 'grid' | 'details' | 'cart' | 'signin' | 'signup'
+
+  function completeSignIn(name) {
+    setUserName(name)
+    setView('grid')
+  }
 
   function toggleGender(gender) {
     setSelectedGenders((prev) => {
@@ -50,8 +58,24 @@ function StoreApp() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onCartClick={() => setView('cart')}
+          userName={userName}
+          onSignInClick={() => setView('signin')}
+          onSignUpClick={() => setView('signup')}
+          onSignOutClick={() => setUserName(null)}
         />
         <StoreNav />
+        {view === 'signin' && (
+          <StoreSignInPage
+            onSignIn={completeSignIn}
+            onSignUp={() => setView('signup')}
+          />
+        )}
+        {view === 'signup' && (
+          <StoreSignUpPage
+            onSignUp={completeSignIn}
+            onSignIn={() => setView('signin')}
+          />
+        )}
         {view === 'cart' && (
           <StoreCartPage
             onBack={() => setView('grid')}

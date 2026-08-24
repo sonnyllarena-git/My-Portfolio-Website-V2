@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import logo from './assets/components/sonny store logo.png'
 import pinIcon from './assets/icons/pin address.png'
 import searchIcon from './assets/icons/search.png'
@@ -8,6 +9,9 @@ import {
   STORE_HEADER_BG,
   STORE_GOLD_SEARCH_BG,
   STORE_BADGE_BG,
+  STORE_GOLD_CTA_BG,
+  STORE_GOLD_CTA_HOVER_BG,
+  STORE_LINK_BLUE,
 } from './theme.js'
 
 // Countries beyond the US will become a real selector later — flag only, for now.
@@ -27,9 +31,60 @@ function StoreHeader({
   searchQuery = '',
   onSearchChange = () => {},
   onCartClick = () => {},
+  userName = null,
+  onSignInClick = () => {},
+  onSignUpClick = () => {},
+  onSignOutClick = () => {},
 }) {
   const isMobile = useIsMobile()
   const { itemCount } = useStoreCart()
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
+  const closeAccountMenuTimer = useRef(null)
+  const accountMenuRef = useRef(null)
+
+  useEffect(() => () => clearTimeout(closeAccountMenuTimer.current), [])
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) return
+    function handleOutsideClick(e) {
+      if (!accountMenuRef.current?.contains(e.target)) {
+        clearTimeout(closeAccountMenuTimer.current)
+        setIsAccountMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [isAccountMenuOpen])
+
+  // The flyout sits below the trigger with a small gap — a quick diagonal mouse move through
+  // that gap briefly hovers neither element, so closing has to wait a beat instead of firing
+  // the instant the pointer leaves either one.
+  function openAccountMenu() {
+    clearTimeout(closeAccountMenuTimer.current)
+    setIsAccountMenuOpen(true)
+  }
+
+  function scheduleCloseAccountMenu() {
+    closeAccountMenuTimer.current = setTimeout(
+      () => setIsAccountMenuOpen(false),
+      1000,
+    )
+  }
+
+  function handleSignInClick() {
+    setIsAccountMenuOpen(false)
+    onSignInClick()
+  }
+
+  function handleSignUpClick() {
+    setIsAccountMenuOpen(false)
+    onSignUpClick()
+  }
+
+  function handleSignOut() {
+    setIsAccountMenuOpen(false)
+    onSignOutClick()
+  }
 
   const searchBar = (
     <div className="flex min-w-0 flex-1 items-stretch">
@@ -90,8 +145,16 @@ function StoreHeader({
 
   return (
     <div
-      className={`flex shrink-0 items-center gap-4 px-4 py-2 text-white ${STORE_HEADER_BG}`}
+      className={`relative z-40 flex shrink-0 items-center gap-4 px-4 py-2 text-white ${STORE_HEADER_BG}`}
     >
+      {isAccountMenuOpen && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-full z-40 bg-black/50"
+          style={{ height: '100vh' }}
+        />
+      )}
+
       <img src={logo} alt="Sonny" className="h-8 shrink-0" />
 
       <div className="flex shrink-0 cursor-pointer items-center gap-1 text-sm">
@@ -110,10 +173,60 @@ function StoreHeader({
         <span className="text-xs">▾</span>
       </div>
 
-      <div className="shrink-0 cursor-pointer text-sm leading-tight">
-        <div className="text-xs text-white/70">Hello, sign in</div>
-        <div className="font-semibold">Sign in</div>
-      </div>
+      {userName ? (
+        <div
+          ref={accountMenuRef}
+          className="relative z-50 shrink-0 cursor-pointer text-sm leading-tight"
+          onClick={() => setIsAccountMenuOpen((open) => !open)}
+        >
+          <div className="text-xs text-white/70">Hello, {userName}</div>
+          <div className="font-semibold">Account</div>
+
+          {isAccountMenuOpen && (
+            <div className="absolute right-0 top-full z-50 mt-2 w-40 rounded-md border border-gray-200 bg-white p-1 text-black shadow-lg">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full cursor-pointer rounded px-2 py-1.5 text-left text-sm hover:bg-gray-100"
+              >
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div
+          ref={accountMenuRef}
+          className="relative z-50 shrink-0 cursor-pointer text-sm leading-tight"
+          onMouseEnter={openAccountMenu}
+          onMouseLeave={scheduleCloseAccountMenu}
+        >
+          <div className="text-xs text-white/70">Hello, sign in</div>
+          <div className="font-semibold">Sign in</div>
+
+          {isAccountMenuOpen && (
+            <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-md border border-gray-200 bg-white p-3 text-black shadow-lg">
+              <button
+                type="button"
+                onClick={handleSignInClick}
+                className={`w-full cursor-pointer rounded-full py-1.5 text-sm font-medium transition-colors duration-150 ${STORE_GOLD_CTA_BG} ${STORE_GOLD_CTA_HOVER_BG}`}
+              >
+                Sign in
+              </button>
+              <div className="mt-2 text-center text-xs">
+                New customer?{' '}
+                <button
+                  type="button"
+                  onClick={handleSignUpClick}
+                  className={`cursor-pointer underline ${STORE_LINK_BLUE}`}
+                >
+                  Start here.
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="shrink-0 cursor-pointer text-sm leading-tight">
         <div className="text-xs text-white/70">Returns</div>
