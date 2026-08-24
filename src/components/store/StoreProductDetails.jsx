@@ -47,7 +47,7 @@ function StoreProductDetails({ product, onBack }) {
           {buyBox}
         </div>
       ) : (
-        <div className="mt-3 flex gap-6">
+        <div className="mt-3 mx-40 flex gap-6">
           <div className="sticky top-4 self-start">{gallery}</div>
           <div className="flex flex-1 gap-6">
             {info}

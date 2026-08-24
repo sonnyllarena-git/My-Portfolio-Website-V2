@@ -53,7 +53,9 @@ function StoreProductGallery({ images, productName }) {
       onMouseMove={isMobile ? undefined : handleMouseMove}
       onMouseLeave={isMobile ? undefined : () => setLens(null)}
       className={`relative shrink-0 overflow-hidden rounded bg-white ${
-        isMobile ? 'aspect-square w-full max-w-sm' : 'h-80 w-80 cursor-zoom-in'
+        isMobile
+          ? 'aspect-square w-full max-w-sm'
+          : 'h-128 w-128 cursor-zoom-in'
       }`}
     >
       <AnimatePresence>
