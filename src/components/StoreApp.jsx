@@ -4,8 +4,10 @@ import StoreNav from './store/StoreNav.jsx'
 import StoreSidebar from './store/StoreSidebar.jsx'
 import StoreProductGrid from './store/StoreProductGrid.jsx'
 import StoreProductDetails from './store/StoreProductDetails.jsx'
+import StoreCartPage from './store/StoreCartPage.jsx'
 import StoreFooter from './store/StoreFooter.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
+import { StoreCartProvider } from '../context/StoreCartContext.jsx'
 import { STORE_PAGE_BG } from './store/theme.js'
 import { storeProducts } from './store/data/storeProducts.js'
 import { filterStoreProducts } from './store/filterStoreProducts.js'
@@ -16,6 +18,7 @@ function StoreApp() {
   const [selectedColor, setSelectedColor] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProductId, setSelectedProductId] = useState(null)
+  const [view, setView] = useState('grid') // 'grid' | 'details' | 'cart'
 
   function toggleGender(gender) {
     setSelectedGenders((prev) => {
@@ -23,6 +26,11 @@ function StoreApp() {
       next.has(gender) ? next.delete(gender) : next.add(gender)
       return next
     })
+  }
+
+  function openProduct(productId) {
+    setSelectedProductId(productId)
+    setView('details')
   }
 
   const filteredProducts = filterStoreProducts(storeProducts, {
@@ -36,32 +44,45 @@ function StoreApp() {
   )
 
   return (
-    <div className={`flex h-full flex-col overflow-auto ${STORE_PAGE_BG}`}>
-      <StoreHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-      <StoreNav />
-      {selectedProduct ? (
-        <StoreProductDetails
-          product={selectedProduct}
-          onBack={() => setSelectedProductId(null)}
+    <StoreCartProvider>
+      <div className={`flex h-full flex-col overflow-auto ${STORE_PAGE_BG}`}>
+        <StoreHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onCartClick={() => setView('cart')}
         />
-      ) : (
-        <div
-          className={`flex shrink-0 gap-3 p-3 ${isMobile ? 'flex-col' : ''}`}
-        >
-          <StoreSidebar
-            selectedGenders={selectedGenders}
-            onToggleGender={toggleGender}
-            selectedColor={selectedColor}
-            onSelectColor={setSelectedColor}
+        <StoreNav />
+        {view === 'cart' && (
+          <StoreCartPage
+            onBack={() => setView('grid')}
+            onSelectProduct={openProduct}
           />
-          <StoreProductGrid
-            products={filteredProducts}
-            onSelect={setSelectedProductId}
+        )}
+        {view === 'details' && selectedProduct && (
+          <StoreProductDetails
+            product={selectedProduct}
+            onBack={() => setView('grid')}
           />
-        </div>
-      )}
-      <StoreFooter />
-    </div>
+        )}
+        {view === 'grid' && (
+          <div
+            className={`flex shrink-0 gap-3 p-3 ${isMobile ? 'flex-col' : ''}`}
+          >
+            <StoreSidebar
+              selectedGenders={selectedGenders}
+              onToggleGender={toggleGender}
+              selectedColor={selectedColor}
+              onSelectColor={setSelectedColor}
+            />
+            <StoreProductGrid
+              products={filteredProducts}
+              onSelect={openProduct}
+            />
+          </div>
+        )}
+        <StoreFooter />
+      </div>
+    </StoreCartProvider>
   )
 }
 

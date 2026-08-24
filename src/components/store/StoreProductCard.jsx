@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
+import { useStoreCart } from '../../context/StoreCartContext.jsx'
 import {
   STORE_BADGE_BG,
   STORE_STAR_COLOR,
@@ -14,6 +15,7 @@ function StoreProductCard({ product, onSelect }) {
   const descriptionRef = useRef(null)
   const [isTruncated, setIsTruncated] = useState(false)
   const [showDescriptionModal, setShowDescriptionModal] = useState(false)
+  const { addItem } = useStoreCart()
 
   useEffect(() => {
     const el = descriptionRef.current
@@ -114,6 +116,10 @@ function StoreProductCard({ product, onSelect }) {
       </div>
 
       <button
+        type="button"
+        onClick={() =>
+          addItem(product.id, product.colors[0], product.sizes[2], 1)
+        }
         className={`mt-1 cursor-pointer rounded-full py-1.5 text-sm font-medium transition-colors duration-150 ${STORE_GOLD_CTA_BG} ${STORE_GOLD_CTA_HOVER_BG}`}
       >
         Add to cart

@@ -22,7 +22,13 @@ function StoreProductDetails({ product, onBack }) {
       onSelectSize={setSelectedSize}
     />
   )
-  const buyBox = <StoreProductBuyBox product={product} />
+  const buyBox = (
+    <StoreProductBuyBox
+      product={product}
+      selectedColor={selectedColor}
+      selectedSize={selectedSize}
+    />
+  )
 
   return (
     <div className="shrink-0 flex-1 bg-white p-4">

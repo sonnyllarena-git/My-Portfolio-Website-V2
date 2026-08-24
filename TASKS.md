@@ -4087,6 +4087,159 @@ Store PDP work below/above — this note originally deferred it, kept here only 
 
 ---
 
+_Requested by Sonny on 2026-08-24, after trying the live admin portal: the logo is invisible on
+`AdminLogin.jsx`'s white background (it's designed for a dark backdrop, per its use in
+`StoreHeader.jsx`'s navy header), the sidebar only has one nav item, there's no way to log out or
+change any portal-wide color, and the native file input under Photos looks like unstyled browser
+chrome. Confirmed scope: fix login contrast using the Store's own navy
+(`STORE_HEADER_BG`/`#131921`), add Settings + Logout to `AdminLayout.jsx`, add a
+runtime-selectable accent color (reusing the existing `src/data/accentColors.js` palette already
+used by the desktop's Personalization settings — one source of truth, not a second color list),
+and restyle the Photos file input as a real button._
+
+- [x] **P423** — Give `AdminLogin.jsx`'s card the same navy background as `StoreHeader.jsx`
+      (`#131921`) so the logo (built for a dark backdrop) is visible, adjusting label/input/link
+      text colors for contrast against navy instead of white.
+      **Pass condition:** `verify` passes; the logo is visibly legible on the login page. Verified
+      live via Playwright screenshot: the white "Sonny" logo is clearly visible against the navy
+      background.
+
+- [x] **P424** — Add a "Settings" nav item to `AdminLayout.jsx`'s sidebar (a new
+      `src/admin/AdminSettingsPage.jsx` placeholder) and a "Log out" button in the topbar (clears
+      the stored token, returns to `AdminLogin`); `AdminApp.jsx` gets a small `view` state
+      ('products' | 'settings') so the sidebar can switch between them.
+      **Pass condition:** `verify` passes; clicking Settings swaps the main content, clicking Log
+      out returns to the login form. Verified live via Playwright: login → Products page,
+      clicking Settings swaps to the placeholder, clicking Log out returns to the sign-in form.
+
+- [x] **P425** — Add a runtime-selectable accent color: `src/admin/AdminSettingsContext.jsx`
+      (mirrors `src/context/SystemSettingsContext.jsx`'s pattern) holds `accentColor`, persisted to
+      `localStorage`, sourced from the existing `src/data/accentColors.js` palette; wire the chosen
+      hex as a `--admin-accent` CSS variable on `AdminLayout.jsx`'s root, and change
+      `adminTheme.js`'s accent tokens to reference `var(--admin-accent)` (with `/10` opacity for
+      the soft/active tint and `hover:brightness-90` instead of a separate hover hex) so every
+      accent-colored element in the portal updates together. Add the picker UI to
+      `AdminSettingsPage.jsx`.
+      **Pass condition:** `verify` passes; picking a different color in Settings changes the "Add
+      product" button and active nav highlight, and the choice survives a page reload. Verified
+      live via Playwright: default green (`rgb(34,197,94)`) → picked purple → button became
+      `rgb(168,85,247)` → survived a full page reload.
+
+- [x] **P426** — Restyle the native file input in `AdminProductForm.jsx`'s Photos section using
+      Tailwind's `file:` variant (styled button-like appearance for the "Choose files" control)
+      instead of default unstyled browser chrome.
+      **Pass condition:** `verify` passes; the Photos file picker renders as a themed button, not
+      plain browser text. Hit a real bug getting here: composing the class at the call site as
+      `` `file:${ADMIN_ACCENT_BG}` `` never appears as literal text in source, so Tailwind's
+      scanner silently generated no CSS for it — fixed by adding
+      `ADMIN_ACCENT_FILE_BUTTON_BG`/`_HOVER` as full literal strings in `adminTheme.js`. Verified
+      live via Playwright: `getComputedStyle(input, '::file-selector-button').backgroundColor`
+      now resolves to the accent color instead of transparent, and a screenshot confirms a real
+      green "Choose Files" button.
+
+- [x] **P427** — Sonny picked blue in Settings and wants it as the portal's actual brand default
+      (matching the desktop app's own default accent — `SystemSettingsContext.jsx` defaults to
+      `'blue'` too): change `AdminSettingsContext.jsx`'s `DEFAULT_ACCENT_ID` from `'green'` to
+      `'blue'`. Also updated `adminTheme.js`'s hardcoded `var(--admin-accent, ...)` fallback from
+      Shopify green to the same blue, so the login page (which sits outside
+      `AdminSettingsProvider`) matches too.
+      **Pass condition:** `verify` passes; clearing `localStorage` and reloading `/admin` shows
+      the blue accent by default. Verified live via Playwright in a fresh, storage-free browser
+      context: the "Add product" button rendered `rgb(59, 130, 246)` (`#3b82f6`) with no stored
+      preference at all.
+
+---
+
+_Requested by Sonny on 2026-08-24: configure real "Add to cart" behavior (currently the buttons on
+both `StoreProductCard.jsx` and `StoreProductBuyBox.jsx` are inert) and add a Shopping Cart page,
+per the new reference mockup `Shopping cart landing page.png`. Cart state is client-only (matches
+the existing localStorage-backed pattern used elsewhere, e.g. arcade scores) — no backend
+involvement, since the Store's product catalog read is the only backend piece in scope._
+
+- [x] **P428** — Create `src/context/StoreCartContext.jsx` (mirrors `AdminSettingsContext.jsx`'s
+      provider/hook/localStorage pattern): `StoreCartProvider` holds a `storeCart`-localStorage-
+      backed `items` array of `{productId, color, size, quantity}`, with `addItem` (merges
+      quantity into an existing matching line), `updateQuantity`, `removeItem`, and a derived
+      `itemCount`; export a `useStoreCart()` hook. Wrap `StoreApp.jsx`'s returned JSX in the new
+      provider.
+      **Pass condition:** `verify` passes. Verified: `npm run verify` green (52 tests passed).
+
+- [x] **P429** — Wire the two existing inert "Add to cart" buttons to `useStoreCart().addItem()`:
+      `StoreProductBuyBox.jsx` (needs `selectedColor`/`selectedSize` passed down as new props from
+      `StoreProductDetails.jsx`, using its own `quantity` state) and `StoreProductCard.jsx` (quick-
+      add using `product.colors[0]` / `product.sizes[2]`, quantity 1).
+      **Pass condition:** `verify` passes; clicking either button adds a line to the cart. Verified:
+      `npm run verify` green (52 tests passed).
+
+- [x] **P430** — `StoreHeader.jsx`: read `itemCount` from `useStoreCart()` and show it as a small
+      badge on the cart icon (reusing `STORE_BADGE_BG` from `theme.js`), hidden when the cart is
+      empty.
+      **Pass condition:** `verify` passes; adding an item updates the header badge count. Verified:
+      `npm run verify` green (52 tests passed).
+
+- [x] **P431** — Create `src/components/store/StoreCartPage.jsx` recreating the "Shopping Cart"
+      mockup (normal web sizing, not literal mockup proportions, per Sonny's earlier mockup-sizing
+      note): heading, one row per cart line (thumbnail, title linking back to that product's
+      details, Color/Size, a +/− quantity stepper wired to `updateQuantity`, a Delete link wired to
+      `removeItem`, line price), a subtotal footer, and an empty-cart state. Wire it into
+      `StoreApp.jsx` by replacing the ad hoc `selectedProductId`-only view logic with an explicit
+      `view` ('grid' | 'details' | 'cart') state — the header cart icon sets `view = 'cart'`, and
+      the cart page's own back link returns to `'grid'`.
+      **Pass condition:** `verify` passes; clicking the header cart icon shows the cart page with
+      correct items/quantities/subtotal, editing quantity and deleting both work live, and an empty
+      cart shows the empty state. Verified live via Playwright: added a quick-add line and a
+      qty-2/Navy Blue/XL line from product details (badge went 1 → 3), cart page showed both lines
+      with correct color/size/price and a `PHP 5,250.00` subtotal, `+` on the first line bumped
+      qty/price/badge/subtotal together, Delete removed a line, deleting the rest showed the empty
+      state with a working "Continue shopping" link, and a full page reload (re-running the boot →
+      sign-in sequence) preserved the badge count via `localStorage`.
+
+- [x] **P432** — Verify the full flow live (Playwright): add from a grid card, add from a product
+      details page, change quantity in the cart, delete an item, confirm the empty state, confirm
+      the count persists across a reload (localStorage). Append LESSONS.md entries for anything
+      that surprised us, or note "none".
+      **Pass condition:** `npm run verify` still green. Verified: full flow above passed with no
+      console/page errors; logged a Windows-path `require()` gotcha and a role-vs-text locator
+      timeout refinement to LESSONS.md.
+
+- [x] **P433** — `AdminProductForm.jsx`: add an optional `options: string[]` to `DETAIL_SECTIONS`
+      field entries, and support native autocomplete in the detail-field render loop (an
+      `<input list="...">` paired with a sibling `<datalist>` when a field defines `options`;
+      fields without `options` render exactly as today). Wire `options` for the "Top Highlights"
+      section's `careInstructions` field only, as the working proof: Machine Wash Cold, Tumble Dry
+      Low / Machine Wash Cold, Do Not Bleach, Tumble Dry Low, Do Not Iron / Machine Wash Warm,
+      Tumble Dry Low, Do Not Bleach / Hand Wash Only, Lay Flat to Dry / Hand Wash Cold, Do Not
+      Bleach, Dry Flat, Do Not Iron / Hand Wash Cold, Line Dry / Dry Clean Only / Machine
+      Washable, Do Not Tumble Dry / Spot Clean Only. No new dependency — native HTML only, per
+      CLAUDE.md §2.
+      **Pass condition:** `verify` passes; typing in Care instructions shows the 9 suggestions,
+      picking one fills the field, and typing a value not in the list still saves.
+      _(2026-08-24: `npm run verify` green — 0 errors, 9 pre-existing-pattern warnings, 52 tests;
+      confirmed the 9 option strings compile into the production bundle. No browser-automation
+      tool was available in this session (no chromium-cli/Playwright) to click through the
+      dropdown live — flagging that rather than claiming a visual check that didn't happen.)_
+
+- [x] **P434** — Data only, no render-logic changes: add `options` arrays to `neckStyle`,
+      `fitType`, `pattern`, and `theme` in `DETAIL_SECTIONS` (Amazon/apparel-vocabulary values
+      approved by Sonny 2026-08-24).
+      **Pass condition:** `verify` passes; each field's datalist shows its approved suggestions
+      and still accepts a typed value outside the list.
+      _(2026-08-24: `npm run verify` green — 0 errors, 9 pre-existing warnings, 52 tests.)_
+
+- [x] **P435** — Data only: add `options` arrays to `seasons`, `sleeveType`, `hemlineForm`, and
+      `occasion` in `DETAIL_SECTIONS`.
+      **Pass condition:** same as P434.
+      _(2026-08-24: `npm run verify` green — 0 errors, 9 pre-existing warnings, 52 tests.)_
+
+- [x] **P436** — Data only: add `options` arrays to `sweaterForm`, `ageRangeDescription`, and
+      `itemTypeName` in `DETAIL_SECTIONS`.
+      **Pass condition:** same as P434.
+      _(2026-08-24: `npm run verify` green — 0 errors, 9 pre-existing warnings, 52 tests; ran
+      `prettier --write` first since the 6-value `ageRangeDescription` array tripped
+      `format:check`'s line-wrap rule.)_
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.

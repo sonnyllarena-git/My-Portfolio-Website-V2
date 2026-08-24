@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
+import { useStoreCart } from '../../context/StoreCartContext.jsx'
 import {
   STORE_LINK_BLUE,
   STORE_BODY_TEXT,
@@ -10,9 +11,10 @@ import {
   STORE_BUYNOW_HOVER_BG,
 } from './theme.js'
 
-function StoreProductBuyBox({ product }) {
+function StoreProductBuyBox({ product, selectedColor, selectedSize }) {
   const isMobile = useIsMobile()
   const [quantity, setQuantity] = useState(1)
+  const { addItem } = useStoreCart()
 
   return (
     <div
@@ -44,6 +46,9 @@ function StoreProductBuyBox({ product }) {
 
         <button
           type="button"
+          onClick={() =>
+            addItem(product.id, selectedColor, selectedSize, quantity)
+          }
           className={`mt-3 w-full cursor-pointer rounded-full py-1.5 font-medium transition-colors duration-150 ${STORE_GOLD_CTA_BG} ${STORE_GOLD_CTA_HOVER_BG}`}
         >
           Add to cart

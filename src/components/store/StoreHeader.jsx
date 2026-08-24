@@ -3,7 +3,12 @@ import pinIcon from './assets/icons/pin address.png'
 import searchIcon from './assets/icons/search.png'
 import cartIcon from './assets/icons/cart.png'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
-import { STORE_HEADER_BG, STORE_GOLD_SEARCH_BG } from './theme.js'
+import { useStoreCart } from '../../context/StoreCartContext.jsx'
+import {
+  STORE_HEADER_BG,
+  STORE_GOLD_SEARCH_BG,
+  STORE_BADGE_BG,
+} from './theme.js'
 
 // Countries beyond the US will become a real selector later — flag only, for now.
 function UsFlagIcon() {
@@ -18,8 +23,13 @@ function UsFlagIcon() {
   )
 }
 
-function StoreHeader({ searchQuery = '', onSearchChange = () => {} }) {
+function StoreHeader({
+  searchQuery = '',
+  onSearchChange = () => {},
+  onCartClick = () => {},
+}) {
   const isMobile = useIsMobile()
+  const { itemCount } = useStoreCart()
 
   const searchBar = (
     <div className="flex min-w-0 flex-1 items-stretch">
@@ -46,8 +56,20 @@ function StoreHeader({ searchQuery = '', onSearchChange = () => {} }) {
   )
 
   const cartButton = (
-    <div className="flex shrink-0 cursor-pointer items-center gap-1">
-      <img src={cartIcon} alt="Cart" className="h-6 w-6" />
+    <div
+      onClick={onCartClick}
+      className="flex shrink-0 cursor-pointer items-center gap-1"
+    >
+      <div className="relative">
+        <img src={cartIcon} alt="Cart" className="h-6 w-6" />
+        {itemCount > 0 && (
+          <span
+            className={`absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${STORE_BADGE_BG}`}
+          >
+            {itemCount}
+          </span>
+        )}
+      </div>
       <span className="text-sm font-semibold">Cart</span>
     </div>
   )
