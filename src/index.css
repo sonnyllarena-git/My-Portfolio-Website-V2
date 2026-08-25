@@ -35,7 +35,42 @@
   animation: blog-loading-sweep 1.6s steps(8, end) infinite;
 }
 
+@keyframes terminal-cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.terminal-cursor {
+  animation: terminal-cursor-blink 1s steps(1, end) infinite;
+}
+
 @layer utilities {
+  .scrollbar-classic::-webkit-scrollbar {
+    width: 16px;
+  }
+  .scrollbar-classic::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+  .scrollbar-classic::-webkit-scrollbar-thumb {
+    background: #4d4d4d;
+    border: 1px solid #1e1e1e;
+    border-radius: 0;
+  }
+  .scrollbar-classic::-webkit-scrollbar-thumb:hover {
+    background: #666666;
+  }
+  .scrollbar-classic::-webkit-scrollbar-button {
+    display: block;
+    height: 16px;
+    background: #2b2b2b;
+  }
+
   .scrollbar-dark::-webkit-scrollbar {
     width: 8px;
     height: 8px;

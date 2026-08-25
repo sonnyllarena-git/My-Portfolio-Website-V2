@@ -66,6 +66,13 @@ function StartMenu({
     onClose()
   }
 
+  const railButtonClass = isMobile
+    ? 'group relative flex h-9 w-9 items-center justify-center overflow-hidden rounded'
+    : 'group relative flex w-full items-center gap-3 overflow-hidden rounded px-3 py-2'
+
+  const railHighlightClass =
+    'absolute inset-0 origin-left scale-x-0 rounded bg-[#2a2a2a] transition-transform duration-200 ease-out group-hover:scale-x-100'
+
   return (
     <motion.div
       {...panelMotion}
@@ -76,22 +83,48 @@ function StartMenu({
           : 'absolute bottom-full left-0 flex h-[560px] w-[760px] max-h-[70vh] overflow-hidden border border-white/10 bg-[#1f1f1f]/95 text-white shadow-2xl backdrop-blur-md'
       }
     >
-      <div className="relative flex w-14 shrink-0 flex-col items-center justify-end gap-2 border-r border-white/10 py-4">
+      <div
+        className={
+          isMobile
+            ? 'relative flex w-14 shrink-0 flex-col items-center justify-end gap-2 border-r border-white/10 py-4'
+            : 'relative flex w-40 shrink-0 flex-col justify-end gap-1 border-r border-white/10 px-2 py-4'
+        }
+      >
         <button
           type="button"
           onClick={() => handleOpen('settings')}
           aria-label="Settings"
-          className="flex h-9 w-9 items-center justify-center rounded hover:bg-white/10"
+          className={railButtonClass}
         >
-          <img src={iconImages.settings} alt="" className="h-5 w-5" />
+          <span aria-hidden className={railHighlightClass} />
+          <img
+            src={iconImages.settings}
+            alt=""
+            className="relative z-10 h-5 w-5 shrink-0"
+          />
+          {!isMobile && (
+            <span className="relative z-10 text-sm whitespace-nowrap">
+              Settings
+            </span>
+          )}
         </button>
         <button
           type="button"
           onClick={() => setIsPowerOpen((prev) => !prev)}
           aria-label="Power"
-          className="flex h-9 w-9 items-center justify-center rounded hover:bg-white/10"
+          className={railButtonClass}
         >
-          <img src={iconImages.power} alt="" className="h-5 w-5" />
+          <span aria-hidden className={railHighlightClass} />
+          <img
+            src={iconImages.power}
+            alt=""
+            className="relative z-10 h-5 w-5 shrink-0"
+          />
+          {!isMobile && (
+            <span className="relative z-10 text-sm whitespace-nowrap">
+              Power
+            </span>
+          )}
         </button>
         {isPowerOpen && (
           <StartMenuPowerFlyout

@@ -20,6 +20,7 @@ import settings from './settings.png'
 import start from './start.png'
 import store from './store.png'
 import techStack from './tech-stack.png'
+import terminal from './terminal icon.png'
 import thisPc from './this-pc.png'
 import videos from './videos.png'
 import visitorArts from './visitor-arts.png'
@@ -52,4 +53,5 @@ export const iconImages = {
   'local-disk-d': localDiskD,
   'tech-stack': techStack,
   'zoom-chat': zoomChat,
+  terminal,
 }

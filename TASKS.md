@@ -5098,6 +5098,138 @@ which this project's narrow icon rail doesn't use)._
       from the left edge (not an instant snap) and clearing the same way on mouse-leave; both
       buttons' click behavior (opening Settings / toggling the Power flyout) is unchanged;
       `npm run verify` passes.
+      _(2026-08-25: P514 itself was confirmed working live — a screenshot Sonny sent showed the
+      slide highlight rendering correctly on Power. Follow-up clarified the real ask was bigger:
+      match real Windows 11's default Start Menu view, where Settings/Power show icon + text label
+      in a wider rail, not an icon-only square — see P515.)_
+- [x] **P515** — In `src/components/StartMenu.jsx`, widen the footer rail on desktop only (`isMobile`
+      keeps the existing `w-14` icon-only square buttons unchanged, since touch has no hover) to
+      `w-40`, and change the Settings/Power buttons to `w-full` rows (`gap-3 px-3 py-2`) with the
+      icon plus a `text-sm whitespace-nowrap` label ("Settings" / "Power") next to it; the P514
+      sliding highlight `<span>` now covers the full labeled row instead of just the icon square.
+      **Pass condition:** on desktop, Settings/Power show icon + text label matching real Windows
+      11's default Start Menu row style, with the same hover slide-in highlight now spanning the
+      full row; on mobile the buttons are unchanged (icon-only); `npm run verify` passes.
+      _(2026-08-25: found marked `[x]` but the code on disk didn't match this spec — a prior
+      uncommitted edit had the label hidden until hover (button grew `w-9` → `hover:w-40`) instead
+      of always-visible on desktop, and the rail never widened. Rewrote to the described
+      `railButtonClass`/`railHighlightClass` (isMobile-gated `w-14` icon-only vs `w-40` full row +
+      sliding `scale-x` highlight span). Verified live with Playwright screenshots: desktop shows
+      the label permanently with the highlight sliding in on hover, Power flyout still opens on
+      click, mobile stays icon-only in the `w-14` rail. `npm run verify` passes.)_
+
+---
+
+## PHASE 84 — TERMINAL: REAL ICON, FRAMELESS CLOSE BUTTON, START MENU/SEARCH/TASKBAR ENTRY
+
+_Sonny supplied `src/assets/icons/terminal icon.png` and a reference screenshot of real
+`cmd.exe`, asking for: that icon on the terminal window (replacing the `>_` text glyph), the
+close button styled like the reference (permanently red, not just on hover — confirmed with
+Sonny), and Terminal made discoverable from the Start Menu app list, the Search modal, and a new
+pinned taskbar icon between Settings and Store. Confirmed with Sonny: Start Menu/Search Modal both
+read from the single `desktopIcons.js` list that also drives the desktop icon grid, so making
+Terminal appear there without also adding an unwanted 14th desktop icon needed a small
+`hideFromDesktop` exclusion flag — he chose no desktop icon._
+
+- [x] **P515** — Add `terminal` to `src/assets/icons/index.js`'s `iconImages` map (importing
+      `./terminal icon.png`).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P516** — Add a `terminal` entry (`label: 'Command Prompt'`, `icon: '>_'`, `sizeKB: 289`,
+      `hideFromDesktop: true`) to `src/data/desktopIcons.js`; in `src/components/Desktop.jsx`,
+      filter `hideFromDesktop` icons out of the desktop-grid's `sortedIcons` only (Start Menu and
+      Search Modal keep reading the full unfiltered list, so Terminal appears there); remove the
+      now-redundant `w.id === 'terminal'` label/icon fallback branches in the taskbar
+      `openWindows` mapping (the new `desktopIcons` entry makes them dead code).
+      **Pass condition:** Terminal shows in the Start Menu's alphabetical app list and is
+      searchable in the Search modal; no "Command Prompt" icon appears on the desktop; `verify`
+      passes.
+- [x] **P517** — In `src/utils/filterApps.js`, also match a query against `app.id` (not just
+      `app.label`), so typing "terminal" finds "Command Prompt".
+      **Pass condition:** typing "terminal" in the Search modal surfaces Command Prompt; `verify`
+      passes.
+- [x] **P518** — In `src/components/Desktop.jsx`, replace the terminal `<Window>`'s `icon=">_"`
+      with `<AppGlyph id="terminal" icon=">_" className="h-4 w-4" />` (the real PNG, matching how
+      every other icon-bearing surface resolves through `iconImages`).
+      **Pass condition:** the terminal window's title bar shows the real terminal icon instead of
+      the `>_` text glyph; `npm run verify` passes.
+- [x] **P519** — In `src/components/Taskbar.jsx`, add a `terminal`/`Command Prompt`/`>_` entry
+      to `pinnedTaskbarApps`, between the `settings` and `store` entries.
+      **Pass condition:** a pinned terminal icon sits in the taskbar between Settings and Store
+      and opens the terminal window on click; `npm run verify` passes.
+- [x] **P520** — In `src/components/Window.jsx`, change the `square` variant's close button from
+      hover-only red (`hover:bg-red-600 hover:text-white`) to permanently red
+      (`bg-red-600 text-white hover:bg-red-700`), matching the real Command Prompt reference
+      screenshot; minimize/maximize stay bare glyphs with their existing hover highlight, no
+      borders on any of the three (non-`square` windows are unaffected).
+      **Pass condition:** the terminal window's close button is solid red at rest, not just on
+      hover; every other window's close button is unchanged; `npm run verify` passes.
+
+---
+
+## PHASE 85 — TERMINAL POLISH: BLINKING CURSOR, ACTIVE-FOCUS, CHROME MATCHING REAL CMD.EXE
+
+_Sonny compared a live screenshot of our terminal against the real Windows cmd.exe side by side
+and asked for closer chrome matching, plus a real terminal-style caret. He corrected P520 (Phase
+84): the close button should go back to red-on-hover only, not permanently red — the reference
+screenshot that looked permanently red was just captured mid-hover._
+
+- [x] **P521** — In `src/components/Window.jsx`, revert the `square` close button to hover-only
+      red (`hover:bg-red-600 hover:text-white`, dropping the permanent `bg-red-600 text-white`
+      from P520); make all three `square` caption buttons flush to the title bar's top/right/
+      bottom edges with zero gap (full-height buttons, no outer padding on that side) instead of
+      floating with a margin from the border; reduce the `square` title bar from `h-10` to `h-9`
+      (~10% shorter).
+      **Pass condition:** hovering the terminal's close button turns it red, not-hovering shows no
+      red; the close button sits flush against the top-right corner with no visible gap; the
+      title bar is visibly shorter than before; every non-`square` window is unchanged;
+      `verify` passes.
+- [x] **P522** — In `src/components/TerminalApp.jsx`, add a blinking terminal-style cursor: an
+      invisible real `<input>` (`text-transparent caret-transparent`, absolutely positioned) keeps
+      handling all keystrokes, while a mirrored `<span>` underneath renders the same text plus a
+      `.terminal-cursor` blinking `_` (new `@keyframes terminal-cursor-blink` in `src/index.css`,
+      hard on/off, no cursor while `loadingLine !== null`); accept a new `isActive` prop and
+      `useEffect(() => { if (isActive) inputRef.current?.focus() }, [isActive])` so switching back
+      to an already-open terminal window refocuses typing without needing a click inside its body;
+      wire `isActive={index === openWindows.length - 1 && !w.isMinimized}` from
+      `src/components/Desktop.jsx`'s real terminal instance.
+      **Pass condition:** the cursor blinks after the prompt when empty and right after typed text
+      (e.g. `/help_`); it disappears during the ~1s open-command loading animation; bringing the
+      terminal window to the front refocuses the input with no extra click; `npm run verify`
+      passes.
+- [x] **P523** — Add a `.scrollbar-classic` utility to `src/index.css` (boxy, square-cornered,
+      gray-on-dark, no rounded thumb — unlike this project's existing rounded scrollbar utilities)
+      and apply it to the terminal's scrollable console `<div>` in `TerminalApp.jsx`, approximating
+      classic Windows console scrollbar styling (note: `::-webkit-scrollbar-button` can only be
+      given a solid background, not an arrow glyph, via plain CSS).
+      **Pass condition:** `npm run verify` passes; scrolling the terminal after enough output shows
+      the boxy gray scrollbar instead of the browser default.
+
+---
+
+## PHASE 86 — TERMINAL: FOCUS ON ANY CLICK, NOT JUST THE INPUT'S OWN AREA
+
+_Sonny reported that only clicking the exact invisible input area let him type — clicking the
+title bar, or other parts of the console body, didn't. Root cause: calling `inputRef.focus()`
+inside `onMouseDown` worked for an instant, but the browser's own default mousedown behavior (blur
+the current focus, since the actual click target — a `<span>`/title-bar `<div>` — isn't itself
+focusable) ran right after and undid it. Fix is `event.preventDefault()` on the mousedown before
+calling `.focus()`, which stops that default un-focus step without affecting anything else
+(confirmed live: window dragging via the title bar still works)._
+
+- [x] **P524** — In `src/components/TerminalApp.jsx`, add `e.preventDefault()` before
+      `inputRef.current?.focus()` in the console body's `onMouseDown`.
+      **Pass condition:** clicking anywhere in the console body (boot text, blank space, existing
+      output) focuses the input and typing lands in it; verified live; `npm run verify` passes.
+- [x] **P525** — Convert `TerminalApp` to `forwardRef` with `useImperativeHandle` exposing a
+      `focus()` method; in `src/components/Desktop.jsx`, add a `terminalHandleRef`, pass it as
+      `ref` to the real `<TerminalApp>` instance, and override that window's `onFocus` prop to
+      call `e.preventDefault()`, the original `shared.onFocus()` (bring-to-front), and
+      `terminalHandleRef.current?.focus()` — since `Window.jsx`'s outer wrapper already fires
+      `onFocus` via `onMouseDownCapture` for a mousedown anywhere in the window, including the
+      title bar, which `TerminalApp`'s own body-level handler can't reach.
+      **Pass condition:** clicking the terminal's title bar while it's already the active window
+      focuses the input and typing lands in it; dragging the window by its title bar still works;
+      `npm run verify` passes.
 
 ---
 

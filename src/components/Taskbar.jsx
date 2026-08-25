@@ -77,6 +77,7 @@ const pinnedTaskbarApps = [
   { id: 'developer-lab', label: 'Developer Lab', icon: '🛠️' },
   { id: 'music-lab', label: 'Music Lab', icon: '🎵' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
+  { id: 'terminal', label: 'Command Prompt', icon: '>_' },
   { id: 'store', label: 'Store', icon: '🛒' },
   { id: 'blog', label: 'Blog', icon: '📝' },
 ]

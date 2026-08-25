@@ -16,4 +16,11 @@ export const desktopIcons = [
   { id: 'visitor-arts', label: 'Visitor Arts', icon: '🖌️', sizeKB: 2900 },
   { id: 'tech-stack', label: 'Tech Stack', icon: '🧰', sizeKB: 700 },
   { id: 'zoom-chat', label: 'Zoom Chat', icon: '📹', sizeKB: 1200 },
+  {
+    id: 'terminal',
+    label: 'Command Prompt',
+    icon: '>_',
+    sizeKB: 289,
+    hideFromDesktop: true,
+  },
 ]

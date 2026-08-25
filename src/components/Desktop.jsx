@@ -25,6 +25,7 @@ import ZoomChatApp from './ZoomChatApp.jsx'
 import ProjectsApp from './ProjectsApp.jsx'
 import StoreApp from './StoreApp.jsx'
 import TerminalApp from './TerminalApp.jsx'
+import AppGlyph from './icons/AppGlyph.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
@@ -107,7 +108,7 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'zoom-chat') return <ZoomChatApp onOpenGmail={() => {}} />
   if (w.id === 'projects') return <ProjectsApp />
   if (w.id === 'store') return <StoreApp />
-  if (w.id === 'terminal') return <TerminalApp />
+  if (w.id === 'terminal') return <TerminalApp onOpenApp={() => {}} />
   return null
 }
 
@@ -143,7 +144,9 @@ function Desktop() {
       sortBy === 'size' ? a.sizeKB - b.sizeKB : a.label.localeCompare(b.label),
     )
   }
-  const sortedIcons = sortIcons(desktopIcons)
+  const sortedIcons = sortIcons(
+    desktopIcons.filter((icon) => !icon.hideFromDesktop),
+  )
   const [iconPositions, setIconPositions] = useState(() =>
     computeAutoLayout(sortedIcons, window.innerHeight),
   )
@@ -175,6 +178,7 @@ function Desktop() {
   }, [])
   const iconRefs = useRef(new Map())
   const instanceCounter = useRef(0)
+  const terminalHandleRef = useRef(null)
   const marqueeStart = useRef({ x: 0, y: 0 })
   const draggedDuringSelect = useRef(false)
   const [isSelecting, setIsSelecting] = useState(false)
@@ -577,14 +581,23 @@ function Desktop() {
               <Window
                 key={w.instanceId}
                 {...shared}
-                icon=">_"
+                onFocus={(e) => {
+                  e?.preventDefault()
+                  shared.onFocus()
+                  terminalHandleRef.current?.focus()
+                }}
+                icon={<AppGlyph id="terminal" icon=">_" className="h-4 w-4" />}
                 title="Command Prompt"
                 defaultWidth={700}
                 defaultHeight={450}
                 square
                 titleBarClassName="bg-[#f3f3f3] text-black"
               >
-                <TerminalApp />
+                <TerminalApp
+                  ref={terminalHandleRef}
+                  onOpenApp={handleIconOpen}
+                  isActive={index === openWindows.length - 1 && !w.isMinimized}
+                />
               </Window>
             )
           }
@@ -789,18 +802,11 @@ function Desktop() {
                 ? 'Settings'
                 : w.id === 'projects'
                   ? 'Projects'
-                  : w.id === 'terminal'
-                    ? 'Command Prompt'
-                    : w.id),
+                  : w.id),
             icon:
               icon?.icon === 'pdf'
                 ? '📄'
-                : (icon?.icon ??
-                  (w.id === 'projects'
-                    ? '🗃️'
-                    : w.id === 'terminal'
-                      ? '>_'
-                      : undefined)),
+                : (icon?.icon ?? (w.id === 'projects' ? '🗃️' : undefined)),
             isMinimized: w.isMinimized,
             preview: renderPreviewBody(w, gmailGuest),
             naturalWidth,
