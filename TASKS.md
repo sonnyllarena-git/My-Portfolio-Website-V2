@@ -5112,11 +5112,40 @@ which this project's narrow icon rail doesn't use)._
       full row; on mobile the buttons are unchanged (icon-only); `npm run verify` passes.
       _(2026-08-25: found marked `[x]` but the code on disk didn't match this spec — a prior
       uncommitted edit had the label hidden until hover (button grew `w-9` → `hover:w-40`) instead
-      of always-visible on desktop, and the rail never widened. Rewrote to the described
-      `railButtonClass`/`railHighlightClass` (isMobile-gated `w-14` icon-only vs `w-40` full row +
-      sliding `scale-x` highlight span). Verified live with Playwright screenshots: desktop shows
-      the label permanently with the highlight sliding in on hover, Power flyout still opens on
-      click, mobile stays icon-only in the `w-14` rail. `npm run verify` passes.)_
+      of always-visible on desktop, and the rail never widened. First rewrote it to match this
+      written spec (permanent `w-40` label row + sliding highlight span) — but Sonny then supplied
+      two real Windows 11 screenshots (default = icon-only Settings/Power, hover = the button
+      itself expanding to icon+label) proving this task's own written spec was wrong, not the
+      original code: real Windows 11 keeps the rail icon-only at rest and only reveals the label
+      on hover, it doesn't show the label permanently. Reverted to the `w-9`→`hover:w-40`
+      expanding-button technique (icon-only `h-9 w-9`, `absolute z-20` so the hover-expand
+      overlays instead of widening the rail, `overflow-hidden` clipping the label text until
+      hover). Verified live with Playwright screenshots against both references: default state
+      icon-only, hover expands to icon+label with a dark background, matches exactly. Also caught
+      and fixed a real bug this exposed — `StartMenuPowerFlyout`'s `z-10` sat below the expanding
+      Power button's `z-20`, so clicking Power (which requires hovering it) rendered the button on
+      top of "Shut down"; bumped the flyout to `z-30`. `npm run verify` passes.)_
+      _(2026-08-25 continued: per-button expand still looked like a floating rounded "pill" popping
+      over the app list instead of an integrated Fluent-style panel. Sonny supplied a third
+      reference showing the *whole* footer rail expanding together as one flush, flat-highlighted
+      column (icon+label for both Settings and Power revealed simultaneously, individual row
+      highlighted per-hover) — rebuilt around a single `group` rail: static `w-14` spacer child
+      (preserves layout so the app-list/recently-used columns never shift) plus a real rail
+      `absolute inset-y-0 left-0 z-30 ... hover:w-[340px]` overlay containing both buttons, each
+      just `opacity-0 group-hover:opacity-100` for its label (no per-label width/max-width clip —
+      an earlier `max-w-0` attempt double-clipped against the rail's own edge and produced a visible
+      seam, per Sonny's "should be seamless" note; opacity-only avoids a second moving edge). First
+      pass expanded only to `w-40`/`w-48`, which was narrower than the app-list's actual text width
+      and let list entries bleed through past the overlay's right edge; reserving that width
+      permanently in the layout (widening the static spacer) stopped the bleed but forced app-list
+      entries onto two lines even at rest, so per Sonny that reserve was reverted — instead the
+      overlay's hover width was extended to `340px`, matching exactly where the "Recently used"
+      column begins (`760px` panel − `420px` desktop recent-column = `340px`), fully overlaying the
+      app list with zero bleed and no permanent-reserve cost; the `border-l` between the app-list
+      and "Recently used" columns was also dropped per Sonny. Verified live via Playwright
+      screenshots at rest, mid-transition, hovered, and
+      with the Power flyout open (still opens above the overlay, `z-30` still wins). `npm run verify`
+      passes.)_
 
 ---
 
