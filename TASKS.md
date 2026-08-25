@@ -4533,6 +4533,37 @@ known, accepted gap, not fixed here._
 
 ---
 
+## PHASE 77 — ADMIN PRODUCT FORM: LABELED PHOTO SLOTS (MAIN / BACK / SIDE)
+
+_Sonny asked on 2026-08-25, with a reference "+" icon, for the Photos section of
+`AdminProductForm.jsx` to have 3 named buttons — Main image, Back view, Side view — each able to
+add or delete its own photo, instead of one plain multi-file input with no control over order and
+no per-photo delete. Confirmed via a plan-mode design pass: exactly 3 fixed slots (not
+extensible), uploads still happen on Save (not immediately per slot, same as before). No backend
+or Store changes needed — `StoreProductGallery.jsx` already just treats `images[0]` as the default
+shown image and maps the rest as thumbnails in array order, so the 3 slots simply determine that
+order (skipping any left empty) and the existing `POST /api/uploads` (10-file limit) comfortably
+covers 3._
+
+- [x] **P460** — `src/admin/AdminProductForm.jsx`: replaced the flat `files`/`previews` state with
+      a 3-slot `photoSlots` state (`{ file, preview }` per slot, `initPhotoSlots` mapping an
+      existing product's `images[0..2]` into Main/Back/Side by position on edit); replaced
+      `handleFilesChange` with `handleSlotFileChange`/`handleSlotRemove`; `handleSubmit`'s image
+      step is now `buildImages()` — batch-uploads only the slots with a newly-picked file (same
+      `POST /uploads` call as before), splices the returned URLs back into position, falls back to
+      each slot's existing URL otherwise, then drops empty slots. JSX: each slot shows its label,
+      an empty slot is a dashed-circle "+" button (plain CSS, no new icon asset/library — none
+      existed anywhere in `src/admin/` to begin with), a filled slot is the thumbnail with a small
+      red circular "×" remove button.
+      **Pass condition:** `npm run verify` passes; verified end-to-end with Playwright against the
+      real dev build — Add product starts with 3 empty "+" slots; filling Main/Back/Side and Save
+      persists the 3 URLs in that exact order; editing that product loads the 3 existing photos
+      back into their matching slots; removing Side and saving again leaves exactly 2 images.
+      Test product (`PRD-0006`) deleted afterward; a pre-existing unrelated product (`PRD-0005`,
+      not created by this session) was left untouched.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.

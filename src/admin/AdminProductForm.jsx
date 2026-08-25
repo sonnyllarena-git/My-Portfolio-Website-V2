@@ -5,9 +5,23 @@ import {
   ADMIN_ACCENT_BG,
   ADMIN_ACCENT_HOVER_BG,
   ADMIN_SECONDARY_TEXT,
-  ADMIN_ACCENT_FILE_BUTTON_BG,
-  ADMIN_ACCENT_FILE_BUTTON_HOVER,
 } from './adminTheme.js'
+
+const PHOTO_SLOTS = [
+  { key: 'main', label: 'Main image' },
+  { key: 'back', label: 'Back view' },
+  { key: 'side', label: 'Side view' },
+]
+
+// There's no stored signal for which existing image was "the back view" — position is the
+// only honest mapping, and it's the same convention this form now enforces going forward.
+function initPhotoSlots(product) {
+  const images = product?.images ?? []
+  return PHOTO_SLOTS.map((_, index) => ({
+    file: null,
+    preview: images[index] ?? null,
+  }))
+}
 
 const DETAIL_SECTIONS = [
   {
@@ -305,34 +319,54 @@ export default function AdminProductForm({ product, onSaved, onCancel }) {
   const [colors, setColors] = useState(product?.colors?.join(', ') ?? '')
   const [sizes, setSizes] = useState(product?.sizes?.join(', ') ?? '')
   const [details, setDetails] = useState(() => initialDetails(product))
-  const [files, setFiles] = useState([])
-  const [previews, setPreviews] = useState(product?.images ?? [])
+  const [photoSlots, setPhotoSlots] = useState(() => initPhotoSlots(product))
   const [error, setError] = useState('')
 
   function handleDetailChange(key, value) {
     setDetails((prev) => ({ ...prev, [key]: value }))
   }
 
-  function handleFilesChange(event) {
-    const selected = Array.from(event.target.files)
-    setFiles(selected)
-    setPreviews(selected.map((file) => URL.createObjectURL(file)))
+  function handleSlotFileChange(index, event) {
+    const file = event.target.files[0]
+    if (!file) return
+    setPhotoSlots((prev) =>
+      prev.map((slot, i) =>
+        i === index ? { file, preview: URL.createObjectURL(file) } : slot,
+      ),
+    )
+  }
+
+  function handleSlotRemove(index) {
+    setPhotoSlots((prev) =>
+      prev.map((slot, i) =>
+        i === index ? { file: null, preview: null } : slot,
+      ),
+    )
+  }
+
+  async function buildImages() {
+    const slotsToUpload = photoSlots.filter((slot) => slot.file)
+    let uploadedUrls = []
+    if (slotsToUpload.length) {
+      const formData = new FormData()
+      slotsToUpload.forEach((slot) => formData.append('photos', slot.file))
+      const uploaded = await apiFetch('/uploads', {
+        method: 'POST',
+        body: formData,
+      })
+      uploadedUrls = uploaded.urls
+    }
+    let uploadIndex = 0
+    return photoSlots
+      .map((slot) => (slot.file ? uploadedUrls[uploadIndex++] : slot.preview))
+      .filter(Boolean)
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
     try {
-      let images = product?.images ?? []
-      if (files.length) {
-        const formData = new FormData()
-        files.forEach((file) => formData.append('photos', file))
-        const uploaded = await apiFetch('/uploads', {
-          method: 'POST',
-          body: formData,
-        })
-        images = uploaded.urls
-      }
+      const images = await buildImages()
 
       const payload = {
         name,
@@ -429,25 +463,47 @@ export default function AdminProductForm({ product, onSaved, onCancel }) {
       />
 
       <h2 className="text-sm font-semibold">Photos</h2>
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={handleFilesChange}
-        className={`text-sm ${ADMIN_SECONDARY_TEXT} file:mr-3 file:cursor-pointer file:rounded file:border-0 ${ADMIN_ACCENT_FILE_BUTTON_BG} file:px-3 file:py-2 file:text-sm file:font-medium file:text-white ${ADMIN_ACCENT_FILE_BUTTON_HOVER}`}
-      />
-      {previews.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {previews.map((src) => (
-            <img
-              key={src}
-              src={src}
-              alt=""
-              className="h-16 w-16 rounded object-cover"
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex gap-6">
+        {PHOTO_SLOTS.map((slotDef, index) => {
+          const slot = photoSlots[index]
+          return (
+            <div key={slotDef.key} className="flex flex-col items-center gap-1">
+              <span className={`text-xs ${ADMIN_SECONDARY_TEXT}`}>
+                {slotDef.label}
+              </span>
+              {slot.preview ? (
+                <div className="relative h-20 w-20">
+                  <img
+                    src={slot.preview}
+                    alt={slotDef.label}
+                    className="h-20 w-20 rounded object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSlotRemove(index)}
+                    aria-label={`Remove ${slotDef.label}`}
+                    className="absolute -right-2 -top-2 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-red-600 text-xs leading-none text-white"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label
+                  className={`flex h-20 w-20 cursor-pointer items-center justify-center rounded-full border-2 border-dashed text-2xl ${ADMIN_CARD_BORDER} ${ADMIN_SECONDARY_TEXT}`}
+                >
+                  +
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => handleSlotFileChange(index, event)}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+          )
+        })}
+      </div>
 
       {DETAIL_SECTIONS.map((section) => (
         <div key={section.title} className="flex flex-col gap-2">
