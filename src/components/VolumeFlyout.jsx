@@ -1,7 +1,9 @@
+import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { accentColors } from '../data/accentColors.js'
 import SpeakerIcon from './icons/SpeakerIcon.jsx'
+import volumeChangeSound from '../assets/sounds/volume-change.mp3'
 
 const panelMotion = {
   initial: { opacity: 0, y: 12, scale: 0.96 },
@@ -15,6 +17,15 @@ function VolumeFlyout() {
     useSystemSettings()
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
   const shownVolume = isMuted ? 0 : volume
+  const chimeRef = useRef(null)
+
+  function playChime(level) {
+    if (level <= 0) return
+    if (!chimeRef.current) chimeRef.current = new Audio(volumeChangeSound)
+    chimeRef.current.volume = level / 100
+    chimeRef.current.currentTime = 0
+    chimeRef.current.play().catch(() => {})
+  }
 
   return (
     <motion.div
@@ -30,7 +41,7 @@ function VolumeFlyout() {
           aria-label={isMuted ? 'Unmute' : 'Mute'}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded hover:bg-white/10"
         >
-          <SpeakerIcon className="h-5 w-5" muted={isMuted} />
+          <SpeakerIcon className="h-5 w-5" muted={isMuted} volume={volume} />
         </button>
         <input
           type="range"
@@ -38,8 +49,10 @@ function VolumeFlyout() {
           max={100}
           value={shownVolume}
           onChange={(e) => {
+            const next = Number(e.target.value)
             setIsMuted(false)
-            setVolume(Number(e.target.value))
+            setVolume(next)
+            playChime(next)
           }}
           style={{ accentColor: accentHex }}
           className="h-1 flex-1"

@@ -32,10 +32,10 @@ function TrayButton({ label, children, onClick }) {
 }
 
 function SystemTray() {
-  const { volume, isMuted } = useSystemSettings()
+  const { volume, isMuted, isVolumeFlyoutOpen, setIsVolumeFlyoutOpen } =
+    useSystemSettings()
   const [now, setNow] = useState(() => new Date())
   const [isFlyoutOpen, setIsFlyoutOpen] = useState(false)
-  const [isVolumeOpen, setIsVolumeOpen] = useState(false)
   const clockAreaRef = useRef(null)
   const volumeAreaRef = useRef(null)
 
@@ -54,13 +54,14 @@ function SystemTray() {
   }, [isFlyoutOpen])
 
   useEffect(() => {
-    if (!isVolumeOpen) return
+    if (!isVolumeFlyoutOpen) return
     function handleOutsideMouseDown(e) {
-      if (!volumeAreaRef.current?.contains(e.target)) setIsVolumeOpen(false)
+      if (!volumeAreaRef.current?.contains(e.target))
+        setIsVolumeFlyoutOpen(false)
     }
     window.addEventListener('mousedown', handleOutsideMouseDown)
     return () => window.removeEventListener('mousedown', handleOutsideMouseDown)
-  }, [isVolumeOpen])
+  }, [isVolumeFlyoutOpen, setIsVolumeFlyoutOpen])
 
   return (
     <div className="ml-auto flex items-center gap-1 pr-2 text-sm text-white">
@@ -71,11 +72,13 @@ function SystemTray() {
       <div ref={volumeAreaRef} className="relative">
         <TrayButton
           label="Volume"
-          onClick={() => setIsVolumeOpen((prev) => !prev)}
+          onClick={() => setIsVolumeFlyoutOpen((prev) => !prev)}
         >
-          <SpeakerIcon className="h-4 w-4" muted={isMuted || volume === 0} />
+          <SpeakerIcon className="h-4 w-4" muted={isMuted} volume={volume} />
         </TrayButton>
-        <AnimatePresence>{isVolumeOpen && <VolumeFlyout />}</AnimatePresence>
+        <AnimatePresence>
+          {isVolumeFlyoutOpen && <VolumeFlyout />}
+        </AnimatePresence>
       </div>
       <div ref={clockAreaRef}>
         <button

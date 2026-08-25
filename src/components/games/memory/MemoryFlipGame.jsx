@@ -4,6 +4,7 @@ import MemoryCard from './MemoryCard.jsx'
 import MemoryHud from './MemoryHud.jsx'
 import MemoryGameOverOverlay from './MemoryGameOverOverlay.jsx'
 import { useGames } from '../../../context/GamesContext.jsx'
+import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
 import {
   buildShuffledDeck,
   pickRandomIcons,
@@ -42,6 +43,7 @@ function playSound(ref, muted) {
 
 export default function MemoryFlipGame({ onExit }) {
   const { submitScore, soundMuted } = useGames()
+  const { volume, isMuted } = useSystemSettings()
   const [level, setLevel] = useState(1)
   const [lives, setLives] = useState(STARTING_LIVES)
   const [deck, setDeck] = useState(() => buildLevelDeck(1))
@@ -99,6 +101,13 @@ export default function MemoryFlipGame({ onExit }) {
     if (soundMuted) musicRef.current.pause()
     else musicRef.current.play().catch(() => {})
   }, [soundMuted])
+
+  useEffect(() => {
+    const effective = soundMuted || isMuted ? 0 : volume / 100
+    ;[flipSoundRef, correctSoundRef, wrongSoundRef, musicRef].forEach((ref) => {
+      if (ref.current) ref.current.volume = effective
+    })
+  }, [volume, isMuted, soundMuted])
 
   function handleFlip(id) {
     if (flippedIds.length === 2) return

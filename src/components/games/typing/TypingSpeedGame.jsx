@@ -11,12 +11,14 @@ import {
   pickWarning,
 } from '../../../utils/games/typingLevels.js'
 import { useGames } from '../../../context/GamesContext.jsx'
+import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
 
 const GAME_ID = 'typing-speed'
 const LEVEL_DURATION_MS = 20000
 
 export default function TypingSpeedGame({ onExit }) {
   const { submitScore, soundMuted } = useGames()
+  const { volume, isMuted } = useSystemSettings()
   const [phase, setPhase] = useState('start')
   const [level, setLevel] = useState(1)
   const [completedLevels, setCompletedLevels] = useState(0)
@@ -37,6 +39,11 @@ export default function TypingSpeedGame({ onExit }) {
     if (soundMuted) musicRef.current.pause()
     else musicRef.current.play().catch(() => {})
   }, [soundMuted])
+
+  useEffect(() => {
+    if (!musicRef.current) return
+    musicRef.current.volume = soundMuted || isMuted ? 0 : volume / 100
+  }, [volume, isMuted, soundMuted])
 
   function handleStart() {
     setPhase('playing')

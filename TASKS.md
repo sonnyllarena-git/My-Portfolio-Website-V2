@@ -4979,7 +4979,7 @@ existing in-memory-only pattern already used for brightness/theme/accent. Full d
       dragging the slider updates the shown percentage live; clicking the flyout's speaker icon
       toggles mute and the tray icon glyph changes to match; clicking outside closes it; the
       format check, the build, and the test suite all pass.
-- [ ] **P501** — In `src/components/MusicLabApp.jsx`, import `useSystemSettings()` and change the
+- [x] **P501** — In `src/components/MusicLabApp.jsx`, import `useSystemSettings()` and change the
       existing volume effect (currently setting `videoRef.current.volume`/
       `audioRef.current.volume` straight from local `volume`) to
       `effective = isMuted ? 0 : (volume / 100) * (masterVolume / 100)`; Music Lab's own slider/
@@ -4987,7 +4987,7 @@ existing in-memory-only pattern already used for brightness/theme/accent. Full d
       **Pass condition:** playing a track in Music Lab while its own slider stays at 100% gets
       audibly quieter as the taskbar master slider is lowered; toggling master mute silences it;
       unmuting restores it; the format check, the build, and the test suite all pass.
-- [ ] **P502** — In `src/components/games/flappybird/FlappyBirdGame.jsx`, add one `useEffect`
+- [x] **P502** — In `src/components/games/flappybird/FlappyBirdGame.jsx`, add one `useEffect`
       reading `volume`/`isMuted` from `useSystemSettings()` that sets `.volume` on all 3 existing
       Audio refs (`bgMusicRef`, `gameOverAudioRef`, `jumpAudioRef`) to the effective volume
       (`soundMuted` forces 0; otherwise `isMuted` forces 0, else `volume / 100`), re-running
@@ -4997,23 +4997,107 @@ existing in-memory-only pattern already used for brightness/theme/accent. Full d
       audibly lowers its background music/SFX; the game's own sound toggle still independently
       silences it regardless of the master; the format check, the build, and the test suite all
       pass.
-- [ ] **P503** — Same pattern as P502, applied to
+- [x] **P503** — Same pattern as P502, applied to
       `src/components/games/flappybird/FlappyBirdCanvas.jsx`'s jump-sound Audio object.
       **Pass condition:** same as P502, verified for this file's sound; the format check, the
       build, and the test suite all pass.
-- [ ] **P504** — Same pattern as P502, applied to all Audio objects in
+- [x] **P504** — Same pattern as P502, applied to all Audio objects in
       `src/components/games/memory/MemoryFlipGame.jsx` (flip/correct/wrong SFX + background
       music).
       **Pass condition:** same as P502, verified for this file's sounds; the format check, the
       build, and the test suite all pass.
-- [ ] **P505** — Same pattern as P502, applied to the background-music Audio object in
+- [x] **P505** — Same pattern as P502, applied to the background-music Audio object in
       `src/components/games/typing/TypingSpeedGame.jsx`.
       **Pass condition:** same as P502, verified for this file's sound; the format check, the
       build, and the test suite all pass.
-- [ ] **P506** — Same pattern as P502, applied to the keystroke-sound Audio object in
+- [x] **P506** — Same pattern as P502, applied to the keystroke-sound Audio object in
       `src/components/games/typing/TypingTestArea.jsx`.
       **Pass condition:** same as P502, verified for this file's sound; the format check, the
       build, and the test suite all pass.
+- [x] **P507** — Sonny supplied a real Windows-style volume-change chime (copied from
+      `src/components/task bar/volume change sound.MP3` into `src/assets/sounds/volume-change.mp3`
+      — a new shared system-sounds folder, alongside the existing `src/assets/icons/`
+      convention). Wire it into `src/components/VolumeFlyout.jsx`: on every slider `onChange`
+      (while the resulting level is above 0), play the chime with its own `.volume` set to the new
+      level being set (so it plays quiet at a low level, loud at a high one), matching native
+      Windows' own volume-change sound; skip playing it at 0/while muted; no change to the mute
+      button (real Windows doesn't chime on mute/unmute, only on level changes).
+      **Pass condition:** dragging the slider plays the chime at a volume proportional to the new
+      level; dragging to 0 plays nothing; the format check, the build, and the test suite all
+      pass.
+- [x] **P508** — Sonny asked the tray/flyout speaker icon to visually reflect the level, not just
+      muted/unmuted: extend `src/components/icons/SpeakerIcon.jsx` with a `volume` prop (0-100,
+      default 100) alongside the existing `muted` prop — muted or `volume <= 0` shows the "X"
+      mark, `volume <= 33` shows one sound-wave arc, `<= 66` shows two, and above that shows three;
+      pass `volume={volume}` from both `src/components/SystemTray.jsx`'s tray icon and
+      `src/components/VolumeFlyout.jsx`'s mute-button icon (both already have `volume` in scope).
+      **Pass condition:** the icon shows 0/1/2/3 wave arcs correctly at each tier live; the format
+      check, the build, and the test suite all pass.
+
+---
+
+## PHASE 83 — TERMINAL: REAL COMMANDS + "OPENING X..." DOTS ANIMATION
+
+_Sonny confirmed on 2026-08-25 the terminal's command list and behavior: `/help` lists commands,
+`/clear` wipes the terminal's text, and every command that opens something (an app window, or the
+taskbar volume flyout) shows ~1 second of literal dots-cycling "Opening X..." text in the terminal
+before the thing actually opens — not a spinner icon, and not anything real cmd.exe/Windows
+Terminal does natively; it's a CLI/installer convention being added fresh. Full design at
+`C:\Users\SonnyLlarena\.claude\plans\giggly-stirring-comet.md`._
+
+- [x] **P509** — In `src/components/TerminalApp.jsx`, add a `COMMANDS` registry array
+      (`{ command, kind, description, appId?, label? }`), `findCommand`/`buildHelpLines` helpers,
+      and rewrite `handleKeyDown` to dispatch on `kind` (`'help'` prints the generated command
+      list, `'clear'` wipes `history` instantly with no echo, anything unmatched keeps the
+      existing "not recognized" line).
+      **Pass condition:** `/help` lists `/help` and `/clear`; `/clear` instantly wipes the console;
+      `npm run verify` passes.
+- [x] **P510** — In `src/components/TerminalApp.jsx`, add the dots-loading mechanism: timing
+      constants (250ms tick, 1000ms total), `loadingLine` state, `intervalRef`/`timeoutRef`/
+      `isMountedRef` with an unmount-cleanup `useEffect`, `runOpenCommand`/`dispatchOpen`, an
+      `onOpenApp = () => {}` prop, `disabled={loadingLine !== null}` on the input, and every
+      `kind: 'open'` command (`/settings`, `/resume`, `/projects`, `/contact`, `/store`, `/games`,
+      `/blog`, `/paint`, `/musiclab`, `/gmail`) wired to call `onOpenApp(appId)` after the
+      animation.
+      **Pass condition:** each open-command shows "Opening {label}" cycling 1→2→3 trailing dots
+      (repeating) for ~1 second, then settles on a "done." line and calls `onOpenApp`; a second
+      Enter mid-animation is a no-op; closing the terminal window mid-animation throws no console
+      errors; `npm run verify` passes.
+- [x] **P511** — In `src/components/Desktop.jsx`, pass `onOpenApp={handleIconOpen}` to the real
+      `w.id === 'terminal'` `<TerminalApp>` instance and `onOpenApp={() => {}}` to the
+      `renderPreviewBody` instance.
+      **Pass condition:** typing `/musiclab` (etc.) in the real terminal window opens that app
+      after the loading animation; `npm run verify` passes.
+- [x] **P512** — Add `isVolumeFlyoutOpen`/`setIsVolumeFlyoutOpen` (`useState(false)`, unpersisted)
+      to `src/context/SystemSettingsContext.jsx` alongside the existing fields; update
+      `src/components/SystemTray.jsx` to consume it from `useSystemSettings()` instead of its own
+      local `isVolumeOpen` state (toggle button, outside-click-close effect, `AnimatePresence`
+      condition all repointed, behavior unchanged).
+      **Pass condition:** the tray speaker icon still opens/closes `VolumeFlyout` exactly as
+      before; `npm run verify` passes.
+- [x] **P513** — In `src/components/TerminalApp.jsx`, add a `/volume` command
+      (`kind: 'volume'`, no `appId`) that runs the same dots animation then calls
+      `setIsVolumeFlyoutOpen(true)` (from `useSystemSettings()`) instead of `onOpenApp`.
+      **Pass condition:** `/volume` shows the animation, then opens the same flyout the speaker
+      icon controls; verified live in the dev server; `npm run verify` passes.
+
+## PHASE 79 — START MENU FOOTER HOVER POLISH
+
+_Sonny asked on 2026-08-25 for a hover effect on the Start Menu's Settings and Power icon buttons:
+a highlight that slides in left-to-right rather than snapping on instantly, as smooth as the Start
+Menu's own open/close transition. Reference: a Windows 11 Start Menu screenshot showing the Power
+row highlighted mid-hover (used for the slide-reveal look only, not the full-width labeled layout,
+which this project's narrow icon rail doesn't use)._
+
+- [x] **P514** — In `src/components/StartMenu.jsx`, replace the instant `hover:bg-white/10` on the
+      Settings and Power buttons with a `group relative overflow-hidden` button wrapping an
+      absolutely-positioned `aria-hidden` background `<span>` (`origin-left scale-x-0` →
+      `group-hover:scale-x-100`, `transition-transform duration-200 ease-out` to match the panel's
+      own `panelMotion` timing); icon `<img>` gets `relative z-10` to stay above it.
+      **Pass condition:** hovering Settings or Power in the browser shows the highlight sliding in
+      from the left edge (not an instant snap) and clearing the same way on mouse-leave; both
+      buttons' click behavior (opening Settings / toggling the Power flyout) is unchanged;
+      `npm run verify` passes.
 
 ---
 

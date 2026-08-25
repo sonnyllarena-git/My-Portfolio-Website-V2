@@ -6,6 +6,7 @@ import backgroundMusic from './assets/audio/flappy bird audio.mp3'
 import gameOverSound from './assets/audio/game over.mp3'
 import jumpSound from './assets/audio/jump.mp3'
 import { useGames } from '../../../context/GamesContext.jsx'
+import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
 
 const GAME_ID = 'flappy-bird'
 
@@ -30,6 +31,7 @@ const EXIT_RECT = {
 
 export default function FlappyBirdGame({ onExit }) {
   const { submitScore, getTopScores, soundMuted } = useGames()
+  const { volume, isMuted } = useSystemSettings()
   const [phase, setPhase] = useState('start')
   const [runKey, setRunKey] = useState(0)
   const [score, setScore] = useState(0)
@@ -48,6 +50,13 @@ export default function FlappyBirdGame({ onExit }) {
       jumpAudioRef.current?.pause()
     }
   }, [])
+
+  useEffect(() => {
+    const effective = soundMuted || isMuted ? 0 : volume / 100
+    ;[bgMusicRef, gameOverAudioRef, jumpAudioRef].forEach((ref) => {
+      if (ref.current) ref.current.volume = effective
+    })
+  }, [volume, isMuted, soundMuted])
 
   useEffect(() => {
     if (phase === 'playing' && !soundMuted) {

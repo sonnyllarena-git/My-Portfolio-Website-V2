@@ -6,6 +6,7 @@ import { getLevelInfo } from '../../../utils/games/typingLevels.js'
 import { resolvePhysicalKey } from '../../../utils/games/keyboardLayout.js'
 import keyboardSound from './assets/sound/keyboard sound.MP3'
 import { useGames } from '../../../context/GamesContext.jsx'
+import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
 
 const KEY_FLASH_MS = 150
 
@@ -16,6 +17,7 @@ export default function TypingTestArea({
   onTimeout,
 }) {
   const { soundMuted } = useGames()
+  const { volume, isMuted } = useSystemSettings()
   const { sentence } = getLevelInfo(level)
   const [typed, setTyped] = useState('')
   const [secondsLeft, setSecondsLeft] = useState(Math.ceil(durationMs / 1000))
@@ -32,6 +34,11 @@ export default function TypingTestArea({
       keySoundRef.current?.pause()
     }
   }, [])
+
+  useEffect(() => {
+    if (!keySoundRef.current) return
+    keySoundRef.current.volume = soundMuted || isMuted ? 0 : volume / 100
+  }, [volume, isMuted, soundMuted])
 
   useEffect(() => {
     startTimeRef.current = performance.now()

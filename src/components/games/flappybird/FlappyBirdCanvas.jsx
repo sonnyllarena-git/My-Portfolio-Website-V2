@@ -12,6 +12,7 @@ import flappyMapBackground from './assets/components/flappy spiderman map.jpg'
 import flappyPipeSprite from './assets/components/pipe.png'
 import jumpSound from './assets/audio/jump.mp3'
 import { useGames } from '../../../context/GamesContext.jsx'
+import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
 
 const PIPE_SPEED = 120
 const MAP_SCROLL_SPEED = PIPE_SPEED * 0.1
@@ -129,6 +130,7 @@ function draw(ctx, bird, pipes, score, width, height, mapOffset) {
 
 export default function FlappyBirdCanvas({ paused, onGameOver }) {
   const { soundMuted } = useGames()
+  const { volume, isMuted } = useSystemSettings()
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const dimsRef = useRef({ width: 400, height: 600 })
@@ -154,6 +156,11 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
   useEffect(() => {
     jumpAudioRef.current = new Audio(jumpSound)
   }, [])
+
+  useEffect(() => {
+    if (!jumpAudioRef.current) return
+    jumpAudioRef.current.volume = soundMuted || isMuted ? 0 : volume / 100
+  }, [volume, isMuted, soundMuted])
 
   useLayoutEffect(() => {
     const container = containerRef.current

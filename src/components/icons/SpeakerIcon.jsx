@@ -1,4 +1,6 @@
-function SpeakerIcon({ className = 'h-5 w-5', muted = false }) {
+function SpeakerIcon({ className = 'h-5 w-5', muted = false, volume = 100 }) {
+  const isSilent = muted || volume <= 0
+
   return (
     <svg
       viewBox="0 0 24 24"
@@ -11,12 +13,13 @@ function SpeakerIcon({ className = 'h-5 w-5', muted = false }) {
       aria-hidden="true"
     >
       <path d="M4 9v6h3l5 4V5L7 9H4z" />
-      {muted ? (
+      {isSilent ? (
         <path d="M16 9l4 6M20 9l-4 6" />
       ) : (
         <>
           <path d="M16 9a4 4 0 0 1 0 6" />
-          <path d="M18.5 7a7 7 0 0 1 0 10" />
+          {volume > 33 && <path d="M18.5 7a7 7 0 0 1 0 10" />}
+          {volume > 66 && <path d="M21 5a10 10 0 0 1 0 14" />}
         </>
       )}
     </svg>

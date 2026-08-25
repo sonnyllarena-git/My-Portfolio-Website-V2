@@ -5,9 +5,11 @@ import MusicLabScreen from './musicLab/MusicLabScreen.jsx'
 import MusicLabAbout from './musicLab/MusicLabAbout.jsx'
 import MusicLabPlayerBar from './musicLab/MusicLabPlayerBar.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
+import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 
 function MusicLabApp() {
   const isMobile = useIsMobile()
+  const { volume: masterVolume, isMuted: isMasterMuted } = useSystemSettings()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [activeType, setActiveType] = useState('video')
   const [activeItem, setActiveItem] = useState(null)
@@ -35,9 +37,10 @@ function MusicLabApp() {
   }, [isPlaying, activeType, activeItem])
 
   useEffect(() => {
-    if (videoRef.current) videoRef.current.volume = volume / 100
-    if (audioRef.current) audioRef.current.volume = volume / 100
-  }, [volume])
+    const effective = isMasterMuted ? 0 : (volume / 100) * (masterVolume / 100)
+    if (videoRef.current) videoRef.current.volume = effective
+    if (audioRef.current) audioRef.current.volume = effective
+  }, [volume, masterVolume, isMasterMuted])
 
   useEffect(() => {
     if (activeType !== 'music' || !isPlaying || activeItem?.mediaSrc) return

@@ -8,6 +8,7 @@ export function SystemSettingsProvider({ children }) {
   const [brightness, setBrightness] = useState(100)
   const [volume, setVolume] = useState(70)
   const [isMuted, setIsMuted] = useState(false)
+  const [isVolumeFlyoutOpen, setIsVolumeFlyoutOpen] = useState(false)
   const [wallpaperId, setWallpaperId] = useState(
     () => localStorage.getItem(WALLPAPER_STORAGE_KEY) || 'cyber',
   )
@@ -34,6 +35,8 @@ export function SystemSettingsProvider({ children }) {
         setVolume,
         isMuted,
         setIsMuted,
+        isVolumeFlyoutOpen,
+        setIsVolumeFlyoutOpen,
         wallpaperId,
         setWallpaperId,
         themeMode,
