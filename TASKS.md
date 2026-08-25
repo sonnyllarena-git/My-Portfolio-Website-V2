@@ -4,8 +4,15 @@
 > ≤50 lines of change per task. If it won't fit, split into `.a` / `.b` here FIRST, then do `.a`.
 > Never work ahead. Never batch. Never soften a task's wording to make it pass.
 
-**Current task pointer:** `_(Store PDP complete through P403A, including the mobile layout pass (P400) — the local admin portal (P404–P422: backend + local SQLite database + Shopify-styled /admin UI, explicitly approved per CLAUDE.md §2) is now complete and verified live end-to-end; P350's asset cleanup remains deferred as noted below; no new unchecked task follows P422 as of 2026-08-24)_`
-**Last verified:** 2026-08-24 — `npm run verify` → PASS (0 errors, 6 pre-existing-pattern warnings, 49 tests); live Playwright confirmed the full PDP flow at 1440px and at a 390px mobile viewport with zero console errors throughout: grid → details navigation, thumbnail hover/tap crossfade, color/size selection, all 3 accordions expanding with lined rows, the Size Chart modal, the bordered buy-box card (including Add to List), the white details background, and the magnifier lens tracking the cursor over the main image
+**Current task pointer:** `_(Phase 81 + addendum — desktop icon grid + snap-to-grid dragging —
+complete (P489-P493, P507; P493 folded into P491): icons render in one aligned absolute grid sized
+to the Large preset, drag-and-drop snaps to the nearest empty cell, Sort discards manual dragging
+in favor of fresh sorted grid order, and shrinking the browser window reflows the grid so nothing
+hides behind the taskbar; this thread's work is done as of 2026-08-25 — other phases/tasks on this
+board (82 onward) belong to concurrent sessions, not this one)_`
+**Last verified:** 2026-08-25 — `npm run verify` → PASS (0 errors, 11 pre-existing-pattern
+warnings, 62 tests); live browser verification covered alignment, drag-to-empty-cell,
+drag-onto-occupied-cell revert, Sort reflowing a manually-dragged icon, and window-resize reflow
 **Verify command:** `npm run verify`
 
 ---
@@ -4835,6 +4842,181 @@ Properties) shares the same `ContextMenu` component, so it picks up the new visu
 
 ---
 
+## PHASE 81 — DESKTOP ICON GRID: ALIGNMENT + SNAP-TO-GRID DRAGGING
+
+_Sonny flagged on 2026-08-25 that the two desktop icon columns don't line up row-to-row — root
+cause is that icons are laid out in two independent flexbox columns with no fixed per-icon height,
+so two-word labels ("Contact Info", "Memory Wall", etc.) wrap to 2 lines and push everything below
+them in that column down, drifting out of alignment with the other column. Rather than patch the
+label height, Sonny asked for the more thorough fix: an invisible fixed-size grid tiling the whole
+desktop (cell size fixed to the Large icon preset regardless of the current View size selection),
+with icons dragging between discrete grid cells instead of floating freely. Confirmed with Sonny:
+dragged positions are session-only (reset on reload, matching `iconSize`/`sortBy`'s existing
+non-persisted precedent); columns fill dynamically based on viewport height (the `column: 1|2`
+field is removed); choosing Sort re-arranges everything into sorted grid order, discarding any
+manual dragging._
+
+- [x] **P489** — Add `src/utils/desktopGrid.js` (grid cell size constants derived from the Large
+      icon preset plus a 2-line label reserve, `cellToPixel(row, col)`, `pixelToNearestCell(x, y)`,
+      and `computeAutoLayout(icons, viewportHeight)` for column-major placement) with a co-located
+      `desktopGrid.test.js` covering the column-major fill and a too-short-viewport edge case.
+      **Pass condition:** `desktopGrid.test.js` passes; `npm run format:check`/`build`/`test` pass;
+      no UI change yet.
+- [x] **P490** — In `Desktop.jsx`, seed a new `iconPositions` state (`id -> {row, col}`) from
+      `computeAutoLayout` and render every desktop icon absolutely positioned via `cellToPixel`,
+      replacing the two `column`-driven flex columns; remove the now-unused `column` field from
+      every entry in `src/data/desktopIcons.js`.
+      **Pass condition:** reloading the desktop shows one continuous grid with every row aligned
+      across columns regardless of label wrapping; `npm run format:check`/`build`/`test` pass.
+- [x] **P491** — Add an `onDragEnd` handler in `DesktopIcon.jsx` that calls a new
+      `onDropAt(id, row, col)` prop (via `pixelToNearestCell`); in `Desktop.jsx`, commit the move
+      into `iconPositions` if the target cell is empty, otherwise leave it unchanged; either way
+      the icon's motion `x`/`y` reset to 0, which — since its `left`/`top` props always reflect its
+      current authoritative cell — both lands it exactly on a newly-committed cell and springs it
+      back to its old one when the drop was rejected, with no separate "remembered position" ref
+      needed. Removed the now-obsolete live per-frame overlap check in `handleDrag` (and, since
+      that was its only caller, the `getOtherRects` prop/plumbing in both files — folded in from
+      P493 below, which this made redundant).
+      **Pass condition:** dragging an icon onto an empty cell keeps it there after drop; dragging
+      one icon onto another springs it back to its pre-drag spot; verified live in the dev server
+      via simulated drag-and-drop; `verify` passes.
+- [x] **P492** — In `Desktop.jsx`, reset `iconPositions` to a fresh `computeAutoLayout` call
+      whenever `sortBy` changes.
+      **Pass condition:** dragging an icon to a new spot, then choosing Sort → Name or Size,
+      reflows every icon (including the dragged one) into sorted grid order; `verify` passes.
+- [x] **P493** — ~~Remove the now-unused `getOtherRects` prop and its plumbing~~ — folded into
+      P491 above: removing the live overlap check made `getOtherRects` dead code immediately, so
+      ESLint's `no-unused-vars` forced its removal in the same pass rather than leaving `verify`
+      red between tasks.
+
+---
+
+## PHASE 81 ADDENDUM — DESKTOP GRID REFLOW ON RESIZE (P489-P493 FOLLOW-UP)
+
+_Flagged after P489-P493 landed: the grid layout is computed once from `window.innerHeight` at
+mount, so shrinking the browser window post-load never reflows it — later-row icons in a column
+can end up hidden behind the taskbar. Sonny asked on 2026-08-25 to close this gap, using the same
+policy Sort already uses (P492): a layout change re-arranges everything from scratch rather than
+trying to preserve manually-dragged positions._
+
+- [x] **P507** — In `Desktop.jsx`, add a debounced `window.resize` listener that recomputes
+      `iconPositions` via `computeAutoLayout` (reading `sortedIcons` through a ref kept in sync
+      each render, so the listener itself can stay mount-only with an empty dependency array).
+      **Pass condition:** shrinking the browser window after the desktop has loaded re-arranges
+      every icon back into a valid grid within the new viewport, with nothing left hidden behind
+      the taskbar; verified live in the dev server; `verify` passes.
+
+---
+
+## PHASE 82 — REAL TERMINAL APP (COMMAND PROMPT LOOK)
+
+_Sonny asked directly on 2026-08-25 to replace the "Open Terminal" Coming-soon toast (Phase 80,
+P487; deferred in Backlog) with an actual terminal window, copying a classic Windows Command
+Prompt's look exactly from a screenshot he provided: square (non-rounded) corners, a light title
+bar, and specific boot-banner text. Command execution itself is out of scope — Sonny will supply
+the command list in a future task; for now the prompt only echoes input and reports it as not
+recognized, matching real cmd.exe's own behavior for an unknown command._
+
+- [x] **P494** — Add a `square`/`titleBarClassName` variant to `src/components/Window.jsx` (drops
+      the rounded corners/accent border and switches the caption-button hover styles when
+      `square` is set; `titleBarClassName` overrides the default dark title-bar background/text).
+      **Pass condition:** `npm run format:check`/`build`/`test` pass; no visual change to any
+      existing window (all keep `square` unset).
+- [x] **P495** — Add `src/components/TerminalApp.jsx`: a black, monospace console that renders the
+      boot banner ("Sonny Window [ Version 10.0.239495.090 ]", "(C) Sonny Corporation. All rights
+      reserved.", a blank line, "Type /help for command") followed by an interactive
+      `C:\Users\Guest>` prompt; Enter echoes the typed line and prints a cmd-style "not recognized"
+      message (no real commands yet).
+      **Pass condition:** `npm run format:check`/`build`/`test` pass.
+- [x] **P496** — Wire it into `Desktop.jsx`: import `TerminalApp`, add a `terminal` entry to
+      `WINDOW_PREVIEW_SIZES`/`renderPreviewBody`, render it through `Window` with `square`,
+      `titleBarClassName="bg-[#f3f3f3] text-black"`, icon `">_"`, title "Command Prompt"; change
+      the desktop menu's "Open Terminal" `onClick` from the `Coming soon` toast to
+      `openApp('terminal')`; remove the now-dead `toastMessage` state it was the only user of;
+      give the taskbar running-button its label/icon fallback for `terminal` (matching the
+      existing `projects` special case).
+      **Pass condition:** right-click desktop → Open Terminal opens the window; verified live via
+      screenshot against Sonny's reference screenshot (square corners, light title bar, exact boot
+      text, working prompt); `npm run verify` passes (pre-existing unrelated warnings only).
+
+---
+
+## PHASE 81 — TASKBAR VOLUME: REAL MIXER-STYLE MASTER CONTROL
+
+_Sonny asked on 2026-08-25 (after pasting a Windows volume-flyout screenshot) to make the taskbar's
+speaker icon functional, "the same with the windows native function of volume." Confirmed with him
+directly: this is a real-mixer model — a master volume/mute in the tray that multiplies on top of
+each app's own independent volume/mute (Music Lab keeps its own separate slider, scaled by the
+master; the arcade games' existing sound on/off toggle is effectively each game's own 100%/0%
+channel fader, likewise scaled by the master). Nothing here persists across reloads, matching the
+existing in-memory-only pattern already used for brightness/theme/accent. Full design at
+`C:\Users\SonnyLlarena\.claude\plans\make-the-volume-button-stateful-oasis.md`._
+
+- [x] **P497** — Add `isMuted` state (boolean, default `false`, in-memory only — no localStorage)
+      to `src/context/SystemSettingsContext.jsx` alongside the existing `volume`, exposed via
+      `useSystemSettings()`.
+      **Pass condition:** the format check, the build, and the test suite all pass.
+- [x] **P498** — Add a `muted` boolean prop (default `false`) to
+      `src/components/icons/SpeakerIcon.jsx`: when true, swap the two sound-wave arc paths for a
+      single "X" mark, reusing the existing speaker-cone path.
+      **Pass condition:** the format check, the build, and the test suite all pass; no visual
+      change when `muted` is omitted.
+- [x] **P499** — Create `src/components/VolumeFlyout.jsx`, mirroring
+      `src/components/ClockCalendarFlyout.jsx`'s shape exactly (same `panelMotion`, same
+      dark blurred panel styling, positioned flush against the tray, narrower width): a "Speakers"
+      header, a native range-input slider bound to `volume`/`setVolume` from
+      `useSystemSettings()` styled with the existing `accent-*` convention and the current accent
+      color (same resolution `ClockCalendarFlyout.jsx` already does via `accentColors`), the live
+      percentage next to the slider, and a mute button (`SpeakerIcon` with `muted={isMuted}`) that
+      calls `setIsMuted((m) => !m)`.
+      **Pass condition:** the format check, the build, and the test suite all pass (not yet
+      rendered anywhere).
+- [x] **P500** — Wire it into `src/components/SystemTray.jsx`: give `TrayButton` an `onClick`
+      prop; add `isVolumeOpen` state + a `volumeAreaRef` mirroring the clock's
+      `isFlyoutOpen`/`clockAreaRef` pattern exactly (its own outside-mousedown-close effect,
+      `AnimatePresence`); the tray's own `SpeakerIcon` gets `muted={isMuted || volume === 0}`.
+      **Pass condition:** clicking the tray speaker icon opens the flyout beside the clock one;
+      dragging the slider updates the shown percentage live; clicking the flyout's speaker icon
+      toggles mute and the tray icon glyph changes to match; clicking outside closes it; the
+      format check, the build, and the test suite all pass.
+- [ ] **P501** — In `src/components/MusicLabApp.jsx`, import `useSystemSettings()` and change the
+      existing volume effect (currently setting `videoRef.current.volume`/
+      `audioRef.current.volume` straight from local `volume`) to
+      `effective = isMuted ? 0 : (volume / 100) * (masterVolume / 100)`; Music Lab's own slider/
+      state stay otherwise unchanged.
+      **Pass condition:** playing a track in Music Lab while its own slider stays at 100% gets
+      audibly quieter as the taskbar master slider is lowered; toggling master mute silences it;
+      unmuting restores it; the format check, the build, and the test suite all pass.
+- [ ] **P502** — In `src/components/games/flappybird/FlappyBirdGame.jsx`, add one `useEffect`
+      reading `volume`/`isMuted` from `useSystemSettings()` that sets `.volume` on all 3 existing
+      Audio refs (`bgMusicRef`, `gameOverAudioRef`, `jumpAudioRef`) to the effective volume
+      (`soundMuted` forces 0; otherwise `isMuted` forces 0, else `volume / 100`), re-running
+      whenever `volume`, `isMuted`, or `soundMuted` change; no change to existing play/pause/loop
+      logic.
+      **Pass condition:** with the game's own sound on, lowering the taskbar master volume
+      audibly lowers its background music/SFX; the game's own sound toggle still independently
+      silences it regardless of the master; the format check, the build, and the test suite all
+      pass.
+- [ ] **P503** — Same pattern as P502, applied to
+      `src/components/games/flappybird/FlappyBirdCanvas.jsx`'s jump-sound Audio object.
+      **Pass condition:** same as P502, verified for this file's sound; the format check, the
+      build, and the test suite all pass.
+- [ ] **P504** — Same pattern as P502, applied to all Audio objects in
+      `src/components/games/memory/MemoryFlipGame.jsx` (flip/correct/wrong SFX + background
+      music).
+      **Pass condition:** same as P502, verified for this file's sounds; the format check, the
+      build, and the test suite all pass.
+- [ ] **P505** — Same pattern as P502, applied to the background-music Audio object in
+      `src/components/games/typing/TypingSpeedGame.jsx`.
+      **Pass condition:** same as P502, verified for this file's sound; the format check, the
+      build, and the test suite all pass.
+- [ ] **P506** — Same pattern as P502, applied to the keystroke-sound Audio object in
+      `src/components/games/typing/TypingTestArea.jsx`.
+      **Pass condition:** same as P502, verified for this file's sound; the format check, the
+      build, and the test suite all pass.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.
@@ -4858,9 +5040,6 @@ Anything here is out of scope until Sonny moves it up.
   explicitly said this is a placeholder and he wants a real cloud database later — that's a new
   architectural layer banned by CLAUDE.md §2 without his explicit sign-off, so it stays here until
   he moves it up and approves the stack addition it requires.
-- **A real desktop-menu "Open Terminal" app** — Phase 80 (P487) wired it to a "Coming soon" toast
-  per Sonny's explicit instruction on 2026-08-25 so the request wouldn't be forgotten; the actual
-  terminal app is real follow-up work, not scoped yet.
 
 ---
 

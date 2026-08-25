@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useRef } from 'react'
 import { animate, motion, useMotionValue } from 'framer-motion'
-import { rectsIntersect } from '../utils/geometry.js'
+import { pixelToNearestCell } from '../utils/desktopGrid.js'
 import AppGlyph from './icons/AppGlyph.jsx'
 
 const SIZE_PRESETS = {
@@ -33,11 +33,13 @@ const DesktopIcon = forwardRef(function DesktopIcon(
     onSelect,
     onOpen,
     onContextMenu,
-    getOtherRects,
+    onDropAt,
     refreshToken,
     staggerIndex,
     variant = 'grid',
     size = 'medium',
+    left,
+    top,
   },
   ref,
 ) {
@@ -46,7 +48,6 @@ const DesktopIcon = forwardRef(function DesktopIcon(
   const y = useMotionValue(0)
   const opacity = useMotionValue(1)
   const nodeRef = useRef(null)
-  const lastGoodPositionRef = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     if (!refreshToken) return
@@ -65,23 +66,16 @@ const DesktopIcon = forwardRef(function DesktopIcon(
     else if (ref) ref.current = node
   }
 
-  function handleDragStart() {
-    lastGoodPositionRef.current = { x: x.get(), y: y.get() }
-  }
-
-  function handleDrag() {
-    const node = nodeRef.current
-    if (!node || !getOtherRects) return
-    const rect = node.getBoundingClientRect()
-    const overlaps = getOtherRects(id).some((other) =>
-      rectsIntersect(rect, other),
-    )
-    if (overlaps) {
-      x.set(lastGoodPositionRef.current.x)
-      y.set(lastGoodPositionRef.current.y)
-    } else {
-      lastGoodPositionRef.current = { x: x.get(), y: y.get() }
+  function handleDragEnd() {
+    if (onDropAt) {
+      const cell = pixelToNearestCell(
+        (left ?? 0) + x.get(),
+        (top ?? 0) + y.get(),
+      )
+      onDropAt(id, cell.row, cell.col)
     }
+    x.set(0)
+    y.set(0)
   }
 
   if (variant === 'list') {
@@ -115,11 +109,10 @@ const DesktopIcon = forwardRef(function DesktopIcon(
   return (
     <motion.div
       ref={setRefs}
-      style={{ x, y, opacity }}
+      style={{ x, y, opacity, position: 'absolute', left, top }}
       drag
       dragMomentum={false}
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
+      onDragEnd={handleDragEnd}
       onClick={(e) => {
         e.stopPropagation()
         onSelect()

@@ -24,11 +24,13 @@ import MusicLabApp from './MusicLabApp.jsx'
 import ZoomChatApp from './ZoomChatApp.jsx'
 import ProjectsApp from './ProjectsApp.jsx'
 import StoreApp from './StoreApp.jsx'
+import TerminalApp from './TerminalApp.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
 import ResumePage from './ResumePage.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
+import { computeAutoLayout, cellToPixel } from '../utils/desktopGrid.js'
 import { addRecentAppId } from '../utils/recentApps.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
@@ -63,6 +65,7 @@ const WINDOW_PREVIEW_SIZES = {
   projects: [1200, 800],
   resume: [420, 560],
   store: [1200, 800],
+  terminal: [700, 450],
 }
 
 function renderPreviewBody(w, gmailGuest) {
@@ -104,6 +107,7 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'zoom-chat') return <ZoomChatApp onOpenGmail={() => {}} />
   if (w.id === 'projects') return <ProjectsApp />
   if (w.id === 'store') return <StoreApp />
+  if (w.id === 'terminal') return <TerminalApp />
   return null
 }
 
@@ -122,7 +126,6 @@ function Desktop() {
   const [refreshToken, setRefreshToken] = useState(0)
   const [iconSize, setIconSize] = useState('medium')
   const [sortBy, setSortBy] = useState('name')
-  const [toastMessage, setToastMessage] = useState(null)
   const [gmailGateOpen, setGmailGateOpen] = useState(false)
   const [gmailGuest, setGmailGuest] = useState(null)
   const [gamesGateOpen, setGamesGateOpen] = useState(false)
@@ -140,8 +143,36 @@ function Desktop() {
       sortBy === 'size' ? a.sizeKB - b.sizeKB : a.label.localeCompare(b.label),
     )
   }
-  const column1 = sortIcons(desktopIcons.filter((icon) => icon.column === 1))
-  const column2 = sortIcons(desktopIcons.filter((icon) => icon.column === 2))
+  const sortedIcons = sortIcons(desktopIcons)
+  const [iconPositions, setIconPositions] = useState(() =>
+    computeAutoLayout(sortedIcons, window.innerHeight),
+  )
+  const [layoutSortBy, setLayoutSortBy] = useState(sortBy)
+  if (sortBy !== layoutSortBy) {
+    setLayoutSortBy(sortBy)
+    setIconPositions(computeAutoLayout(sortedIcons, window.innerHeight))
+  }
+  const sortedIconsRef = useRef(sortedIcons)
+  useEffect(() => {
+    sortedIconsRef.current = sortedIcons
+  })
+
+  useEffect(() => {
+    let timeoutId
+    function handleResize() {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        setIconPositions(
+          computeAutoLayout(sortedIconsRef.current, window.innerHeight),
+        )
+      }, 200)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => {
+      clearTimeout(timeoutId)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
   const iconRefs = useRef(new Map())
   const instanceCounter = useRef(0)
   const marqueeStart = useRef({ x: 0, y: 0 })
@@ -154,13 +185,15 @@ function Desktop() {
     else iconRefs.current.delete(id)
   }
 
-  function getOtherRects(excludeId) {
-    const rects = []
-    iconRefs.current.forEach((node, otherId) => {
-      if (otherId !== excludeId && node)
-        rects.push(node.getBoundingClientRect())
+  function handleIconDropAt(id, row, col) {
+    setIconPositions((prev) => {
+      const isOccupied = Object.entries(prev).some(
+        ([otherId, pos]) =>
+          otherId !== id && pos.row === row && pos.col === col,
+      )
+      if (isOccupied) return prev
+      return { ...prev, [id]: { row, col } }
     })
-    return rects
   }
 
   function handleDesktopMouseDown(e) {
@@ -380,14 +413,15 @@ function Desktop() {
           ))}
         </div>
       ) : (
-        <div className="absolute top-4 left-4 flex gap-2">
-          <div className="flex flex-col gap-2">
-            {column1.map((icon, index) => (
+        <div className="absolute inset-0">
+          {sortedIcons.map((icon, index) => {
+            const cell = iconPositions[icon.id] ?? { row: 0, col: 0 }
+            const { x: left, y: top } = cellToPixel(cell.row, cell.col)
+            return (
               <DesktopIcon
                 key={icon.id}
                 ref={(node) => registerIconRef(icon.id, node)}
                 id={icon.id}
-                getOtherRects={getOtherRects}
                 icon={icon.icon}
                 label={icon.label}
                 isSelected={selectedIconIds.includes(icon.id)}
@@ -397,28 +431,12 @@ function Desktop() {
                 refreshToken={refreshToken}
                 staggerIndex={index}
                 size={iconSize}
+                left={left}
+                top={top}
+                onDropAt={handleIconDropAt}
               />
-            ))}
-          </div>
-          <div className="flex flex-col gap-2">
-            {column2.map((icon, index) => (
-              <DesktopIcon
-                key={icon.id}
-                ref={(node) => registerIconRef(icon.id, node)}
-                id={icon.id}
-                getOtherRects={getOtherRects}
-                icon={icon.icon}
-                label={icon.label}
-                isSelected={selectedIconIds.includes(icon.id)}
-                onSelect={() => setSelectedIconIds([icon.id])}
-                onOpen={() => handleIconOpen(icon.id)}
-                onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
-                refreshToken={refreshToken}
-                staggerIndex={column1.length + index}
-                size={iconSize}
-              />
-            ))}
-          </div>
+            )
+          })}
         </div>
       )}
       <div className="pointer-events-none absolute inset-0 bottom-12">
@@ -551,6 +569,22 @@ function Desktop() {
                 defaultHeight={800}
               >
                 <StoreApp />
+              </Window>
+            )
+          }
+          if (w.id === 'terminal') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon=">_"
+                title="Command Prompt"
+                defaultWidth={700}
+                defaultHeight={450}
+                square
+                titleBarClassName="bg-[#f3f3f3] text-black"
+              >
+                <TerminalApp />
               </Window>
             )
           }
@@ -729,10 +763,7 @@ function Desktop() {
             {
               label: 'Open Terminal',
               roomy: true,
-              onClick: () => {
-                setToastMessage('Coming soon')
-                setTimeout(() => setToastMessage(null), 2000)
-              },
+              onClick: () => openApp('terminal'),
             },
             { divider: true },
             {
@@ -742,11 +773,6 @@ function Desktop() {
             },
           ]}
         />
-      )}
-      {toastMessage && (
-        <div className="fixed bottom-16 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-sm text-white shadow-lg">
-          {toastMessage}
-        </div>
       )}
       <Taskbar
         openWindows={openWindows.map((w) => {
@@ -763,11 +789,18 @@ function Desktop() {
                 ? 'Settings'
                 : w.id === 'projects'
                   ? 'Projects'
-                  : w.id),
+                  : w.id === 'terminal'
+                    ? 'Command Prompt'
+                    : w.id),
             icon:
               icon?.icon === 'pdf'
                 ? '📄'
-                : (icon?.icon ?? (w.id === 'projects' ? '🗃️' : undefined)),
+                : (icon?.icon ??
+                  (w.id === 'projects'
+                    ? '🗃️'
+                    : w.id === 'terminal'
+                      ? '>_'
+                      : undefined)),
             isMinimized: w.isMinimized,
             preview: renderPreviewBody(w, gmailGuest),
             naturalWidth,

@@ -23,6 +23,8 @@ function Window({
   zIndex,
   onFocus,
   hideTitleBar = false,
+  square = false,
+  titleBarClassName,
   children,
 }) {
   const { accentColor } = useSystemSettings()
@@ -113,11 +115,17 @@ function Window({
         initial={{ opacity: 0 }}
         animate={{ opacity: isHidden ? 0 : 1 }}
         transition={{ duration: FADE_DURATION }}
-        style={{ borderColor: accentHex }}
-        className="flex h-full w-full flex-col overflow-hidden rounded-lg border-2 bg-[#1a1c22] text-white shadow-2xl"
+        style={square ? undefined : { borderColor: accentHex }}
+        className={
+          square
+            ? 'flex h-full w-full flex-col overflow-hidden border border-black/60 bg-black text-white shadow-2xl'
+            : 'flex h-full w-full flex-col overflow-hidden rounded-lg border-2 bg-[#1a1c22] text-white shadow-2xl'
+        }
       >
         {!hideTitleBar && (
-          <div className="window-title-bar flex h-10 shrink-0 cursor-move items-center justify-between bg-[#25272e] px-3 py-2">
+          <div
+            className={`window-title-bar flex h-10 shrink-0 cursor-move items-center justify-between px-3 py-2 ${titleBarClassName ?? 'bg-[#25272e]'}`}
+          >
             <span className="flex items-center gap-2 text-sm font-medium">
               {icon}
               {title}
@@ -129,21 +137,33 @@ function Window({
               <button
                 onClick={onMinimizeToggle}
                 aria-label="Minimize"
-                className="flex h-5 w-6 items-center justify-center rounded hover:bg-white/10"
+                className={
+                  square
+                    ? 'flex h-6 w-8 items-center justify-center hover:bg-black/10'
+                    : 'flex h-5 w-6 items-center justify-center rounded hover:bg-white/10'
+                }
               >
                 −
               </button>
               <button
                 onClick={toggleMaximize}
                 aria-label={isMaximized ? 'Restore' : 'Maximize'}
-                className="flex h-5 w-6 items-center justify-center rounded hover:bg-white/10"
+                className={
+                  square
+                    ? 'flex h-6 w-8 items-center justify-center hover:bg-black/10'
+                    : 'flex h-5 w-6 items-center justify-center rounded hover:bg-white/10'
+                }
               >
                 {isMaximized ? '❐' : '□'}
               </button>
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="flex h-5 w-6 items-center justify-center rounded hover:bg-red-500/80"
+                className={
+                  square
+                    ? 'flex h-6 w-8 items-center justify-center hover:bg-red-600 hover:text-white'
+                    : 'flex h-5 w-6 items-center justify-center rounded hover:bg-red-500/80'
+                }
               >
                 ×
               </button>
