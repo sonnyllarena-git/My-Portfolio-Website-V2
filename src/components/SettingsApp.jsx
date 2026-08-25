@@ -19,9 +19,9 @@ const TABS = [
   { id: 'support', label: 'Get Support', Icon: SupportIcon },
 ]
 
-function SettingsApp({ onOpenGmail, onOpenZoomChat }) {
+function SettingsApp({ onOpenGmail, onOpenZoomChat, initialTab = 'system' }) {
   const isMobile = useIsMobile()
-  const [activeTab, setActiveTab] = useState('system')
+  const [activeTab, setActiveTab] = useState(initialTab)
 
   return (
     <div className={`flex h-full text-white ${isMobile ? 'flex-col' : ''}`}>

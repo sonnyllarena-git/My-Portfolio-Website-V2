@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-function ContextMenu({ x, y, items, onClose }) {
-  const menuRef = useRef(null)
+function useClampedPosition(innerRef, x, y) {
   const [position, setPosition] = useState({ top: y, left: x })
 
   useEffect(() => {
-    const menu = menuRef.current
+    const menu = innerRef.current
     if (!menu) return
     const { offsetWidth, offsetHeight } = menu
     const maxLeft = window.innerWidth - offsetWidth - 8
@@ -15,11 +14,59 @@ function ContextMenu({ x, y, items, onClose }) {
       left: Math.max(8, Math.min(x, maxLeft)),
       top: Math.max(8, Math.min(y, maxTop)),
     })
-  }, [x, y])
+  }, [innerRef, x, y])
+
+  return position
+}
+
+function MenuPanel({ innerRef, x, y, width, items, onItemClick }) {
+  const position = useClampedPosition(innerRef, x, y)
+
+  return (
+    <div
+      ref={innerRef}
+      style={{ top: position.top, left: position.left, width }}
+      className="fixed z-50 border border-black/10 bg-[#fbfbfd] py-2 text-[15px] text-black shadow-md"
+    >
+      {items.map((item, index) =>
+        item.divider ? (
+          <div
+            key={`divider-${index}`}
+            className="my-1 border-t border-black/10"
+          />
+        ) : (
+          <button
+            key={item.label}
+            onClick={(e) => {
+              e.stopPropagation()
+              onItemClick(item, e)
+            }}
+            className={`flex w-full items-center justify-between px-5 text-left hover:bg-black/5 ${
+              item.roomy ? 'py-2.5' : 'py-1.5'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              {item.selected && <span className="text-xs">●</span>}
+              {item.label}
+            </span>
+            {item.hasSubmenu && <span className="text-black/40">›</span>}
+          </button>
+        ),
+      )}
+    </div>
+  )
+}
+
+function ContextMenu({ x, y, items, onClose }) {
+  const menuRef = useRef(null)
+  const submenuRef = useRef(null)
+  const [submenu, setSubmenu] = useState(null)
 
   useEffect(() => {
     function handleOutsidePointerDown(e) {
-      if (!menuRef.current?.contains(e.target)) onClose()
+      if (menuRef.current?.contains(e.target)) return
+      if (submenuRef.current?.contains(e.target)) return
+      onClose()
     }
     window.addEventListener('mousedown', handleOutsidePointerDown)
     window.addEventListener('touchstart', handleOutsidePointerDown)
@@ -29,26 +76,49 @@ function ContextMenu({ x, y, items, onClose }) {
     }
   }, [onClose])
 
+  function handleItemClick(item, e) {
+    if (item.hasSubmenu) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      setSubmenu((current) =>
+        current?.label === item.label
+          ? null
+          : {
+              label: item.label,
+              x: rect.right,
+              y: rect.top,
+              items: item.submenuItems,
+            },
+      )
+      return
+    }
+    item.onClick?.()
+    onClose()
+  }
+
   return createPortal(
-    <div
-      ref={menuRef}
-      style={{ top: position.top, left: position.left }}
-      className="fixed z-50 w-48 rounded-md border border-white/10 bg-[#1f2126] py-1 text-sm text-white shadow-xl"
-    >
-      {items.map((item) => (
-        <button
-          key={item.label}
-          onClick={(e) => {
-            e.stopPropagation()
+    <>
+      <MenuPanel
+        innerRef={menuRef}
+        x={x}
+        y={y}
+        width={230}
+        items={items}
+        onItemClick={handleItemClick}
+      />
+      {submenu && (
+        <MenuPanel
+          innerRef={submenuRef}
+          x={submenu.x}
+          y={submenu.y}
+          width={190}
+          items={submenu.items}
+          onItemClick={(item) => {
             item.onClick?.()
             onClose()
           }}
-          className="block w-full px-3 py-1.5 text-left hover:bg-white/10"
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>,
+        />
+      )}
+    </>,
     document.body,
   )
 }

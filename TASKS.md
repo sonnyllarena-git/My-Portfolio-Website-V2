@@ -4739,6 +4739,102 @@ desktop reference view was referenced — the 3-column/smaller-icon treatment is
 
 ---
 
+## PHASE 79 — TASKBAR: HOVER-ONLY HIGHLIGHT, BIGGER ICONS, EQUAL SPACING, PINNED REORDER
+
+_Sonny asked on 2026-08-25 to fix a `TaskbarButton` bug (clicking a pinned icon toggled a
+persistent highlight that only cleared on a second click, instead of just tracking hover), grow
+the taskbar icons 20%, make the gaps between pinned icons uniform, and replace the decorative
+Widgets/Explorer/Music/Terminal/Messaging placeholders with a fixed, functional row: Start >
+Search > Developer Lab > Music Lab > Settings > Store > Blog, with Developer Lab/Music Lab/Store/
+Blog wired to actually open their windows. Search itself is intentionally left unwired — Sonny is
+building the real Search Modal (from `src/components/search modal/*.png` mockups) in a parallel
+session, so its click handler is left for that work to land._
+
+- [x] **P480** — `src/components/Taskbar.jsx`: removed `TaskbarButton`'s internal
+      `isActiveState` click-toggle; the highlight now comes only from the explicit `isActive` prop
+      (Start button, unaffected) or the `hover:bg-white/10` CSS class, so a plain pinned icon
+      highlights only while the mouse is over it.
+      **Pass condition:** `npm run test` and `npm run build` pass; verified live — clicking Developer
+      Lab/Music Lab/Settings/Store/Blog no longer leaves a stuck highlight, hovering does.
+- [x] **P481** — `src/components/Taskbar.jsx`: bumped `TaskbarButton`/`RunningAppButton` from
+      `h-9 w-9` to `h-[43px] w-[43px]` (20%) and `IconGlyph`'s image from `h-5 w-5` to `h-6 w-6`
+      (20%); bumped the taskbar row and running-window group from `gap-1` to `gap-2`.
+      **Pass condition:** `npm run test` and `npm run build` pass.
+- [x] **P482** — `src/components/Taskbar.jsx`: replaced the `leftLaunchers`/`pinnedApps` arrays
+      with one `pinnedTaskbarApps` list (Search, Developer Lab, Music Lab, Settings, Store, Blog)
+      rendered as a single equally-spaced row directly after Start (desktop only, sharing the
+      container's `gap-2`); Developer Lab/Music Lab/Store/Blog call `onOpenApp(id)`, Settings keeps
+      calling `onOpenSettings`; mobile keeps showing just Start + Settings, matching the prior
+      P275/P467 mobile scope.
+      **Pass condition:** `npm run test` and `npm run build` pass; verified live — the row reads
+      Start, Search, Developer Lab, Music Lab, Settings, Store, Blog with equal gaps; clicking
+      Developer Lab, Music Lab, Store, or Blog opens the matching window.
+
+**Known blocker (not this task's to fix):** `npm run lint` currently fails on
+`src/components/SearchModal.jsx` (unused import in `Taskbar.jsx`, plus a
+`react-hooks/set-state-in-effect` error inside `SearchModal.jsx`) — that file is mid-edit in a
+parallel session building the real Search Modal. `format:check`, `build`, and `test` all pass on
+their own; full `npm run verify` will go green once that other session finishes wiring it up.
+
+---
+
+## PHASE 80 — DESKTOP RIGHT-CLICK MENU: WINDOWS-11 REDESIGN
+
+_Sonny asked on 2026-08-25 to rebuild the desktop background's right-click menu to strictly match
+a Windows-11-style screenshot (light rounded panel, indigo-blue text, grouped rows with dividers):
+View and Sort open an interactive submenu beside the main menu (submenu ≈1/3 the main menu's
+height); View picks the desktop icon size (small/medium/large, non-persisted — resets to the
+default, medium, on every visit/guest per Sonny's note); Sort picks Name (alphabetical) or Size;
+System/Personalization open the existing Settings window on their matching tab; Open Terminal
+shows a "coming soon" placeholder (a real terminal is deferred, tracked in Backlog below); Contact
+Developer opens the existing Contact Info window. The icon right-click menu (Open/Rename/Delete/
+Properties) shares the same `ContextMenu` component, so it picks up the new visual style for free._
+
+- [x] **P483** — Redesign `src/components/ContextMenu.jsx` to the screenshot's light Windows-11
+      style (white/near-white rounded panel, indigo-blue item text, thin full-width divider support
+      via a `{ divider: true }` item entry, a trailing `›` chevron on any item flagged
+      `hasSubmenu: true`); update the desktop-background menu's item list in `Desktop.jsx` to the
+      screenshot's exact grouping/order: View›, Sort›, Refresh, divider, System, Personalization,
+      Open Terminal, divider, Contact Developer (handlers stay stubbed for now).
+      **Pass condition:** `npm run format:check`, `npm run build`, `npm run test` all pass; a live
+      screenshot shows the light-themed menu with the correct grouping/order/dividers/chevrons.
+- [x] **P484** — Add click-to-open submenu support to `ContextMenu.jsx` (an item with
+      `submenuItems` renders a second panel flush against its right edge, closing when the parent
+      menu closes or an outside click lands) and consume it end-to-end for "View": add an
+      `iconSize` state (`'small' | 'medium' | 'large'`, default `'medium'`, in-memory only) to
+      `Desktop.jsx`; thread it into `DesktopIcon.jsx`'s grid variant so the glyph/label/container
+      scale together at each size without changing the gap between icons; the View submenu's three
+      options set that state and show a filled-dot marker on the active choice.
+      **Pass condition:** clicking View opens the submenu beside the main menu; clicking outside
+      either panel closes both; selecting each size visibly rescales every desktop icon with
+      unchanged, non-overlapping spacing; verified live at all three sizes; the format check, the
+      build, and the test suite all pass.
+- [x] **P485** — Wire the desktop menu's "Sort" item to open a Name/Size submenu (same mechanism
+      as P484): add a `sizeKB` field to each entry in `src/data/desktopIcons.js`; add a `sortBy`
+      state (`'name' | 'size'`, default `'name'`) to `Desktop.jsx`; sort `column1`/`column2` by the
+      active choice before rendering, with a filled-dot marker on the active option.
+      **Pass condition:** choosing Name/Size visibly reorders desktop icons within each column;
+      `npm run format:check`/`build`/`test` pass.
+- [x] **P486** — Give `SettingsApp.jsx` an `initialTab` prop (default `'system'`); make
+      `Desktop.jsx`'s "System"/"Personalization" desktop-menu items open the Settings window on
+      that respective tab (extend the relevant `openWindows` entry with a `tab` field, read it in
+      the `w.id === 'settings'` render branch).
+      **Pass condition:** right-click → System opens Settings on the System tab; right-click →
+      Personalization opens it on the Personalization tab; `npm run format:check`/`build`/`test`
+      pass.
+- [x] **P487** — Wire the desktop menu's "Open Terminal" to show a small self-dismissing "Coming
+      soon" toast instead of doing nothing (no new dependency); add a Backlog entry below noting a
+      real terminal app is deferred.
+      **Pass condition:** clicking Open Terminal shows "Coming soon" and it disappears on its own;
+      the Backlog section lists the deferred terminal; `npm run format:check`/`build`/`test` pass.
+- [x] **P488** — Wire the desktop menu's "Contact Developer" item to the existing
+      `handleIconOpen('contact-info')` path (the same Contact Info window Blog's user menu already
+      opens).
+      **Pass condition:** right-click → Contact Developer opens the Contact Info window;
+      `npm run format:check`/`build`/`test` pass.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.
@@ -4762,6 +4858,9 @@ Anything here is out of scope until Sonny moves it up.
   explicitly said this is a placeholder and he wants a real cloud database later — that's a new
   architectural layer banned by CLAUDE.md §2 without his explicit sign-off, so it stays here until
   he moves it up and approves the stack addition it requires.
+- **A real desktop-menu "Open Terminal" app** — Phase 80 (P487) wired it to a "Coming soon" toast
+  per Sonny's explicit instruction on 2026-08-25 so the request wouldn't be forgotten; the actual
+  terminal app is real follow-up work, not scoped yet.
 
 ---
 

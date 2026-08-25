@@ -120,6 +120,9 @@ function Desktop() {
   const [iconMenu, setIconMenu] = useState(null)
   const [desktopMenu, setDesktopMenu] = useState(null)
   const [refreshToken, setRefreshToken] = useState(0)
+  const [iconSize, setIconSize] = useState('medium')
+  const [sortBy, setSortBy] = useState('name')
+  const [toastMessage, setToastMessage] = useState(null)
   const [gmailGateOpen, setGmailGateOpen] = useState(false)
   const [gmailGuest, setGmailGuest] = useState(null)
   const [gamesGateOpen, setGamesGateOpen] = useState(false)
@@ -132,8 +135,13 @@ function Desktop() {
     setVisitor: setBlogVisitor,
     logout: blogLogout,
   } = useBlog()
-  const column1 = desktopIcons.filter((icon) => icon.column === 1)
-  const column2 = desktopIcons.filter((icon) => icon.column === 2)
+  function sortIcons(icons) {
+    return [...icons].sort((a, b) =>
+      sortBy === 'size' ? a.sizeKB - b.sizeKB : a.label.localeCompare(b.label),
+    )
+  }
+  const column1 = sortIcons(desktopIcons.filter((icon) => icon.column === 1))
+  const column2 = sortIcons(desktopIcons.filter((icon) => icon.column === 2))
   const iconRefs = useRef(new Map())
   const instanceCounter = useRef(0)
   const marqueeStart = useRef({ x: 0, y: 0 })
@@ -216,6 +224,19 @@ function Desktop() {
       prev.some((w) => w.id === id)
         ? prev.map((w) => (w.id === id ? { ...w, isMinimized: false } : w))
         : [...prev, { id, instanceId: id, isMinimized: false }],
+    )
+  }
+
+  function openSettingsTab(tab) {
+    setOpenWindows((prev) =>
+      prev.some((w) => w.id === 'settings')
+        ? prev.map((w) =>
+            w.id === 'settings' ? { ...w, isMinimized: false, tab } : w,
+          )
+        : [
+            ...prev,
+            { id: 'settings', instanceId: 'settings', isMinimized: false, tab },
+          ],
     )
   }
 
@@ -375,6 +396,7 @@ function Desktop() {
                 onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
                 refreshToken={refreshToken}
                 staggerIndex={index}
+                size={iconSize}
               />
             ))}
           </div>
@@ -393,6 +415,7 @@ function Desktop() {
                 onContextMenu={(x, y) => setIconMenu({ id: icon.id, x, y })}
                 refreshToken={refreshToken}
                 staggerIndex={column1.length + index}
+                size={iconSize}
               />
             ))}
           </div>
@@ -563,6 +586,8 @@ function Desktop() {
                 defaultHeight={800}
               >
                 <SettingsApp
+                  key={w.tab ?? 'system'}
+                  initialTab={w.tab}
                   onOpenGmail={() => handleIconOpen('gmail')}
                   onOpenZoomChat={() => handleIconOpen('zoom-chat')}
                 />
@@ -652,16 +677,76 @@ function Desktop() {
           y={desktopMenu.y}
           onClose={() => setDesktopMenu(null)}
           items={[
-            { label: 'View', onClick: () => {} },
-            { label: 'Sort by', onClick: () => {} },
+            {
+              label: 'View',
+              hasSubmenu: true,
+              submenuItems: [
+                {
+                  label: 'Small icons',
+                  selected: iconSize === 'small',
+                  onClick: () => setIconSize('small'),
+                },
+                {
+                  label: 'Medium icons',
+                  selected: iconSize === 'medium',
+                  onClick: () => setIconSize('medium'),
+                },
+                {
+                  label: 'Large icons',
+                  selected: iconSize === 'large',
+                  onClick: () => setIconSize('large'),
+                },
+              ],
+            },
+            {
+              label: 'Sort',
+              hasSubmenu: true,
+              submenuItems: [
+                {
+                  label: 'Name',
+                  selected: sortBy === 'name',
+                  onClick: () => setSortBy('name'),
+                },
+                {
+                  label: 'Size',
+                  selected: sortBy === 'size',
+                  onClick: () => setSortBy('size'),
+                },
+              ],
+            },
             { label: 'Refresh', onClick: () => setRefreshToken((t) => t + 1) },
-            { label: 'Next Desktop Wallpaper', onClick: () => {} },
-            { label: 'Paste', onClick: () => {} },
-            { label: 'New', onClick: () => {} },
-            { label: 'Personalize', onClick: () => {} },
-            { label: 'Open Terminal', onClick: () => {} },
+            { divider: true },
+            {
+              label: 'System',
+              roomy: true,
+              onClick: () => openSettingsTab('system'),
+            },
+            {
+              label: 'Personalization',
+              roomy: true,
+              onClick: () => openSettingsTab('personalization'),
+            },
+            {
+              label: 'Open Terminal',
+              roomy: true,
+              onClick: () => {
+                setToastMessage('Coming soon')
+                setTimeout(() => setToastMessage(null), 2000)
+              },
+            },
+            { divider: true },
+            {
+              label: 'Contact Developer',
+              roomy: true,
+              onClick: () => handleIconOpen('contact-info'),
+            },
           ]}
         />
+      )}
+      {toastMessage && (
+        <div className="fixed bottom-16 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-sm text-white shadow-lg">
+          {toastMessage}
+        </div>
       )}
       <Taskbar
         openWindows={openWindows.map((w) => {
@@ -692,6 +777,8 @@ function Desktop() {
         onWindowClick={handleTaskbarClick}
         onOpenSettings={() => handleIconOpen('settings')}
         onOpenApp={handleIconOpen}
+        onOpenNewWindow={openNewInstance}
+        onIconContextMenu={(id, x, y) => setIconMenu({ id, x, y })}
         recentAppIds={recentAppIds}
       />
       {gmailGateOpen && (

@@ -3,6 +3,27 @@ import { animate, motion, useMotionValue } from 'framer-motion'
 import { rectsIntersect } from '../utils/geometry.js'
 import AppGlyph from './icons/AppGlyph.jsx'
 
+const SIZE_PRESETS = {
+  small: {
+    container: 'w-16',
+    glyph: 'h-6 w-6',
+    glyphText: 'text-lg',
+    label: 'text-[10px]',
+  },
+  medium: {
+    container: 'w-20',
+    glyph: 'h-8 w-8',
+    glyphText: 'text-2xl',
+    label: 'text-xs',
+  },
+  large: {
+    container: 'w-28',
+    glyph: 'h-12 w-12',
+    glyphText: 'text-4xl',
+    label: 'text-sm',
+  },
+}
+
 const DesktopIcon = forwardRef(function DesktopIcon(
   {
     id,
@@ -16,9 +37,11 @@ const DesktopIcon = forwardRef(function DesktopIcon(
     refreshToken,
     staggerIndex,
     variant = 'grid',
+    size = 'medium',
   },
   ref,
 ) {
+  const preset = SIZE_PRESETS[size] ?? SIZE_PRESETS.medium
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const opacity = useMotionValue(1)
@@ -110,14 +133,21 @@ const DesktopIcon = forwardRef(function DesktopIcon(
         e.stopPropagation()
         onContextMenu(e.clientX, e.clientY)
       }}
-      className={`flex w-20 cursor-grab flex-col items-center gap-1 rounded border p-2 text-center text-white transition-colors active:cursor-grabbing ${
+      className={`flex ${preset.container} cursor-grab flex-col items-center gap-1 rounded border p-2 text-center text-white transition-colors active:cursor-grabbing ${
         isSelected
           ? 'border-cyan-400 bg-white/10'
           : 'border-transparent hover:bg-white/5'
       }`}
     >
-      <AppGlyph id={id} icon={icon} />
-      <span className="text-xs leading-tight [text-shadow:0_0_3px_rgba(0,0,0,0.9),0_0_6px_rgba(0,0,0,0.7)]">
+      <AppGlyph
+        id={id}
+        icon={icon}
+        className={preset.glyph}
+        textClassName={preset.glyphText}
+      />
+      <span
+        className={`${preset.label} leading-tight [text-shadow:0_0_3px_rgba(0,0,0,0.9),0_0_6px_rgba(0,0,0,0.7)]`}
+      >
         {label}
       </span>
     </motion.div>
