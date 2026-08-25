@@ -3,28 +3,24 @@ import { AnimatePresence } from 'framer-motion'
 import SystemTray from './SystemTray.jsx'
 import TaskbarPreview from './TaskbarPreview.jsx'
 import StartMenu from './StartMenu.jsx'
+import SearchModal from './SearchModal.jsx'
 import { iconImages } from '../assets/icons/index.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function IconGlyph({ id, icon }) {
   return iconImages[id] ? (
-    <img src={iconImages[id]} alt="" className="h-5 w-5 object-contain" />
+    <img src={iconImages[id]} alt="" className="h-6 w-6 object-contain" />
   ) : (
     icon
   )
 }
 
-function TaskbarButton({ id, icon, label, onClick, isActive: isActiveProp }) {
-  const [isActiveState, setIsActiveState] = useState(false)
-  const isActive = isActiveProp ?? isActiveState
+function TaskbarButton({ id, icon, label, onClick, isActive = false }) {
   return (
     <button
-      onClick={() => {
-        if (isActiveProp === undefined) setIsActiveState((prev) => !prev)
-        onClick?.()
-      }}
+      onClick={onClick}
       aria-label={label}
-      className={`flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
+      className={`flex h-[43px] w-[43px] items-center justify-center rounded text-xl text-white ${
         isActive ? 'bg-white/20' : 'hover:bg-white/10'
       }`}
     >
@@ -54,7 +50,7 @@ function RunningAppButton({
       <button
         onClick={onClick}
         aria-label={label}
-        className={`flex h-9 w-9 items-center justify-center rounded text-lg text-white ${
+        className={`flex h-[43px] w-[43px] items-center justify-center rounded text-xl text-white ${
           isMinimized
             ? 'bg-white/5 hover:bg-white/10'
             : 'bg-white/20 hover:bg-white/30'
@@ -76,17 +72,13 @@ function RunningAppButton({
   )
 }
 
-const leftLaunchers = [
-  { id: 'start', label: 'Start', icon: '⊞' },
-  { id: 'widgets', label: 'Widgets', icon: '▤' },
+const pinnedTaskbarApps = [
   { id: 'search', label: 'Search', icon: '🔍' },
-  { id: 'explorer', label: 'File Explorer', icon: '📁' },
-]
-
-const pinnedApps = [
-  { id: 'music', label: 'Music', icon: '🎵' },
-  { id: 'terminal', label: 'Terminal', icon: '⌨️' },
-  { id: 'messaging', label: 'Messaging', icon: '💬' },
+  { id: 'developer-lab', label: 'Developer Lab', icon: '🛠️' },
+  { id: 'music-lab', label: 'Music Lab', icon: '🎵' },
+  { id: 'settings', label: 'Settings', icon: '⚙️' },
+  { id: 'store', label: 'Store', icon: '🛒' },
+  { id: 'blog', label: 'Blog', icon: '📝' },
 ]
 
 function Taskbar({
@@ -94,11 +86,15 @@ function Taskbar({
   onWindowClick,
   onOpenSettings,
   onOpenApp,
+  onOpenNewWindow,
+  onIconContextMenu,
   recentAppIds = [],
 }) {
   const isMobile = useIsMobile()
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const startAreaRef = useRef(null)
+  const searchAreaRef = useRef(null)
 
   useEffect(() => {
     if (!isStartMenuOpen) return
@@ -109,8 +105,17 @@ function Taskbar({
     return () => window.removeEventListener('mousedown', handleOutsideMouseDown)
   }, [isStartMenuOpen])
 
+  useEffect(() => {
+    if (!isSearchOpen) return
+    function handleOutsideMouseDown(e) {
+      if (!searchAreaRef.current?.contains(e.target)) setIsSearchOpen(false)
+    }
+    window.addEventListener('mousedown', handleOutsideMouseDown)
+    return () => window.removeEventListener('mousedown', handleOutsideMouseDown)
+  }, [isSearchOpen])
+
   return (
-    <div className="absolute inset-x-0 bottom-0 z-40 flex h-12 items-center gap-1 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
+    <div className="absolute inset-x-0 bottom-0 z-40 flex h-12 items-center gap-2 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
       <div ref={startAreaRef}>
         <TaskbarButton
           id="start"
@@ -124,41 +129,59 @@ function Taskbar({
             <StartMenu
               onClose={() => setIsStartMenuOpen(false)}
               onOpenApp={onOpenApp}
+              onIconContextMenu={onIconContextMenu}
               recentAppIds={recentAppIds}
             />
           )}
         </AnimatePresence>
       </div>
       {!isMobile &&
-        leftLaunchers
-          .filter((item) => item.id !== 'start')
-          .map((item) => (
+        pinnedTaskbarApps.map((item) =>
+          item.id === 'search' ? (
+            <div key={item.id} ref={searchAreaRef} className="relative">
+              <TaskbarButton
+                id={item.id}
+                icon={item.icon}
+                label={item.label}
+                isActive={isSearchOpen}
+                onClick={() => setIsSearchOpen((prev) => !prev)}
+              />
+              <AnimatePresence>
+                {isSearchOpen && (
+                  <SearchModal
+                    onClose={() => setIsSearchOpen(false)}
+                    onOpenApp={onOpenApp}
+                    onOpenNewWindow={onOpenNewWindow}
+                    onIconContextMenu={onIconContextMenu}
+                    recentAppIds={recentAppIds}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
             <TaskbarButton
               key={item.id}
               id={item.id}
               icon={item.icon}
               label={item.label}
+              onClick={
+                item.id === 'settings'
+                  ? onOpenSettings
+                  : () => onOpenApp(item.id)
+              }
             />
-          ))}
-      <div className="ml-4 flex items-center gap-1">
-        {!isMobile &&
-          pinnedApps.map((item) => (
-            <TaskbarButton
-              key={item.id}
-              id={item.id}
-              icon={item.icon}
-              label={item.label}
-            />
-          ))}
+          ),
+        )}
+      {isMobile && (
         <TaskbarButton
           id="settings"
           icon="⚙️"
           label="Settings"
           onClick={onOpenSettings}
         />
-      </div>
+      )}
       {openWindows.length > 0 && (
-        <div className="ml-4 flex items-center gap-1 border-l border-white/10 pl-4">
+        <div className="ml-4 flex items-center gap-2 border-l border-white/10 pl-4">
           {openWindows.map((w) => (
             <RunningAppButton
               key={w.instanceId}

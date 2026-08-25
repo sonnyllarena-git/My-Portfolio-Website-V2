@@ -48,7 +48,12 @@ function StartMenuPowerFlyout({ onSelect }) {
   )
 }
 
-function StartMenu({ onClose, onOpenApp, recentAppIds = [] }) {
+function StartMenu({
+  onClose,
+  onOpenApp,
+  onIconContextMenu,
+  recentAppIds = [],
+}) {
   const isMobile = useIsMobile()
   const [isPowerOpen, setIsPowerOpen] = useState(false)
 
@@ -109,6 +114,11 @@ function StartMenu({ onClose, onOpenApp, recentAppIds = [] }) {
                 key={icon.id}
                 type="button"
                 onClick={() => handleOpen(icon.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onIconContextMenu?.(icon.id, e.clientX, e.clientY)
+                }}
                 className="flex w-full items-center gap-3 rounded px-2 py-1.5 text-left hover:bg-white/10"
               >
                 <AppGlyph id={icon.id} icon={icon.icon} className="h-5 w-5" />
@@ -134,6 +144,11 @@ function StartMenu({ onClose, onOpenApp, recentAppIds = [] }) {
                 key={icon.id}
                 type="button"
                 onClick={() => handleOpen(icon.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onIconContextMenu?.(icon.id, e.clientX, e.clientY)
+                }}
                 className="flex flex-col items-center gap-1 rounded-lg border border-transparent bg-white/5 p-2 hover:border-white/30 hover:bg-white/10"
               >
                 <AppGlyph
