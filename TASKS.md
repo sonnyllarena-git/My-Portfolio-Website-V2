@@ -4564,6 +4564,181 @@ covers 3._
 
 ---
 
+## PHASE 78 — TASKBAR: START MENU + CLOCK/CALENDAR FLYOUT
+
+_Sonny asked on 2026-08-25 to wire up the two decorative taskbar controls (Start button,
+clock/date) into a Windows-11-style Start Menu and Clock/Calendar flyout, closely following a
+reference screenshot (`src/components/task bar/component/Task Bar.png`). Confirmed via a
+plan-mode design pass: Start Menu shows a bigger-icon "Recently used" row (in-memory only, not
+persisted) plus a scrollable alphabetical list sourced from the existing 17 `desktopIcons`, a
+Settings/Power icon rail, and a decorative 3-item Power flyout (Sleep/Restart/Shut down, no real
+OS action exists to hook up — confirmed with Sonny). The clock flyout adds a seconds-accurate big
+clock + full date + a real month-grid calendar (pure helper + tests) with a decorative "Today"
+placeholder. Both use the project's existing opacity+y+scale pop transition (no slide-up exists
+anywhere in this codebase), anchor above the taskbar via the `TaskbarPreview.jsx`
+`bottom-full`/glass-shell idiom, and get a full-width bottom-sheet variant on mobile. The Start
+button is newly shown on mobile too (Sonny confirmed; Widgets/Search/Explorer stay hidden)._
+
+- [x] **P461** — Copy `src/components/task bar/icons/power icon.png` to
+      `src/assets/icons/power.png`; import it in `src/assets/icons/index.js` and add `power` to
+      the `iconImages` map (grep first per the 2026-08-18 LESSONS.md entry — confirmed no existing
+      `power` key).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P462** — Create `src/components/icons/AppGlyph.jsx` (id/icon → image / `PdfGlyph` / raw
+      emoji, with size-class props), extracting the resolution logic from `DesktopIcon.jsx`
+      (lines ~65-71). Refactor `DesktopIcon.jsx`'s grid and list variants to render
+      `<AppGlyph id={id} icon={icon} />` in place of their inline `glyph` ternary + wrapping span;
+      drop the now-unused local `PdfGlyph` import there.
+      **Pass condition:** `npm run verify` passes; desktop icon grid/list rendering is visually
+      unchanged (verified live).
+- [x] **P463** — Create `src/utils/calendarGrid.js` (`buildCalendarGrid(year, month, today)`,
+      returns a flat 42-cell array with `{ date, day, isCurrentMonth, isToday }`, using `Date`'s
+      own rollover normalization for leading/trailing days) and `calendarGrid.test.js` (happy
+      path: August 2026 — starts Saturday, has both leading and trailing days; edge path: November
+      2026 — starts Sunday, zero leading days).
+      **Pass condition:** `npm run verify` passes; both tests pass.
+- [x] **P464** — Create `src/utils/recentApps.js` (`addRecentAppId(currentIds, id, maxLength=6)`
+      — dedupe, move-to-front, cap) and `recentApps.test.js` (happy path: prepend a new id; edge
+      path: re-adding an existing id moves it to front without duplicating).
+      **Pass condition:** `npm run verify` passes; both tests pass.
+- [x] **P465** — `src/components/Desktop.jsx`: add `recentAppIds` state; `openApp(id)` calls
+      `addRecentAppId` (P464), guarded to only track ids present in `desktopIcons`; pass
+      `recentAppIds` and `onOpenApp={handleIconOpen}` as new props on the existing `<Taskbar />`
+      call (unused there until P467).
+      **Pass condition:** `npm run verify` passes; opening two different desktop icons then
+      reopening the first leaves `recentAppIds` as `[first, second]` with no duplicate (verified
+      live, e.g. via a temporary console log removed before commit).
+- [x] **P466.a** — Create `src/components/StartMenu.jsx`: outer glass-panel shell (desktop
+      ~560px-wide/`max-h-[70vh]` and mobile full-width-bottom-sheet className variants, pop-in
+      transition per plan), the left icon rail (Settings via `iconImages.settings` calling
+      `onOpenApp('settings')`; Power via `iconImages.power` toggling a local `isPowerOpen` state)
+      and a `StartMenuPowerFlyout` (3 decorative text rows: Sleep/Restart/Shut down, no icons).
+      Not yet imported/rendered anywhere.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P466.b** — `src/components/StartMenu.jsx`: add the "Recently used" tile grid (bigger
+      `AppGlyph` at `h-10 w-10`, resolved from the `recentAppIds` prop against `desktopIcons`,
+      empty-state placeholder text when none) and the `flex-1 overflow-y-auto` alphabetical app
+      list (`desktopIcons` sorted by label, `AppGlyph` at `h-5 w-5`) — `shrink-0` on the recent
+      section so only the list scrolls. Both call a shared `handleOpen(id)` helper that calls
+      `onOpenApp` then `onClose`.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P467** — `src/components/Taskbar.jsx`: `TaskbarButton` gains an optional controlled
+      `isActive` prop; pull the `'start'` entry out of the `leftLaunchers` map and render it
+      directly inside a new `<div ref={startAreaRef} className="relative">` alongside a
+      conditional `<AnimatePresence><StartMenu .../></AnimatePresence>`, wired to new
+      `isStartMenuOpen` state and a `mousedown`-outside-`startAreaRef` close effect; accept and
+      forward `onOpenApp`/`recentAppIds` props; the remaining `leftLaunchers` (Widgets/Search/
+      Explorer) stay `!isMobile`-gated, but the Start button now renders unconditionally.
+      **Pass condition:** `npm run verify` passes; verified live — mobile viewport shows only the
+      Start icon among the left launchers; clicking Start opens the panel; clicking outside or
+      re-clicking Start closes it.
+- [x] **P468** — Create `src/components/ClockCalendarFlyout.jsx`: big clock with seconds + full
+      weekday date (from the `now` prop), month header with prev/next chevrons over local
+      `viewedMonth` state, weekday-initials row, and a `grid-cols-7` day grid from
+      `buildCalendarGrid` (P463), memoized on the viewed year/month plus `now.toDateString()`;
+      today's cell gets an accent-colored outline via the existing
+      `useSystemSettings`/`accentColors` pattern (`Window.jsx` lines ~28-29); static "Today"
+      section with a no-op `+` and placeholder text. Desktop and mobile (full-width bottom sheet)
+      className variants. Not yet imported/rendered anywhere.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P469** — `src/components/SystemTray.jsx`: add `relative` to the root; turn the time/date
+      block into a `<button>`; add `trayRef` + `isFlyoutOpen` state + mousedown-outside-`trayRef`
+      close effect; render `ClockCalendarFlyout` inside `AnimatePresence`, passing `now` and
+      `onClose`. Compact tray `formatTime`/`formatDate` stay unchanged.
+      **Pass condition:** `npm run verify` passes; verified live — clicking the clock opens the
+      flyout with live-ticking seconds, chevrons move between months, today's cell is highlighted,
+      outside click closes it.
+- [x] **P470** — Verify the full flow live in the running dev app (desktop + mobile viewports):
+      Start Menu opens/closes on click and outside-click; opening 2-3 different apps populates
+      Recently Used most-recent-first with no duplicates; clicking a recent tile or an
+      alphabetical-list row opens the correct window and closes the menu; Power flyout
+      opens/closes. Clock flyout: seconds tick live, month navigation works across a year boundary
+      (December → January), today's cell is highlighted on the correct day, outside click closes
+      it.
+      **Pass condition:** every step above behaves as described; `npm run verify` green
+      throughout.
+
+---
+
+## PHASE 78 ADDENDUM — START MENU LAYOUT + SHARP CORNERS + BIGGER CLOCK
+
+_Sonny reviewed Phase 78 live against a cropped reference screenshot of the real Windows 11 Start
+Menu (all-apps view) on 2026-08-25 and asked for closer fidelity: the reference is a genuine
+two-column layout (an independently-scrolling A-Z list with letter-group headers on the left, a
+non-scrolling pinned/recent tile grid on the right, divided by a vertical rule) rather than one
+stacked scrolling column; both new panels should have sharp corners, not rounded; and the
+Clock/Calendar flyout should be noticeably bigger with larger text._
+
+- [x] **P471** — `src/components/StartMenu.jsx`: restructure the main content into two side-by-side
+      columns matching the reference — group `sortedApps` by first letter into a new
+      `groupedApps` module-level constant (`{ letter, items }[]`, `#` for any non-letter-leading
+      label), render it as the left column (`min-w-0 flex-1 overflow-y-auto`, a small `letter`
+      header above each group) so only that column scrolls independently; move the "Recently used"
+      tile grid into a `w-[220px] shrink-0 border-l border-white/10 overflow-y-auto` right column
+      in its place.
+      **Pass condition:** `npm run verify` passes; verified live — left column lists every app
+      grouped under a letter header and scrolls on its own; right column shows the recent tiles
+      unscrolled, separated by a visible vertical divider.
+- [x] **P472** — `src/components/StartMenu.jsx` and `src/components/ClockCalendarFlyout.jsx`:
+      remove the rounded corners on both panels' desktop and mobile variants (`rounded-2xl`,
+      `rounded-t-2xl`) so both modals render with sharp corners.
+      **Pass condition:** `npm run verify` passes; verified live via screenshot — neither panel
+      shows any corner rounding on desktop or mobile.
+- [x] **P473** — `src/components/ClockCalendarFlyout.jsx`: increase the desktop panel width from
+      `w-[320px]` to `w-[480px]` (1.5x) with proportionally larger padding, and bump the font sizes
+      one step up across the clock (`text-3xl` → `text-4xl`), date, month header, weekday row, day
+      grid, and Today section (mobile shares the same text elements, so it gets the same bump).
+      **Pass condition:** `npm run verify` passes; verified live — the desktop flyout is visibly
+      larger with readable, larger text, still anchored correctly above the taskbar.
+- [x] **P474** — `src/index.css`: add a `.scrollbar-overlay` utility (transparent track, transparent
+      thumb by default, thumb fades to a translucent white on container `:hover`, constant 6px
+      width so nothing reflows) matching the file's existing `.scrollbar-*` convention. Apply it to
+      both scrollable columns in `src/components/StartMenu.jsx` (the A-Z list and the Recently used
+      column) in place of the default browser scrollbar.
+      **Pass condition:** `npm run verify` passes; verified live — the scrollbar thumb is invisible
+      until the list is hovered, then fades in; no layout shift when it appears.
+- [x] **P475** — `src/components/StartMenu.jsx`: increase the Recently used tile icon from
+      `h-10 w-10` to `h-40 w-40` (4x) with a proportionally bigger emoji-fallback `textClassName`;
+      switch that column's tile grid from `grid-cols-2` to `grid-cols-1` since two 160px icons no
+      longer fit side by side in the 220px column.
+      **Pass condition:** `npm run verify` passes; verified live — recent-app icons render
+      noticeably larger, one per row, with no overlap or clipping.
+
+---
+
+## PHASE 78 ADDENDUM 2 — START MENU POLISH (SCROLLBAR, 3-WIDE RECENTS, TILE HOVER, FLUSH TASKBAR)
+
+_Sonny reviewed the live Start Menu against the reference again on 2026-08-25 and asked for:
+a thinner scrollbar, the Recently used tiles arranged 3-across (matching the reference's
+"Productivity" row) with smaller icons, a persistent gray tile background with a light-gray hover
+border, and both new panels flush against the taskbar with no gap. Confirmed via a plan-mode
+follow-up question: the scrollbar reduction is the scrollbar's own CSS width/height, not the
+modal's height; mobile keeps its current single-column recents layout unchanged since only the
+desktop reference view was referenced — the 3-column/smaller-icon treatment is `md:`-only._
+
+- [x] **P476** — `src/index.css`: reduce `.scrollbar-overlay::-webkit-scrollbar`'s `width`/`height`
+      from `6px` to `3px` (50%).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P477** — `src/components/StartMenu.jsx`: make the Recently used tile grid, icon size, and
+      column width responsive — mobile (`grid-cols-1`, `h-40 w-40` icon, `w-[220px]` column) stays
+      as-is; add `md:grid-cols-3`, `md:h-[120px] md:w-[120px]` icon (`md:text-7xl` emoji fallback),
+      and `md:w-[420px]` column for desktop. Widen the desktop root panel from `w-[560px]` to
+      `w-[760px]` so the alphabetical-list column's actual pixel width is unchanged.
+      **Pass condition:** `npm run verify` passes; verified live — desktop shows 3 smaller tiles
+      per row, mobile is visually unchanged, the list column's width looks the same as before.
+- [x] **P478** — `src/components/StartMenu.jsx`: give each Recently used tile button a persistent
+      `bg-white/5` background and a `border border-transparent` that becomes `hover:border-white/30`
+      on hover (kept alongside the existing `hover:bg-white/10`).
+      **Pass condition:** `npm run verify` passes; verified live — tiles show a gray box at rest
+      and a visible light-gray border on hover, no layout shift.
+- [x] **P479** — `src/components/StartMenu.jsx` and `src/components/ClockCalendarFlyout.jsx`:
+      remove `mb-2` from each panel's desktop anchoring className so both sit flush against the
+      taskbar's top edge with no gap (mobile already uses `mb-0`, untouched).
+      **Pass condition:** `npm run verify` passes; verified live via screenshot — no visible gap
+      between either panel and the taskbar.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.

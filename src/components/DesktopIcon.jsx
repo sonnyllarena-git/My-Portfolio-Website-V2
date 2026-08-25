@@ -1,8 +1,7 @@
 import { forwardRef, useEffect, useRef } from 'react'
 import { animate, motion, useMotionValue } from 'framer-motion'
-import { iconImages } from '../assets/icons/index.js'
 import { rectsIntersect } from '../utils/geometry.js'
-import PdfGlyph from './icons/PdfGlyph.jsx'
+import AppGlyph from './icons/AppGlyph.jsx'
 
 const DesktopIcon = forwardRef(function DesktopIcon(
   {
@@ -62,14 +61,6 @@ const DesktopIcon = forwardRef(function DesktopIcon(
     }
   }
 
-  const glyph = iconImages[id] ? (
-    <img src={iconImages[id]} alt="" className="h-8 w-8 object-contain" />
-  ) : icon === 'pdf' ? (
-    <PdfGlyph />
-  ) : (
-    icon
-  )
-
   if (variant === 'list') {
     return (
       <div
@@ -82,9 +73,7 @@ const DesktopIcon = forwardRef(function DesktopIcon(
           isSelected ? 'bg-white/10' : 'hover:bg-white/5'
         }`}
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center text-2xl">
-          {glyph}
-        </span>
+        <AppGlyph id={id} icon={icon} className="h-8 w-8 shrink-0" />
         <span className="flex-1 text-sm">{label}</span>
         <button
           onClick={(e) => {
@@ -127,9 +116,7 @@ const DesktopIcon = forwardRef(function DesktopIcon(
           : 'border-transparent hover:bg-white/5'
       }`}
     >
-      <span className="flex h-8 w-8 items-center justify-center text-2xl">
-        {glyph}
-      </span>
+      <AppGlyph id={id} icon={icon} />
       <span className="text-xs leading-tight [text-shadow:0_0_3px_rgba(0,0,0,0.9),0_0_6px_rgba(0,0,0,0.7)]">
         {label}
       </span>

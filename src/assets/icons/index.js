@@ -12,6 +12,7 @@ import memoryWall from './memory-wall.png'
 import musicFolder from './music.png'
 import paint from './paint.png'
 import pictures from './pictures.png'
+import power from './power.png'
 import projects from './projects.png'
 import recycleBin from './recycle-bin.png'
 import search from './search.png'
@@ -43,6 +44,7 @@ export const iconImages = {
   desktop,
   downloads,
   pictures,
+  power,
   projects,
   'music-folder': musicFolder,
   videos,

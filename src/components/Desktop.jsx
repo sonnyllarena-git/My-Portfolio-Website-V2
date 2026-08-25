@@ -29,6 +29,7 @@ import Taskbar from './Taskbar.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
 import ResumePage from './ResumePage.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
+import { addRecentAppId } from '../utils/recentApps.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { wallpapers } from '../data/wallpapers.js'
@@ -115,6 +116,7 @@ function Desktop() {
   const isMobile = useIsMobile()
   const [selectedIconIds, setSelectedIconIds] = useState([])
   const [openWindows, setOpenWindows] = useState([])
+  const [recentAppIds, setRecentAppIds] = useState([])
   const [iconMenu, setIconMenu] = useState(null)
   const [desktopMenu, setDesktopMenu] = useState(null)
   const [refreshToken, setRefreshToken] = useState(0)
@@ -207,6 +209,9 @@ function Desktop() {
   }, [isSelecting])
 
   function openApp(id) {
+    if (desktopIcons.some((icon) => icon.id === id)) {
+      setRecentAppIds((prev) => addRecentAppId(prev, id))
+    }
     setOpenWindows((prev) =>
       prev.some((w) => w.id === id)
         ? prev.map((w) => (w.id === id ? { ...w, isMinimized: false } : w))
@@ -686,6 +691,8 @@ function Desktop() {
         })}
         onWindowClick={handleTaskbarClick}
         onOpenSettings={() => handleIconOpen('settings')}
+        onOpenApp={handleIconOpen}
+        recentAppIds={recentAppIds}
       />
       {gmailGateOpen && (
         <GmailGuestGate

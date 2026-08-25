@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import SystemTray from './SystemTray.jsx'
 import TaskbarPreview from './TaskbarPreview.jsx'
+import StartMenu from './StartMenu.jsx'
 import { iconImages } from '../assets/icons/index.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 
@@ -13,12 +14,13 @@ function IconGlyph({ id, icon }) {
   )
 }
 
-function TaskbarButton({ id, icon, label, onClick }) {
-  const [isActive, setIsActive] = useState(false)
+function TaskbarButton({ id, icon, label, onClick, isActive: isActiveProp }) {
+  const [isActiveState, setIsActiveState] = useState(false)
+  const isActive = isActiveProp ?? isActiveState
   return (
     <button
       onClick={() => {
-        setIsActive((prev) => !prev)
+        if (isActiveProp === undefined) setIsActiveState((prev) => !prev)
         onClick?.()
       }}
       aria-label={label}
@@ -87,19 +89,57 @@ const pinnedApps = [
   { id: 'messaging', label: 'Messaging', icon: '💬' },
 ]
 
-function Taskbar({ openWindows = [], onWindowClick, onOpenSettings }) {
+function Taskbar({
+  openWindows = [],
+  onWindowClick,
+  onOpenSettings,
+  onOpenApp,
+  recentAppIds = [],
+}) {
   const isMobile = useIsMobile()
+  const [isStartMenuOpen, setIsStartMenuOpen] = useState(false)
+  const startAreaRef = useRef(null)
+
+  useEffect(() => {
+    if (!isStartMenuOpen) return
+    function handleOutsideMouseDown(e) {
+      if (!startAreaRef.current?.contains(e.target)) setIsStartMenuOpen(false)
+    }
+    window.addEventListener('mousedown', handleOutsideMouseDown)
+    return () => window.removeEventListener('mousedown', handleOutsideMouseDown)
+  }, [isStartMenuOpen])
+
   return (
     <div className="absolute inset-x-0 bottom-0 z-40 flex h-12 items-center gap-1 border-t border-white/10 bg-black/40 px-2 backdrop-blur-md">
+      <div ref={startAreaRef}>
+        <TaskbarButton
+          id="start"
+          icon="⊞"
+          label="Start"
+          isActive={isStartMenuOpen}
+          onClick={() => setIsStartMenuOpen((prev) => !prev)}
+        />
+        <AnimatePresence>
+          {isStartMenuOpen && (
+            <StartMenu
+              onClose={() => setIsStartMenuOpen(false)}
+              onOpenApp={onOpenApp}
+              recentAppIds={recentAppIds}
+            />
+          )}
+        </AnimatePresence>
+      </div>
       {!isMobile &&
-        leftLaunchers.map((item) => (
-          <TaskbarButton
-            key={item.id}
-            id={item.id}
-            icon={item.icon}
-            label={item.label}
-          />
-        ))}
+        leftLaunchers
+          .filter((item) => item.id !== 'start')
+          .map((item) => (
+            <TaskbarButton
+              key={item.id}
+              id={item.id}
+              icon={item.icon}
+              label={item.label}
+            />
+          ))}
       <div className="ml-4 flex items-center gap-1">
         {!isMobile &&
           pinnedApps.map((item) => (
