@@ -28,6 +28,7 @@ import TerminalApp from './TerminalApp.jsx'
 import AppGlyph from './icons/AppGlyph.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
+import PowerTransitionOverlay from './PowerTransitionOverlay.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
 import ResumePage from './ResumePage.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
@@ -112,7 +113,7 @@ function renderPreviewBody(w, gmailGuest) {
   return null
 }
 
-function Desktop() {
+function Desktop({ onExitToBoot }) {
   const { brightness, wallpaperId, cursorStyle, accentColor } =
     useSystemSettings()
   const wallpaper =
@@ -133,6 +134,7 @@ function Desktop() {
   const [gamesLoadingName, setGamesLoadingName] = useState(null)
   const [blogGateOpen, setBlogGateOpen] = useState(false)
   const [blogLoadingIdentity, setBlogLoadingIdentity] = useState(null)
+  const [powerAction, setPowerAction] = useState(null)
   const { visitorName, setVisitorName, logout } = useGames()
   const {
     visitorName: blogVisitorName,
@@ -819,7 +821,14 @@ function Desktop() {
         onOpenNewWindow={openNewInstance}
         onIconContextMenu={(id, x, y) => setIconMenu({ id, x, y })}
         recentAppIds={recentAppIds}
+        onPowerAction={setPowerAction}
       />
+      {powerAction && (
+        <PowerTransitionOverlay
+          action={powerAction}
+          onComplete={onExitToBoot}
+        />
+      )}
       {gmailGateOpen && (
         <GmailGuestGate
           onSubmit={(guest) => {

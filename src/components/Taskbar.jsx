@@ -90,6 +90,7 @@ function Taskbar({
   onOpenNewWindow,
   onIconContextMenu,
   recentAppIds = [],
+  onPowerAction,
 }) {
   const isMobile = useIsMobile()
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false)
@@ -132,6 +133,7 @@ function Taskbar({
               onOpenApp={onOpenApp}
               onIconContextMenu={onIconContextMenu}
               recentAppIds={recentAppIds}
+              onPowerAction={onPowerAction}
             />
           )}
         </AnimatePresence>

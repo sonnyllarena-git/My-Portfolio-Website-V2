@@ -25,7 +25,7 @@ function App() {
         <SystemSettingsProvider>
           <GamesProvider>
             <BlogProvider>
-              <Desktop />
+              <Desktop onExitToBoot={() => setPhase('boot')} />
             </BlogProvider>
           </GamesProvider>
         </SystemSettingsProvider>

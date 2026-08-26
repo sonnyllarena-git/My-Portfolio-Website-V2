@@ -9,9 +9,9 @@ import PowerIcon from './icons/PowerIcon.jsx'
 import RestartIcon from './icons/RestartIcon.jsx'
 
 const POWER_OPTIONS = [
-  { label: 'Sleep', Icon: MoonIcon },
-  { label: 'Restart', Icon: RestartIcon },
-  { label: 'Shut down', Icon: PowerIcon },
+  { label: 'Sleep', action: 'sleep', Icon: MoonIcon },
+  { label: 'Restart', action: 'restart', Icon: RestartIcon },
+  { label: 'Shut down', action: 'shutdown', Icon: PowerIcon },
 ]
 
 const sortedApps = [...desktopIcons].sort((a, b) =>
@@ -41,11 +41,11 @@ const panelMotion = {
 function StartMenuPowerFlyout({ onSelect }) {
   return (
     <div className="absolute bottom-12 inset-x-0 z-30 border border-white/10 bg-[#2a2a2a] p-1 shadow-xl">
-      {POWER_OPTIONS.map(({ label, Icon }) => (
+      {POWER_OPTIONS.map(({ label, action, Icon }) => (
         <button
           key={label}
           type="button"
-          onClick={onSelect}
+          onClick={() => onSelect(action)}
           className="flex w-full items-center gap-3 px-2 py-1.5 text-left text-sm text-white hover:bg-white/10"
         >
           <Icon className="h-4 w-4 shrink-0" />
@@ -61,6 +61,7 @@ function StartMenu({
   onOpenApp,
   onIconContextMenu,
   recentAppIds = [],
+  onPowerAction,
 }) {
   const isMobile = useIsMobile()
   const [isPowerOpen, setIsPowerOpen] = useState(false)
@@ -116,9 +117,10 @@ function StartMenu({
         </button>
         {isPowerOpen && (
           <StartMenuPowerFlyout
-            onSelect={() => {
+            onSelect={(action) => {
               setIsPowerOpen(false)
               onClose()
+              onPowerAction(action)
             }}
           />
         )}

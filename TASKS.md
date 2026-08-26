@@ -13,6 +13,9 @@ board (82 onward) belong to concurrent sessions, not this one)_`
 **Also this thread:** Phase 87 (P526) — a direct Sonny bug-report fix for the Start Menu Power
 flyout's width alignment — complete as of 2026-08-26. Phase 88 (P527) — seeded the Start Menu's
 "Recently used" grid with 6 default apps instead of starting empty — complete as of 2026-08-26.
+Phase 91 (P530-P532) — gave every window's minimize/maximize/close buttons the same flush,
+square-cornered "seamless" chrome Command Prompt already had — complete as of 2026-08-26. (Phases
+89-90 in between belong to a concurrent session, not this thread.)
 **Last verified:** 2026-08-26 — `npm run verify` → PASS (0 errors, 11 pre-existing-pattern
 warnings, 62 tests)
 **Verify command:** `npm run verify`
@@ -5315,12 +5318,96 @@ by clicking._
 - [x] **P528** — In `src/components/StartMenu.jsx`: drop `rounded-lg`/`rounded` from
       `StartMenuPowerFlyout`'s container/buttons (square corners); force the footer rail's width to
       `w-[340px]` whenever `isPowerOpen` is true instead of relying only on `hover:w-[340px]`, so it
-      can never be narrower than the flyout while open; add `onMouseLeave={() =>
-      setIsPowerOpen(false)}` on the rail so moving the mouse off it closes the flyout instead of
-      leaving it clipped.
+      can never be narrower than the flyout while open; add
+      `onMouseLeave={() => setIsPowerOpen(false)}` on the rail so moving the mouse off it closes
+      the flyout instead of leaving it clipped.
       **Pass condition:** flyout corners are square; clicking Power then moving the mouse fully off
       the rail closes the flyout cleanly (no clipped/garbled remnant); confirmed live via Playwright
       screenshots before/after mouse-out; `npm run verify` passes.
+
+---
+
+## PHASE 90 — POWER BUTTON ACTIONS: RESTART, SLEEP, SHUT DOWN
+
+_Sonny wants the Power flyout's Sleep/Restart/Shut down buttons to actually do something: fade the
+screen out, hold on black, then either return to the boot loading video (Restart, and Sleep after
+an Esc "wake up" prompt) or attempt to close the tab (Shut down — browsers only allow
+`window.close()` on a script-opened tab, so a real visitor's tab won't actually close; a static
+fallback message covers that case). Split into three small increments: .a stands up the shared
+plumbing (Start Menu → Taskbar → Desktop → App wiring, plus a new `PowerTransitionOverlay.jsx`
+doing a generic fade-then-return-to-boot, which is already the complete Restart behavior); .b adds
+Sleep's Esc-to-wake branch; .c adds Shut down's close-attempt/fallback branch. Each is independently
+verifiable live._
+
+- [x] **P529.a** — New `src/components/PowerTransitionOverlay.jsx` (`{ action, onComplete }`
+      props): `fixed inset-0 z-50 bg-black` shell, a `framer-motion` div fading opacity 0→1 over
+      ~500ms, then (for any `action`) holding until ~3000ms total elapsed before calling
+      `onComplete()`. Wire it up: `StartMenu.jsx`'s `POWER_OPTIONS` gains an `action` id per entry
+      (`sleep`/`restart`/`shutdown`), the flyout's button `onClick` passes it through, `StartMenu`
+      gains an `onPowerAction` prop called after closing the menu; `Taskbar.jsx` forwards
+      `onPowerAction` to `StartMenu`; `Desktop.jsx` adds `powerAction` state, passes
+      `onPowerAction={setPowerAction}` to `Taskbar`, and renders
+      `{powerAction && <PowerTransitionOverlay action={powerAction} onComplete={onExitToBoot} />}`;
+      `App.jsx` passes `onExitToBoot={() => setPhase('boot')}` to `<Desktop />`.
+      **Pass condition:** clicking Restart in the Power flyout fades the live desktop to black over
+      ~500ms, holds black to ~3s total, then shows the boot loading video screen again; confirmed
+      live via Playwright; `npm run verify` passes.
+- [x] **P529.b** — In `PowerTransitionOverlay.jsx`, add the `sleep` branch: after the fade, wait
+      ~2000ms then fade in "Press Esc to wake up" (styled like `StartupLoadingScreen`'s existing
+      "Click anywhere to continue" hint), and attach a `keydown` listener (mirroring the pattern in
+      `Desktop.jsx`) so **Esc** calls `onComplete()` at any point once the screen is black.
+      **Pass condition:** clicking Sleep fades to black, shows "Press Esc to wake up" after the
+      delay, and pressing Esc returns to the boot loading screen; confirmed live via Playwright;
+      `npm run verify` passes.
+- [x] **P529.c** — In `PowerTransitionOverlay.jsx`, add the `shutdown` branch: after the fade, show
+      a placeholder "Shutting down…" message for ~3000ms, call `window.close()`, and if the tab is
+      still alive shortly after, show a static "You can close this tab now" fallback line and stop
+      (no `onComplete()` call — matches the "PC is off" metaphor with no way back short of
+      reloading the page).
+      **Pass condition:** clicking Shut down fades to black, shows the placeholder, then shows the
+      fallback message (since the close attempt is expected to be blocked in this test environment
+      too); confirmed live via Playwright; `npm run verify` passes.
+
+---
+
+## PHASE 91 — FLUSH CAPTION BUTTONS ON EVERY WINDOW
+
+_Sonny asked for every window's minimize/maximize/close buttons to get the same "seamless"
+(flush-to-the-edge, no border-radius, no gap) treatment Command Prompt already had via
+`Window.jsx`'s `square` variant — the classic Win32 titlebar look, vs. the small rounded floating
+buttons every other window used. Split by file since each is an independent, self-contained edit._
+
+- [x] **P530** — In `src/components/Window.jsx`, make the caption-button _shape_ unconditional
+      (drop the `square` ternary for the title bar's padding, the button-group wrapper, and each
+      button's size/border-radius — always `pl-3` with no right/vertical padding, always
+      `flex h-full items-stretch` wrapper, always `flex h-full w-9 items-center justify-center`
+      buttons). Keep the `square` ternary only for hover color (Terminal's light title bar needs
+      dark hover overlays; every other window's dark title bar needs light ones) and for the frame
+      theme (rounded-lg/accent-border vs. square/black), which are unchanged.
+      **Pass condition:** every window that renders through `Window.jsx` (Projects, Store, Games,
+      Settings, Gmail, Contact Info, Paint, Visitor Arts, Memory Wall, Music Lab, This PC,
+      Developer Lab, the fallback window) now has flush, square-cornered caption buttons matching
+      Command Prompt's; `npm run verify` passes.
+- [x] **P531** — In `src/components/ResumeWindow.jsx` (hand-rolled title bar, not `Window.jsx`):
+      restyle the existing Minimize/Close buttons to the same flush/square shape, and add a real
+      Maximize/Restore button (`isMaximized` state, glyph swap, `positionClasses` gains a
+      maximized branch — `fixed inset-x-0 top-0 bottom-12` on desktop, filling the desktop area
+      above the 48px taskbar — leaving the existing centered `w-[420px]` box as the restored state
+      and mobile's always-fullscreen behavior untouched).
+      **Pass condition:** Resume's title bar has 3 flush, square-cornered buttons; Maximize fills
+      the desktop area above the taskbar and Restore returns it to its centered size;
+      `npm run verify` passes.
+- [x] **P532** — In `src/components/zoomChat/ZoomChatHeader.jsx` (hand-rolled title bar, not
+      `Window.jsx`): same flush/square restyle for its existing Minimize/Maximize/Close buttons
+      (drop `rounded-full`, drop the gap, go full-height); also switch Close's hover to
+      `hover:bg-red-500/80` (it previously shared the generic white hover with Minimize/Maximize)
+      to match the red-on-hover affordance every other window's close button already has.
+      **Pass condition:** Zoom Chat's caption buttons are flush and square-cornered with a
+      red-hover Close, matching the rest of the app; `npm run verify` passes.
+
+Blog's window was left out of scope — its minimize/maximize/restore controls live inside a
+dropdown menu (`BlogUserMenu`, opened from the avatar in `BlogTopNav`), not as a visible
+caption-button row, so there was nothing there resembling the Command Prompt pattern to restyle.
 
 ---
 
