@@ -27,11 +27,14 @@ function ResumeWindow({
   const accentHex = accentColors.find((c) => c.id === accentColor)?.hex
   const isMobile = useIsMobile()
   const isHidden = isMinimized || isClosing
-  const positionClasses = isMobile
-    ? 'fixed inset-0'
-    : 'absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2'
   const [shouldRender, setShouldRender] = useState(!isClosing)
   const [showFileMenu, setShowFileMenu] = useState(false)
+  const [isMaximized, setIsMaximized] = useState(false)
+  const positionClasses = isMobile
+    ? 'fixed inset-0'
+    : isMaximized
+      ? 'fixed inset-x-0 top-0 bottom-12'
+      : 'absolute top-1/2 left-1/2 w-[420px] -translate-x-1/2 -translate-y-1/2'
 
   useEffect(() => {
     const timer = setTimeout(
@@ -52,21 +55,28 @@ function ResumeWindow({
       animate={{ opacity: isHidden ? 0 : 1 }}
       transition={{ duration: FADE_DURATION }}
       style={{ borderColor: accentHex, zIndex }}
-      className={`${positionClasses} overflow-hidden rounded-lg border-2 bg-[#2b2b2b] shadow-2xl ${isHidden ? 'pointer-events-none' : 'pointer-events-auto'}`}
+      className={`${positionClasses} overflow-hidden border-2 bg-[#2b2b2b] shadow-2xl ${isHidden ? 'pointer-events-none' : 'pointer-events-auto'}`}
     >
-      <div className="flex items-center justify-between bg-[#b30b00] px-3 py-2 text-white">
+      <div className="flex h-10 items-center justify-between bg-[#b30b00] pl-3 text-white">
         <span className="text-sm font-medium">Resume.pdf</span>
-        <div className="flex items-center gap-1">
+        <div className="flex h-full items-stretch">
           <button
             onClick={onMinimizeToggle}
-            className="flex h-5 w-5 items-center justify-center rounded hover:bg-black/30"
+            className="flex h-full w-9 items-center justify-center hover:bg-black/30"
             aria-label="Minimize"
           >
             _
           </button>
           <button
+            onClick={() => setIsMaximized((prev) => !prev)}
+            className="flex h-full w-9 items-center justify-center hover:bg-black/30"
+            aria-label={isMaximized ? 'Restore' : 'Maximize'}
+          >
+            {isMaximized ? '❐' : '□'}
+          </button>
+          <button
             onClick={onClose}
-            className="flex h-5 w-5 items-center justify-center rounded hover:bg-black/30"
+            className="flex h-full w-9 items-center justify-center hover:bg-black/30"
             aria-label="Close"
           >
             ×

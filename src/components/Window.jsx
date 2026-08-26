@@ -119,12 +119,12 @@ function Window({
         className={
           square
             ? 'flex h-full w-full flex-col overflow-hidden border border-black/60 bg-black text-white shadow-2xl'
-            : 'flex h-full w-full flex-col overflow-hidden rounded-lg border-2 bg-[#1a1c22] text-white shadow-2xl'
+            : 'flex h-full w-full flex-col overflow-hidden border-2 bg-[#1a1c22] text-white shadow-2xl'
         }
       >
         {!hideTitleBar && (
           <div
-            className={`window-title-bar flex ${square ? 'h-9 pl-3' : 'h-10 px-3 py-2'} shrink-0 cursor-move items-center justify-between ${titleBarClassName ?? 'bg-[#25272e]'}`}
+            className={`window-title-bar flex ${square ? 'h-9' : 'h-10'} shrink-0 cursor-move items-center justify-between pl-3 ${titleBarClassName ?? 'bg-[#25272e]'}`}
           >
             <span className="flex items-center gap-2 text-sm font-medium">
               {icon}
@@ -132,40 +132,26 @@ function Window({
             </span>
             <div
               onMouseDown={(e) => e.stopPropagation()}
-              className={
-                square ? 'flex h-full items-stretch' : 'flex items-center gap-1'
-              }
+              className="flex h-full items-stretch"
             >
               <button
                 onClick={onMinimizeToggle}
                 aria-label="Minimize"
-                className={
-                  square
-                    ? 'flex h-full w-9 items-center justify-center hover:bg-black/10'
-                    : 'flex h-5 w-6 items-center justify-center rounded hover:bg-white/10'
-                }
+                className={`flex h-full w-9 items-center justify-center ${square ? 'hover:bg-black/10' : 'hover:bg-white/10'}`}
               >
                 −
               </button>
               <button
                 onClick={toggleMaximize}
                 aria-label={isMaximized ? 'Restore' : 'Maximize'}
-                className={
-                  square
-                    ? 'flex h-full w-9 items-center justify-center hover:bg-black/10'
-                    : 'flex h-5 w-6 items-center justify-center rounded hover:bg-white/10'
-                }
+                className={`flex h-full w-9 items-center justify-center ${square ? 'hover:bg-black/10' : 'hover:bg-white/10'}`}
               >
                 {isMaximized ? '❐' : '□'}
               </button>
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className={
-                  square
-                    ? 'flex h-full w-9 items-center justify-center hover:bg-red-600 hover:text-white'
-                    : 'flex h-5 w-6 items-center justify-center rounded hover:bg-red-500/80'
-                }
+                className={`flex h-full w-9 items-center justify-center ${square ? 'hover:bg-red-600 hover:text-white' : 'hover:bg-red-500/80'}`}
               >
                 ×
               </button>
