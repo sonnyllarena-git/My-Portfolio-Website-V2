@@ -5264,21 +5264,26 @@ calling `.focus()`, which stops that default un-focus step without affecting any
 
 ---
 
-## PHASE 87 — START MENU: POWER FLYOUT WIDTH ALIGNMENT
+## PHASE 87 — START MENU: POWER FLYOUT WIDTH ALIGNMENT + ICONS
 
 _Sonny reported the Sleep/Restart/Shut down flyout shown on clicking Power in the Start Menu's
 footer rail looked misaligned next to a genuine Windows 10 reference screenshot — it renders at a
 fixed 144px width instead of tracking the rail's hover-expanded width, leaving a visible gap and
-reading as a separate, narrower floating box instead of a flush continuation of the rail._
+reading as a separate, narrower floating box instead of a flush continuation of the rail. Mid-task
+he also supplied a reference image of moon/power/restart glyphs and asked for matching icons on
+each option, which were previously bare text rows._
 
 - [x] **P526** — In `src/components/StartMenu.jsx`, change `StartMenuPowerFlyout`'s className
       (line 36) from a fixed `w-36 left-2` to `inset-x-0`, so the flyout always spans 100% of its
-      positioned ancestor (the footer rail)'s current width instead of a hardcoded 144px; adjust
-      internal padding as needed so the options line up with the `railItemClass` Settings/Power
-      buttons above/below it.
+      positioned ancestor (the footer rail)'s current width instead of a hardcoded 144px. Also add
+      three new line-icon components (`src/components/icons/MoonIcon.jsx`, `RestartIcon.jsx`,
+      `PowerIcon.jsx`, matching the existing `WifiIcon.jsx`/`SpeakerIcon.jsx`/`SunIcon.jsx`
+      `currentColor`-stroke convention) and render one beside each flyout option's label, keyed via
+      a `POWER_OPTIONS` array of `{ label, Icon }` instead of the old bare string array.
       **Pass condition:** hovering the footer rail so it expands, then clicking Power, shows the
       Sleep/Restart/Shut down flyout spanning the same width as the expanded rail (flush left/
-      right edges matching the Settings/Power rows); `npm run verify` passes.
+      right edges matching the Settings/Power rows), each option prefixed with its matching icon;
+      `npm run verify` passes; confirmed live via Playwright screenshot.
 
 ---
 
