@@ -10,9 +10,11 @@ to the Large preset, drag-and-drop snaps to the nearest empty cell, Sort discard
 in favor of fresh sorted grid order, and shrinking the browser window reflows the grid so nothing
 hides behind the taskbar; this thread's work is done as of 2026-08-25 — other phases/tasks on this
 board (82 onward) belong to concurrent sessions, not this one)_`
-**Last verified:** 2026-08-25 — `npm run verify` → PASS (0 errors, 11 pre-existing-pattern
-warnings, 62 tests); live browser verification covered alignment, drag-to-empty-cell,
-drag-onto-occupied-cell revert, Sort reflowing a manually-dragged icon, and window-resize reflow
+**Also this thread:** Phase 87 (P526) — a direct Sonny bug-report fix for the Start Menu Power
+flyout's width alignment — complete as of 2026-08-26. Phase 88 (P527) — seeded the Start Menu's
+"Recently used" grid with 6 default apps instead of starting empty — complete as of 2026-08-26.
+**Last verified:** 2026-08-26 — `npm run verify` → PASS (0 errors, 11 pre-existing-pattern
+warnings, 62 tests)
 **Verify command:** `npm run verify`
 
 ---
@@ -5259,6 +5261,40 @@ calling `.focus()`, which stops that default un-focus step without affecting any
       **Pass condition:** clicking the terminal's title bar while it's already the active window
       focuses the input and typing lands in it; dragging the window by its title bar still works;
       `npm run verify` passes.
+
+---
+
+## PHASE 87 — START MENU: POWER FLYOUT WIDTH ALIGNMENT
+
+_Sonny reported the Sleep/Restart/Shut down flyout shown on clicking Power in the Start Menu's
+footer rail looked misaligned next to a genuine Windows 10 reference screenshot — it renders at a
+fixed 144px width instead of tracking the rail's hover-expanded width, leaving a visible gap and
+reading as a separate, narrower floating box instead of a flush continuation of the rail._
+
+- [x] **P526** — In `src/components/StartMenu.jsx`, change `StartMenuPowerFlyout`'s className
+      (line 36) from a fixed `w-36 left-2` to `inset-x-0`, so the flyout always spans 100% of its
+      positioned ancestor (the footer rail)'s current width instead of a hardcoded 144px; adjust
+      internal padding as needed so the options line up with the `railItemClass` Settings/Power
+      buttons above/below it.
+      **Pass condition:** hovering the footer rail so it expands, then clicking Power, shows the
+      Sleep/Restart/Shut down flyout spanning the same width as the expanded rail (flush left/
+      right edges matching the Settings/Power rows); `npm run verify` passes.
+
+---
+
+## PHASE 88 — START MENU: DEFAULT RECENTLY USED APPS
+
+_Sonny asked for the Start Menu's "Recently used" tile grid to ship with 6 default apps instead of
+showing the empty "Apps you open will show up here." state on first load — matching real Windows
+11, which seeds Recommended with a few defaults rather than starting blank._
+
+- [x] **P527** — Add `DEFAULT_RECENT_APP_IDS` (`resume`, `projects`, `blog`, `store`, `games`,
+      `terminal`) to `src/utils/recentApps.js`; initialize `Desktop.jsx`'s `recentAppIds` state
+      with it instead of `[]`. Still in-memory only/unpersisted (P464-465 design), and still
+      overridden by real usage the moment an app is opened (`addRecentAppId` still dedupes/
+      reorders/caps at 6).
+      **Pass condition:** opening the Start Menu with no apps yet opened shows the 6 default tiles;
+      opening any app moves it to the front and the list stays capped at 6; `npm run verify` passes.
 
 ---
 

@@ -4,8 +4,15 @@ import { iconImages } from '../assets/icons/index.js'
 import { desktopIcons } from '../data/desktopIcons.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import AppGlyph from './icons/AppGlyph.jsx'
+import MoonIcon from './icons/MoonIcon.jsx'
+import PowerIcon from './icons/PowerIcon.jsx'
+import RestartIcon from './icons/RestartIcon.jsx'
 
-const POWER_OPTIONS = ['Sleep', 'Restart', 'Shut down']
+const POWER_OPTIONS = [
+  { label: 'Sleep', Icon: MoonIcon },
+  { label: 'Restart', Icon: RestartIcon },
+  { label: 'Shut down', Icon: PowerIcon },
+]
 
 const sortedApps = [...desktopIcons].sort((a, b) =>
   a.label.localeCompare(b.label),
@@ -33,15 +40,16 @@ const panelMotion = {
 
 function StartMenuPowerFlyout({ onSelect }) {
   return (
-    <div className="absolute bottom-12 left-2 z-30 w-36 rounded-lg border border-white/10 bg-[#2a2a2a] p-1 shadow-xl">
-      {POWER_OPTIONS.map((option) => (
+    <div className="absolute bottom-12 inset-x-0 z-30 rounded-lg border border-white/10 bg-[#2a2a2a] p-1 shadow-xl">
+      {POWER_OPTIONS.map(({ label, Icon }) => (
         <button
-          key={option}
+          key={label}
           type="button"
           onClick={onSelect}
-          className="w-full rounded px-2 py-1.5 text-left text-sm text-white hover:bg-white/10"
+          className="flex w-full items-center gap-3 rounded px-2 py-1.5 text-left text-sm text-white hover:bg-white/10"
         >
-          {option}
+          <Icon className="h-4 w-4 shrink-0" />
+          {label}
         </button>
       ))}
     </div>

@@ -32,7 +32,7 @@ import ExplorerBody from './explorer/ExplorerBody.jsx'
 import ResumePage from './ResumePage.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
 import { computeAutoLayout, cellToPixel } from '../utils/desktopGrid.js'
-import { addRecentAppId } from '../utils/recentApps.js'
+import { addRecentAppId, DEFAULT_RECENT_APP_IDS } from '../utils/recentApps.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { wallpapers } from '../data/wallpapers.js'
@@ -121,7 +121,7 @@ function Desktop() {
   const isMobile = useIsMobile()
   const [selectedIconIds, setSelectedIconIds] = useState([])
   const [openWindows, setOpenWindows] = useState([])
-  const [recentAppIds, setRecentAppIds] = useState([])
+  const [recentAppIds, setRecentAppIds] = useState(DEFAULT_RECENT_APP_IDS)
   const [iconMenu, setIconMenu] = useState(null)
   const [desktopMenu, setDesktopMenu] = useState(null)
   const [refreshToken, setRefreshToken] = useState(0)
