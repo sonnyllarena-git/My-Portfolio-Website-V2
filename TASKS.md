@@ -5691,6 +5691,96 @@ previously required a click before anything played at all._
 
 ---
 
+## PHASE 94 — CONTACT INFO: ANIMATED 3D ICON SCENE (REPLACES NOTEPAD APP)
+
+_Sonny wants the notepad-style Contact Info app replaced with an animated scene: the 7 contact/
+social icons (Website, Phone, Twitter/X, Facebook, Instagram, LinkedIn, Spotify) float and slowly
+spin in real WebGL 3D over a background matching this project's existing "Cyber Grid" wallpaper
+palette; clicking an icon animates it toward the window's center and opens a card with that
+platform's link plus a clearly-labeled placeholder stat. This is an explicit, one-time approved
+exception to CLAUDE.md §2 (adds `three`, `@react-three/fiber`, `@react-three/drei`) — full design
+in the approved plan at
+`C:\Users\SonnyLlarena\.claude\plans\can-we-create-animation-foamy-micali.md`. Mobile gets a
+lighter DOM-only tap grid (same modal content), not the 3D scene, for bandwidth/touch reasons._
+
+- [x] **P546** — `npm install three @react-three/fiber @react-three/drei`; read the real installed
+      versions back from `package-lock.json` and add 3 new rows to CLAUDE.md §2's STACK table (3D
+      rendering / 3D React bindings / 3D scene helpers), each with a one-line "why" noting explicit
+      approval for this feature. Check install output / `npm ls react` for peer-dependency warnings
+      against React 19.2.8 — resolve for real if any appear (never `--legacy-peer-deps`/`--force`),
+      logging the verbatim conflict + fix in LESSONS.md if one existed.
+      **Pass condition:** `npm run build` still green; STACK table versions match the lockfile
+      exactly; no unresolved peer-dependency warnings.
+- [x] **P547** — Add `kind` + `stat: {label, value, isPlaceholder: true}` fields to the `Website`
+      and `Phone and WhatsApp` entries and all 5 `profiles` entries in `src/data/contactInfo.js`
+      (additive only — `Name`/`Role`/`Based In` get neither); add `src/utils/buildContactIcons.js`
+      (pure mapper: `contactInfo` → flat `[{id, label, href, stat}]`, filtering to entries with a
+      `kind`) + `buildContactIcons.test.js` (happy path + edge path); add
+      `src/data/contactSceneLayout.js` (`CONTACT_ICON_LAYOUT`: per-icon `{id, glyph, nx, ny, nz}`
+      viewport-fraction scatter coordinates).
+      **Pass condition:** `npm run verify` passes including the new test's happy+edge cases;
+      manually confirm `src/components/settings/ContactPage.jsx` still renders unchanged.
+- [x] **P548** — Add `src/components/contactScene/ContactProfileModal.jsx`: shared modal content
+      (label, link/copy action, `stat` value, an always-visible "placeholder — illustrative only"
+      caption), using this project's existing modal convention (a `fixed inset-0` backdrop centered
+      via flex, `bg-black/30`, backdrop-click-to-close + inner-card `stopPropagation`,
+      `onContextMenu` `stopPropagation`, top-right `×` close button).
+      **Pass condition:** `npm run verify` passes; component renders with no console errors when
+      manually mounted with sample icon data.
+- [x] **P549** — Add `src/components/contactScene/ContactMobileGrid.jsx` (2-column tap grid, one
+      tile per icon from `buildContactIcons()`, calling `onSelectIcon(id)`); rewrite
+      `src/components/ContactInfoApp.jsx` as a thin orchestrator (strip the notepad menu
+      bar/Read-Edit toggle/row list entirely) that branches on `useIsMobile()` — mobile renders
+      `ContactMobileGrid` + `ContactProfileModal`; desktop renders a temporary "coming soon"
+      placeholder (3D scene lands in P550-P551).
+      **Pass condition:** confirmed live via Playwright at a mobile viewport width — all 7 tiles
+      render, tapping each opens the correct modal content, closing works; desktop branch shows the
+      placeholder cleanly with no errors; `npm run verify` passes.
+- [x] **P550** — Add the 3D scene core: `src/components/contactScene/ContactSceneBackdrop.jsx`
+      (DOM div reusing `wallpapers.js`'s `cyber` entry's `layers` verbatim), `ContactSceneCanvas.jsx`
+      (`<Canvas>` wrapper: `PerspectiveCamera` fov≈48, ambient + one cyan directional light, no
+      shadows, `dpr={[1,2]}`), `AmbientField.jsx` (2 large slow-counter-rotating wireframe shapes,
+      cyan `#00f0ff` + green `#00ff66`, `z≈-6..-9`), `FloatingIcon.jsx` (`RoundedBox` + `Decal`
+      glyph texture per icon, idle float via `Math.sin` + slow continuous spin in one shared
+      `useFrame`, deterministic per-index phase/speed, no `Math.random()`, positions as viewport
+      fractions via `useThree(state => state.viewport)`), `src/hooks/useGlyphTexture.js`
+      (synchronous `useMemo` canvas-texture generator, module-scope `Map` cache). No click behavior
+      yet — still renders behind the P549 placeholder.
+      **Pass condition:** confirmed live via Playwright/browser — icons visibly float/spin
+      independently, background palette matches the desktop's Cyber Grid wallpaper, dragging the
+      window edge to resize live reflows the scatter without clipping; `npm run verify` passes
+      (build succeeds bundling the new WebGL imports).
+- [x] **P551** — Add `src/utils/projectToScreen.js` (a pure helper that projects a 3D object's
+      current position to `{x, y}` viewport pixels given the camera/canvas size/canvas rect, called
+      only at click/close time, never per-frame) and
+      `src/components/contactScene/ContactModalLayer.jsx` (anchored "chip grows into a card"
+      wrapper: mounts a small `motion.div` at the click's projected screen anchor using Framer
+      Motion's `layout` prop, flips to expanded a frame later so it tweens into the centered
+      `ContactProfileModal`; backdrop fades in only once expanded; falls back to a plain
+      `AnimatePresence` cross-fade if the `layout`-prop tween looks glitchy live). Wire
+      `FloatingIcon`'s click handler through to it; swap `ContactInfoApp.jsx`'s desktop placeholder
+      for the real scene via `React.lazy`/`Suspense` (so mobile never downloads the three.js
+      chunk).
+      **Pass condition:** confirmed live via Playwright — clicking each of the 7 icons opens the
+      correct modal content anchored at/growing from the icon's position; closing restores that
+      icon's idle float/spin; `npm run verify` passes.
+- [x] **P552** — In `src/components/Desktop.jsx`, at the Contact Info window's real render call
+      site (`<ContactInfoApp />`), pass `isMinimized={w.isMinimized}` through so
+      `ContactSceneCanvas.jsx` can set `frameloop="never"` while minimized instead of rendering an
+      invisible window every frame; also drop the leftover `.txt` from the window title
+      (`"Contact Info.txt"` → `"Contact Info"`).
+      **Pass condition:** confirmed live — minimizing the Contact Info window visibly stops the
+      scene's animation (frameloop paused); `npm run verify` passes.
+- [x] **P553** — Full manual Playwright verification pass across every real entry point: desktop
+      double-click "Contact Info" icon, desktop right-click "Contact Developer", Blog's
+      `BlogUserMenu` "Contact Developer", Settings' Contact tab (confirm zero regression) — at both
+      desktop and mobile breakpoints.
+      **Pass condition:** all entry points open the correct experience for their breakpoint, all 7
+      icons/tiles link to the correct platform, zero console errors throughout; `npm run verify`
+      passes.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.

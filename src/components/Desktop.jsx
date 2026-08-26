@@ -548,11 +548,11 @@ function Desktop({ onExitToBoot }) {
                 key={w.instanceId}
                 {...shared}
                 icon="📇"
-                title="Contact Info.txt"
+                title="Contact Info"
                 defaultWidth={650}
                 defaultHeight={500}
               >
-                <ContactInfoApp />
+                <ContactInfoApp isMinimized={w.isMinimized} />
               </Window>
             )
           }
