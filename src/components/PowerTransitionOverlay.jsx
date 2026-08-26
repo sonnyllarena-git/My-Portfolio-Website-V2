@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import restartVideo from './windows startup/assets/restarting.mp4'
+import shutdownVideo from './windows startup/assets/shutting down.mp4'
 
 const FADE_DURATION_S = 0.5
-const RESTART_HOLD_MS = 3000
 const SLEEP_TEXT_DELAY_MS = 2000
-const SHUTDOWN_HOLD_MS = 3000
 
 function PowerTransitionOverlay({ action, onComplete }) {
   const [showWakeHint, setShowWakeHint] = useState(false)
@@ -25,20 +25,10 @@ function PowerTransitionOverlay({ action, onComplete }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [action, onComplete])
 
-  useEffect(() => {
-    if (action !== 'restart') return
-    const timer = setTimeout(onComplete, RESTART_HOLD_MS)
-    return () => clearTimeout(timer)
-  }, [action, onComplete])
-
-  useEffect(() => {
-    if (action !== 'shutdown') return
-    const timer = setTimeout(() => {
-      window.close()
-      setCloseAttempted(true)
-    }, SHUTDOWN_HOLD_MS)
-    return () => clearTimeout(timer)
-  }, [action])
+  function handleShutdownEnded() {
+    window.close()
+    setCloseAttempted(true)
+  }
 
   return (
     <motion.div
@@ -47,6 +37,28 @@ function PowerTransitionOverlay({ action, onComplete }) {
       transition={{ duration: FADE_DURATION_S }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black"
     >
+      {action === 'restart' && (
+        <video
+          className="h-full w-full object-contain"
+          src={restartVideo}
+          autoPlay
+          muted
+          playsInline
+          onEnded={onComplete}
+          onError={onComplete}
+        />
+      )}
+      {action === 'shutdown' && (
+        <video
+          className="h-full w-full object-contain"
+          src={shutdownVideo}
+          autoPlay
+          muted
+          playsInline
+          onEnded={handleShutdownEnded}
+          onError={handleShutdownEnded}
+        />
+      )}
       {showWakeHint && (
         <motion.p
           initial={{ opacity: 0 }}
@@ -57,9 +69,9 @@ function PowerTransitionOverlay({ action, onComplete }) {
           Press Esc to wake up
         </motion.p>
       )}
-      {action === 'shutdown' && (
-        <p className="text-sm text-white/70">
-          {closeAttempted ? 'You can close this tab now' : 'Shutting down…'}
+      {action === 'shutdown' && closeAttempted && (
+        <p className="absolute bottom-[8%] text-sm text-white/70">
+          You can close this tab now
         </p>
       )}
     </motion.div>
