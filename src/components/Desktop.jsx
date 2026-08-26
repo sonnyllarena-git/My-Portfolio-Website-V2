@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { desktopIcons } from '../data/desktopIcons.js'
+import sIcon from '../assets/icons/S icon.png'
 import DesktopIcon from './DesktopIcon.jsx'
 import Window from './Window.jsx'
 import ResumeWindow from './ResumeWindow.jsx'
@@ -500,7 +501,9 @@ function Desktop({ onExitToBoot }) {
               <Window
                 key={w.instanceId}
                 {...shared}
-                icon="✉️"
+                icon={
+                  <img src={sIcon} alt="" className="h-4 w-4 object-contain" />
+                }
                 title="Sign in"
                 defaultWidth={900}
                 defaultHeight={539}
@@ -521,7 +524,9 @@ function Desktop({ onExitToBoot }) {
               <Window
                 key={w.instanceId}
                 {...shared}
-                icon="✉️"
+                icon={
+                  <img src={sIcon} alt="" className="h-4 w-4 object-contain" />
+                }
                 title="New Message"
                 defaultWidth={1000}
                 defaultHeight={550}
@@ -839,14 +844,13 @@ function Desktop({ onExitToBoot }) {
                     ? 'Sign in'
                     : w.id),
             icon:
-              icon?.icon === 'pdf'
-                ? '📄'
-                : (icon?.icon ??
-                  (w.id === 'projects'
-                    ? '🗃️'
-                    : w.id === 'gmail-login'
-                      ? '✉️'
-                      : undefined)),
+              w.id === 'gmail-login' || w.id === 'gmail' ? (
+                <img src={sIcon} alt="" className="h-6 w-6 object-contain" />
+              ) : icon?.icon === 'pdf' ? (
+                '📄'
+              ) : (
+                (icon?.icon ?? (w.id === 'projects' ? '🗃️' : undefined))
+              ),
             isMinimized: w.isMinimized,
             preview: renderPreviewBody(w, gmailGuest),
             naturalWidth,

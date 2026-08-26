@@ -1,15 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import composeBg from './gmail/assets/gmail compose app.jpg'
 import ZoomChatEmojiPicker from './zoomChat/ZoomChatEmojiPicker.jsx'
 
 const CONTACT_EMAIL = 'llarenasonny@yahoo.com'
-const CATEGORIES = [
-  'Pricing',
-  'Product Inquiry',
-  'Software Development',
-  'Web Development',
-  'Other',
-]
 
 const FONT_FAMILIES = [
   'Arial',
@@ -78,10 +70,13 @@ const ALIGN_BUTTONS = [
   { command: 'justifyRight', label: 'Align right', Icon: AlignRightIcon },
 ]
 
+function signatureBody(guest) {
+  return `\n\n—\n${guest?.name ?? ''} <${guest?.email ?? ''}>`
+}
+
 function GmailComposeApp({ guest, onLogout = () => {} }) {
   const [copied, setCopied] = useState(false)
   const [sent, setSent] = useState(false)
-  const [category, setCategory] = useState('')
   const [subject, setSubject] = useState('')
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false)
   const bodyRef = useRef(null)
@@ -120,28 +115,28 @@ function GmailComposeApp({ guest, onLogout = () => {} }) {
     setTimeout(() => setSent(false), 2500)
   }
 
+  function handleDiscard() {
+    setSubject('')
+    if (bodyRef.current) bodyRef.current.textContent = signatureBody(guest)
+  }
+
   return (
-    <div className="flex h-full w-full items-center justify-center bg-[#1a1c22] p-2">
-      <div
-        className="relative w-full bg-white bg-no-repeat text-[#202124]"
-        style={{
-          aspectRatio: '1695 / 857',
-          containerType: 'inline-size',
-          backgroundImage: `url(${composeBg})`,
-          backgroundSize: '118.0% 123.2%',
-          backgroundPosition: '49.84% 85.43%',
-        }}
-      >
+    <div className="@container relative flex h-full w-full flex-col overflow-auto bg-white text-[#202124]">
+      <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3">
+        <span className="text-sm font-medium text-gray-800">New Message</span>
         <button
           type="button"
           onClick={onLogout}
-          className="absolute top-[2.9%] right-[2%] cursor-pointer font-medium text-[#1a73e8] hover:underline [font-size:max(8px,1.32cqw)]"
+          className="cursor-pointer text-sm font-medium text-[#1a73e8] hover:underline"
         >
           Logout
         </button>
+      </div>
 
-        <div className="absolute top-0 left-[4%] flex h-[4.79%] items-center gap-1">
-          <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 [font-size:max(8px,1.22cqw)]">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 px-4 py-2">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-gray-500">To</span>
+          <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
             {CONTACT_EMAIL}
             <button
               type="button"
@@ -153,145 +148,153 @@ function GmailComposeApp({ guest, onLogout = () => {} }) {
             </button>
           </span>
         </div>
+        <span className="text-xs text-gray-400">Cc Bcc</span>
+      </div>
 
-        <input
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="Subject"
-          aria-label="Subject"
-          className="absolute top-[4.79%] left-[1%] h-[5.01%] w-[45%] bg-white text-[#202124] outline-none placeholder:text-gray-500 [font-size:max(8px,1.32cqw)]"
-        />
+      <input
+        value={subject}
+        onChange={(e) => setSubject(e.target.value)}
+        placeholder="Subject"
+        aria-label="Subject"
+        className="shrink-0 border-b border-gray-100 px-4 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-500"
+      />
+
+      <div
+        ref={bodyRef}
+        contentEditable
+        suppressContentEditableWarning
+        className="scrollbar-classic min-h-[120px] flex-1 overflow-auto px-4 py-3 text-sm whitespace-pre-wrap text-gray-800 outline-none"
+      >
+        {signatureBody(guest)}
+      </div>
+
+      <div className="flex shrink-0 flex-wrap items-center gap-1 border-t border-gray-100 px-3 py-2">
+        <div ref={emojiButtonRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setEmojiPickerOpen((open) => !open)}
+            aria-label="Add emoji"
+            title="Insert emoji"
+            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded hover:bg-gray-100"
+          >
+            🙂
+          </button>
+          {emojiPickerOpen && (
+            <ZoomChatEmojiPicker onSelect={handleEmojiSelect} />
+          )}
+        </div>
         <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          aria-label="Inquiry category"
-          className="absolute top-[5.3%] left-[48%] h-[4%] w-[20%] cursor-pointer border border-gray-300 bg-white text-gray-600 [font-size:max(7px,1.12cqw)]"
+          onChange={(e) => exec('fontName', e.target.value)}
+          defaultValue=""
+          aria-label="Font family"
+          className="cursor-pointer rounded border border-gray-300 bg-white px-1 py-1 text-xs text-gray-600"
         >
-          <option value="">Category</option>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
+          <option value="" disabled>
+            Font
+          </option>
+          {FONT_FAMILIES.map((f) => (
+            <option key={f} value={f}>
+              {f}
             </option>
           ))}
         </select>
-
-        <div
-          ref={bodyRef}
-          contentEditable
-          suppressContentEditableWarning
-          className="scrollbar-classic absolute top-[9.8%] left-[1%] h-[77.5%] w-[97%] overflow-auto text-gray-800 whitespace-pre-wrap outline-none [font-size:max(9px,1.42cqw)]"
+        <select
+          onChange={(e) => exec('fontSize', e.target.value)}
+          defaultValue="3"
+          aria-label="Font size"
+          className="cursor-pointer rounded border border-gray-300 bg-white px-1 py-1 text-xs text-gray-600"
         >
-          {`\n\n—\n${guest?.name ?? ''} <${guest?.email ?? ''}>`}
-        </div>
-
-        <div className="absolute top-[87.4%] left-[1%] flex h-[4.8%] w-[75%] items-center gap-1">
-          <div ref={emojiButtonRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setEmojiPickerOpen((open) => !open)}
-              aria-label="Add emoji"
-              title="Insert emoji — above the Send button"
-              className="flex h-6 w-6 cursor-pointer items-center justify-center hover:bg-gray-100 [font-size:max(10px,1.52cqw)]"
-            >
-              🙂
-            </button>
-            {emojiPickerOpen && (
-              <ZoomChatEmojiPicker onSelect={handleEmojiSelect} />
-            )}
-          </div>
-          <select
-            onChange={(e) => exec('fontName', e.target.value)}
-            defaultValue=""
-            aria-label="Font family"
-            className="cursor-pointer border border-gray-300 bg-white text-gray-600 [font-size:max(7px,1.12cqw)]"
-          >
-            <option value="" disabled>
-              Font
+          {FONT_SIZES.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
             </option>
-            {FONT_FAMILIES.map((f) => (
-              <option key={f} value={f}>
-                {f}
-              </option>
-            ))}
-          </select>
-          <select
-            onChange={(e) => exec('fontSize', e.target.value)}
-            defaultValue="3"
-            aria-label="Font size"
-            className="cursor-pointer border border-gray-300 bg-white text-gray-600 [font-size:max(7px,1.12cqw)]"
+          ))}
+        </select>
+        <input
+          type="color"
+          onChange={(e) => exec('foreColor', e.target.value)}
+          aria-label="Text color"
+          defaultValue="#000000"
+          className="h-7 w-7 cursor-pointer rounded border border-gray-300 p-0.5"
+        />
+        {MARK_BUTTONS.map((btn) => (
+          <button
+            key={btn.label}
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => exec(btn.command)}
+            aria-label={btn.label}
+            title={btn.label}
+            className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded text-sm text-gray-600 hover:bg-gray-100 ${btn.className}`}
           >
-            {FONT_SIZES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-          <input
-            type="color"
-            onChange={(e) => exec('foreColor', e.target.value)}
-            aria-label="Text color"
-            defaultValue="#000000"
-            className="h-6 w-6 cursor-pointer border border-gray-300 p-0.5"
-          />
-          {MARK_BUTTONS.map((btn) => (
-            <button
-              key={btn.label}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => exec(btn.command)}
-              aria-label={btn.label}
-              title={btn.label}
-              className={`flex h-6 w-6 cursor-pointer items-center justify-center text-gray-600 hover:bg-gray-100 [font-size:max(8px,1.32cqw)] ${btn.className}`}
-            >
-              {btn.glyph}
-            </button>
-          ))}
-          {ALIGN_BUTTONS.map((btn) => (
-            <button
-              key={btn.label}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => exec(btn.command)}
-              aria-label={btn.label}
-              title={btn.label}
-              className="flex h-6 w-6 cursor-pointer items-center justify-center text-gray-600 hover:bg-gray-100"
-            >
-              <btn.Icon />
-            </button>
-          ))}
-          {LIST_BUTTONS.map((btn) => (
-            <button
-              key={btn.label}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => exec(btn.command)}
-              aria-label={btn.label}
-              title={btn.label}
-              className="flex h-6 w-6 cursor-pointer items-center justify-center text-gray-600 hover:bg-gray-100 [font-size:max(8px,1.32cqw)]"
-            >
-              {btn.glyph}
-            </button>
-          ))}
-        </div>
+            {btn.glyph}
+          </button>
+        ))}
+        {ALIGN_BUTTONS.map((btn) => (
+          <button
+            key={btn.label}
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => exec(btn.command)}
+            aria-label={btn.label}
+            title={btn.label}
+            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-gray-600 hover:bg-gray-100"
+          >
+            <btn.Icon />
+          </button>
+        ))}
+        {LIST_BUTTONS.map((btn) => (
+          <button
+            key={btn.label}
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => exec(btn.command)}
+            aria-label={btn.label}
+            title={btn.label}
+            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-sm text-gray-600 hover:bg-gray-100"
+          >
+            {btn.glyph}
+          </button>
+        ))}
+      </div>
 
+      <div className="flex shrink-0 items-center justify-between px-3 pb-3">
+        <div className="flex overflow-hidden rounded-full shadow-sm">
+          <button
+            type="button"
+            onClick={handleSend}
+            className="cursor-pointer bg-[#1a73e8] px-6 py-2.5 text-sm font-medium text-white hover:shadow-md"
+          >
+            Send
+          </button>
+          <span
+            aria-hidden="true"
+            className="flex items-center justify-center border-l border-white/20 bg-[#1a73e8] px-3 text-xs text-white"
+          >
+            ▾
+          </span>
+        </div>
         <button
           type="button"
-          onClick={handleSend}
-          aria-label="Send"
-          className="absolute top-[94.05%] left-[1%] h-[4.2%] w-[6.37%] cursor-pointer"
-        />
-
-        {copied && (
-          <div className="absolute top-[80%] left-1/2 -translate-x-1/2 rounded bg-black/80 px-3 py-1.5 text-xs text-white shadow-lg">
-            Copied to clipboard!
-          </div>
-        )}
-        {sent && (
-          <div className="absolute top-[80%] left-1/2 -translate-x-1/2 rounded bg-black/80 px-3 py-1.5 text-xs text-white shadow-lg">
-            Message sent (demo) — real sending is coming soon
-          </div>
-        )}
+          onClick={handleDiscard}
+          aria-label="Discard draft"
+          title="Discard draft"
+          className="cursor-pointer text-gray-500 hover:text-gray-700"
+        >
+          🗑
+        </button>
       </div>
+
+      {copied && (
+        <div className="absolute top-[80%] left-1/2 -translate-x-1/2 rounded bg-black/80 px-3 py-1.5 text-xs text-white shadow-lg">
+          Copied to clipboard!
+        </div>
+      )}
+      {sent && (
+        <div className="absolute top-[80%] left-1/2 -translate-x-1/2 rounded bg-black/80 px-3 py-1.5 text-xs text-white shadow-lg">
+          Message sent (demo) — real sending is coming soon
+        </div>
+      )}
     </div>
   )
 }

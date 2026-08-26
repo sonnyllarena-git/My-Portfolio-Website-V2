@@ -8,6 +8,7 @@ import { iconImages } from '../assets/icons/index.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function IconGlyph({ id, icon }) {
+  if (typeof icon !== 'string' && icon !== undefined) return icon
   return iconImages[id] ? (
     <img src={iconImages[id]} alt="" className="h-6 w-6 object-contain" />
   ) : (
