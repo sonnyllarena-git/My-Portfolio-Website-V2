@@ -40,13 +40,13 @@ const panelMotion = {
 
 function StartMenuPowerFlyout({ onSelect }) {
   return (
-    <div className="absolute bottom-12 inset-x-0 z-30 rounded-lg border border-white/10 bg-[#2a2a2a] p-1 shadow-xl">
+    <div className="absolute bottom-12 inset-x-0 z-30 border border-white/10 bg-[#2a2a2a] p-1 shadow-xl">
       {POWER_OPTIONS.map(({ label, Icon }) => (
         <button
           key={label}
           type="button"
           onClick={onSelect}
-          className="flex w-full items-center gap-3 rounded px-2 py-1.5 text-left text-sm text-white hover:bg-white/10"
+          className="flex w-full items-center gap-3 px-2 py-1.5 text-left text-sm text-white hover:bg-white/10"
         >
           <Icon className="h-4 w-4 shrink-0" />
           {label}
@@ -88,7 +88,10 @@ function StartMenu({
       }
     >
       <div className="w-14 shrink-0 border-r border-white/10" />
-      <div className="group absolute inset-y-0 left-0 z-30 flex w-14 flex-col justify-end gap-1 overflow-hidden border-r border-white/10 bg-[#1f1f1f] py-4 transition-[width] duration-200 ease-out hover:w-[340px]">
+      <div
+        onMouseLeave={() => setIsPowerOpen(false)}
+        className={`group absolute inset-y-0 left-0 z-30 flex flex-col justify-end gap-1 overflow-hidden border-r border-white/10 bg-[#1f1f1f] py-4 transition-[width] duration-200 ease-out ${isPowerOpen ? 'w-[340px]' : 'w-14 hover:w-[340px]'}`}
+      >
         <button
           type="button"
           onClick={() => handleOpen('settings')}

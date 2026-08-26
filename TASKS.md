@@ -5303,6 +5303,27 @@ showing the empty "Apps you open will show up here." state on first load — mat
 
 ---
 
+## PHASE 89 — START MENU: POWER FLYOUT SQUARE CORNERS + HOVER-OUT CLOSE
+
+_Sonny asked for square (not rounded) corners on the Power flyout, then caught a real bug live:
+moving the mouse off the rail while the flyout was open left a clipped, garbled sliver of it
+behind (the rail's real CSS `:hover` had collapsed back to 56px, independent of the flyout's own
+open/closed React state, so `overflow-hidden` cut it down) — the exact failure mode noted as a
+risk in P526 but not fixed there since it only reproduces by actually moving the mouse away, not
+by clicking._
+
+- [x] **P528** — In `src/components/StartMenu.jsx`: drop `rounded-lg`/`rounded` from
+      `StartMenuPowerFlyout`'s container/buttons (square corners); force the footer rail's width to
+      `w-[340px]` whenever `isPowerOpen` is true instead of relying only on `hover:w-[340px]`, so it
+      can never be narrower than the flyout while open; add `onMouseLeave={() =>
+      setIsPowerOpen(false)}` on the rail so moving the mouse off it closes the flyout instead of
+      leaving it clipped.
+      **Pass condition:** flyout corners are square; clicking Power then moving the mouse fully off
+      the rail closes the flyout cleanly (no clipped/garbled remnant); confirmed live via Playwright
+      screenshots before/after mouse-out; `npm run verify` passes.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.
