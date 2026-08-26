@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import loginBackground from '../assets/login ui/gmail login ui.png'
+import { useEffect, useState } from 'react'
+import emailLoginBg from './gmail/assets/gmail email login.jpg'
+import nameLoginBg from './gmail/assets/gmail name login.jpg'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -7,98 +8,86 @@ function GmailGuestGate({ onSubmit, onCancel }) {
   const [step, setStep] = useState('email')
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const [emailError, setEmailError] = useState('')
+  const [error, setError] = useState('')
+  const [focused, setFocused] = useState(false)
 
-  const emailFilled = email.trim().length > 0
-  const nameFilled = name.trim().length > 0
-  const canContinue = step === 'email' ? emailFilled : nameFilled
-
-  function handleEmailSubmit(e) {
-    e.preventDefault()
-    if (!emailFilled) return
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setEmailError('Enter a valid email address.')
-      return
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') onCancel()
     }
-    setEmailError('')
-    setStep('name')
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onCancel])
+
+  const value = step === 'email' ? email : name
+
+  function handleChange(e) {
+    if (step === 'email') setEmail(e.target.value)
+    else setName(e.target.value)
+    if (error) setError('')
   }
 
-  function handleNameSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault()
-    if (!nameFilled) return
-    onSubmit({ name: name.trim(), email: email.trim() })
+    const trimmed = value.trim()
+    if (!trimmed) {
+      setError(
+        step === 'email' ? 'Enter an email address.' : 'Enter your name.',
+      )
+      return
+    }
+    if (step === 'email' && !EMAIL_PATTERN.test(trimmed)) {
+      setError('Enter a valid email address.')
+      return
+    }
+    if (step === 'email') {
+      setError('')
+      setStep('name')
+      return
+    }
+    onSubmit({ name: trimmed, email: email.trim() })
   }
 
   return (
-    <div
-      onClick={(e) => e.stopPropagation()}
-      onContextMenu={(e) => e.stopPropagation()}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-    >
+    <div className="flex h-full w-full items-center justify-center bg-[#1a1c22] p-2">
       <form
-        onSubmit={step === 'email' ? handleEmailSubmit : handleNameSubmit}
+        onSubmit={handleSubmit}
         noValidate
-        className="relative w-full max-w-[340px] bg-cover bg-center bg-no-repeat"
+        className="relative w-full bg-cover bg-center bg-no-repeat shadow-2xl"
         style={{
-          backgroundImage: `url(${loginBackground})`,
-          aspectRatio: '500 / 889',
+          backgroundImage: `url(${step === 'email' ? emailLoginBg : nameLoginBg})`,
+          aspectRatio: '1920 / 1056',
+          containerType: 'inline-size',
         }}
       >
-        <button
-          type="button"
-          onClick={onCancel}
-          aria-label="Close"
-          className="absolute left-[80%] top-[19%] h-[7%] w-[14%] cursor-pointer rounded-full hover:bg-black/5"
+        <input
+          key={step}
+          autoFocus
+          type={step === 'email' ? 'email' : 'text'}
+          value={value}
+          onChange={handleChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          aria-label={step === 'email' ? 'Email' : 'Name'}
+          style={{ caretColor: '#1a73e8' }}
+          className="absolute top-[39.87%] left-[51.93%] h-[6.06%] w-[25.21%] bg-transparent text-gray-800 outline-none [font-size:max(9px,1.78cqw)]"
         />
-
-        {step === 'email' ? (
-          <input
-            autoFocus
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              if (emailError) setEmailError('')
-            }}
-            placeholder="Enter your email"
-            aria-label="Enter your email"
-            className={`absolute left-[32.4%] top-[56%] h-[5%] w-[42.4%] rounded-sm border bg-white px-2 text-gray-800 outline-none [font-size:clamp(8px,2.4vw,12px)] ${
-              emailError ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-        ) : (
-          <input
-            autoFocus
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-            aria-label="Enter your name"
-            className="absolute left-[32.4%] top-[56%] h-[5%] w-[42.4%] rounded-sm border border-gray-300 bg-white px-2 text-gray-800 outline-none [font-size:clamp(8px,2.4vw,12px)]"
+        {!focused && value.length === 0 && (
+          <span
+            aria-hidden="true"
+            className="terminal-cursor pointer-events-none absolute top-[41.5%] left-[52.3%] h-[3.2%] w-px bg-[#1a73e8]"
           />
         )}
 
         <button
           type="submit"
-          disabled={!canContinue}
-          aria-label={step === 'email' ? 'Next' : 'Login'}
-          className={`absolute left-[32%] top-[60.5%] h-[4.6%] w-[43.2%] rounded-sm text-center font-medium [font-size:clamp(8px,2.2vw,12px)] ${
-            step === 'name'
-              ? canContinue
-                ? 'bg-[#4386f4] text-white'
-                : 'bg-gray-300 text-gray-400'
-              : !emailFilled
-                ? 'bg-white/50'
-                : ''
-          }`}
-        >
-          {step === 'name' ? 'Login' : ''}
-        </button>
+          aria-label={step === 'email' ? 'Next' : 'Sign in'}
+          className="absolute top-[61.46%] left-[72.92%] h-[3.88%] w-[4.22%] cursor-pointer rounded-full"
+        />
 
-        {emailError && (
-          <p className="absolute left-[32%] top-[66%] w-[43.2%] text-center text-xs text-red-300 [font-size:clamp(7px,2vw,10px)]">
-            {emailError}
+        {error && (
+          <p className="absolute top-[47%] left-[51.93%] w-[25.21%] text-red-600 [font-size:max(8px,1.33cqw)]">
+            {error}
           </p>
         )}
       </form>

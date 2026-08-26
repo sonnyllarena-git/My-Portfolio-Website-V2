@@ -53,7 +53,8 @@ import {
 const CLOSE_ANIMATION_MS = 180
 
 const WINDOW_PREVIEW_SIZES = {
-  gmail: [700, 550],
+  gmail: [1000, 550],
+  'gmail-login': [900, 539],
   'contact-info': [650, 500],
   paint: [1200, 800],
   'visitor-arts': [1200, 800],
@@ -95,7 +96,10 @@ function renderPreviewBody(w, gmailGuest) {
         onClose={() => {}}
       />
     )
-  if (w.id === 'gmail') return <GmailComposeApp guest={gmailGuest} />
+  if (w.id === 'gmail-login')
+    return <GmailGuestGate onSubmit={() => {}} onCancel={() => {}} />
+  if (w.id === 'gmail')
+    return <GmailComposeApp guest={gmailGuest} onLogout={() => {}} />
   if (w.id === 'contact-info') return <ContactInfoApp />
   if (w.id === 'paint') return <PaintApp onOpenGallery={() => {}} />
   if (w.id === 'visitor-arts') return <VisitorArtsApp onOpenPaint={() => {}} />
@@ -128,7 +132,6 @@ function Desktop({ onExitToBoot }) {
   const [refreshToken, setRefreshToken] = useState(0)
   const [iconSize, setIconSize] = useState('medium')
   const [sortBy, setSortBy] = useState('name')
-  const [gmailGateOpen, setGmailGateOpen] = useState(false)
   const [gmailGuest, setGmailGuest] = useState(null)
   const [gamesGateOpen, setGamesGateOpen] = useState(false)
   const [gamesLoadingName, setGamesLoadingName] = useState(null)
@@ -293,7 +296,7 @@ function Desktop({ onExitToBoot }) {
 
   function handleIconOpen(id) {
     if (id === 'gmail' && !gmailGuest) {
-      setGmailGateOpen(true)
+      openApp('gmail-login')
       return
     }
     if (id === 'games' && !visitorName) {
@@ -492,6 +495,27 @@ function Desktop({ onExitToBoot }) {
               </Window>
             )
           }
+          if (w.id === 'gmail-login') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="✉️"
+                title="Sign in"
+                defaultWidth={900}
+                defaultHeight={539}
+              >
+                <GmailGuestGate
+                  onSubmit={(guest) => {
+                    setGmailGuest(guest)
+                    shared.onClose()
+                    openApp('gmail')
+                  }}
+                  onCancel={shared.onClose}
+                />
+              </Window>
+            )
+          }
           if (w.id === 'gmail') {
             return (
               <Window
@@ -499,10 +523,17 @@ function Desktop({ onExitToBoot }) {
                 {...shared}
                 icon="✉️"
                 title="New Message"
-                defaultWidth={700}
+                defaultWidth={1000}
                 defaultHeight={550}
               >
-                <GmailComposeApp guest={gmailGuest} />
+                <GmailComposeApp
+                  guest={gmailGuest}
+                  onLogout={() => {
+                    setGmailGuest(null)
+                    shared.onClose()
+                    openApp('gmail-login')
+                  }}
+                />
               </Window>
             )
           }
@@ -804,11 +835,18 @@ function Desktop({ onExitToBoot }) {
                 ? 'Settings'
                 : w.id === 'projects'
                   ? 'Projects'
-                  : w.id),
+                  : w.id === 'gmail-login'
+                    ? 'Sign in'
+                    : w.id),
             icon:
               icon?.icon === 'pdf'
                 ? '📄'
-                : (icon?.icon ?? (w.id === 'projects' ? '🗃️' : undefined)),
+                : (icon?.icon ??
+                  (w.id === 'projects'
+                    ? '🗃️'
+                    : w.id === 'gmail-login'
+                      ? '✉️'
+                      : undefined)),
             isMinimized: w.isMinimized,
             preview: renderPreviewBody(w, gmailGuest),
             naturalWidth,
@@ -827,16 +865,6 @@ function Desktop({ onExitToBoot }) {
         <PowerTransitionOverlay
           action={powerAction}
           onComplete={onExitToBoot}
-        />
-      )}
-      {gmailGateOpen && (
-        <GmailGuestGate
-          onSubmit={(guest) => {
-            setGmailGuest(guest)
-            setGmailGateOpen(false)
-            openApp('gmail')
-          }}
-          onCancel={() => setGmailGateOpen(false)}
         />
       )}
       {gamesGateOpen && (

@@ -15,9 +15,21 @@ flyout's width alignment — complete as of 2026-08-26. Phase 88 (P527) — seed
 "Recently used" grid with 6 default apps instead of starting empty — complete as of 2026-08-26.
 Phase 91 (P530-P532) — gave every window's minimize/maximize/close buttons the same flush,
 square-cornered "seamless" chrome Command Prompt already had — complete as of 2026-08-26. (Phases
-89-90 in between belong to a concurrent session, not this thread.)
-**Last verified:** 2026-08-26 — `npm run verify` → PASS (0 errors, 11 pre-existing-pattern
-warnings, 62 tests)
+89-90 in between belong to a concurrent session, not this thread.) P542 — rebuilt the Gmail guest
+login gate (`GmailGuestGate.jsx`) from Sonny's reference screenshots as real DOM instead of a
+background-image overlay, sized to match the Gmail compose window (700×550) — complete as of
+2026-08-26. P543 — Sonny replaced the references and reversed P542: `GmailGuestGate.jsx` rebuilt
+back to a literal image-background overlay against updated screenshots, and `GmailComposeApp.jsx`
+rebuilt the same way with a real working formatting toolbar (font/size/color/bold/italic/
+underline/align/lists/emoji) and a working Logout — complete as of 2026-08-26. P544 — fixed a real
+image-alignment bug in both Gmail components (the crop math assumed the window's full size, not
+its actual content area under the title bar) via an `aspectRatio`-locked, centered inner box, and
+gave the login gate real Minimize/Maximize/Close + dragging by routing it through the shared
+`Window`/`react-rnd` pipeline instead of an ad hoc modal — complete as of 2026-08-26. P545 — fixed
+overlay text in both Gmail components being permanently pinned at its `clamp()` ceiling instead of
+scaling with the window, by switching to container-query (`cqw`) units tied to each image's own
+box — complete as of 2026-08-26.
+**Last verified:** 2026-08-26 — `npm run verify` → PASS (24/24 test files, 62/62 tests)
 **Verify command:** `npm run verify`
 
 ---
@@ -5537,6 +5549,145 @@ previously required a click before anything played at all._
       **Pass condition:** confirmed via Playwright hover + zoomed-crop screenshot on the paused
       Sign In frame — glow is visibly present, borderless, and doesn't intrude into the button's
       own fill; `npm run verify` passes (24/24 test files, 62/62 tests).
+- [x] **P542** — Rebuilt `src/components/GmailGuestGate.jsx` from scratch against Sonny's two
+      reference screenshots (`src/components/gmail/assets/gmail email login.jpg` and
+      `gmail name login.jpg`): replaced the old single-background-PNG overlay (tiny 340px card,
+      clamp()-scaled text) with real DOM/Tailwind markup recreating a fake Chrome window — tab
+      strip with minimize/maximize/close, a nav/address bar (disabled back/forward, working
+      refresh, `https://gmail.com` pill with a hand-built inline-SVG Gmail favicon since the 📧
+      emoji glyph isn't guaranteed to render, account avatar, kebab menu) — over a light
+      blue-gray page holding the white sign-in card (inline-SVG 4-color Google "G" logo, "Sign
+      in" heading, guest-facing copy, floating-label input, Guest-mode helper text, Next/Sign in
+      button) and the footer (language + Help/Privacy/Terms + copyright line). Default size now
+      matches the Gmail compose window (`700×550`, via `sm:h-[550px]` + `max-w-[700px]`, with
+      `max-h-[92vh] overflow-y-auto` so it degrades to scrollable rather than clipped on small
+      viewports) instead of the old independent 340px portrait card. Added `cursor-pointer` to
+      every real button (close/minimize/maximize/refresh/avatar/kebab/submit) and
+      `disabled:cursor-not-allowed` on the submit button. Added a decorative blinking caret
+      (reusing the existing `.terminal-cursor` keyframe from `src/index.css`, the same one
+      `TerminalApp.jsx` uses) inside each floating-label input, shown only while the field is
+      idle and empty so it doesn't fight the browser's own native caret once focused/typed-in.
+      Per [[feedback_mockup_sizing]], used normal web text sizes (`text-3xl` heading, `text-sm`
+      body) rather than literally scaling the screenshot's proportions into the smaller window.
+      **Pass condition:** confirmed live via Playwright through the full boot sequence — email
+      step and name step both visually match the reference layout/colors, Next/Sign in buttons
+      show `cursor: not-allowed` while disabled and `pointer` once enabled, submitting opens the
+      real `GmailComposeApp` pre-filled with the guest's name/email, zero console errors at any
+      step; `npm run verify` passes (24/24 test files, 62/62 tests).
+- [x] **P543** — Sonny replaced the reference screenshots and reversed course on P542: rebuilt
+      `GmailGuestGate.jsx` back to a literal image-background overlay (deleting the P542 fake-DOM
+      chrome entirely) against his updated `gmail email login.jpg`/`gmail name login.jpg`
+      (1920×1056 real Chrome screenshots, his own browser chrome/bookmarks kept in verbatim per
+      his explicit confirmation), pixel-calibrated via an in-browser canvas `getImageData`
+      color-boundary scan (same technique as P538's boot-video button) cross-checked against an
+      independent Plan-agent scan — both landed within a few px. Login card now sizes to the
+      image's native `1920/1056` aspect ratio (`max-w-[900px]`) instead of P542's fixed 700×550,
+      since the two no longer reconcile. Added empty-field validation ("Enter an email address."/
+      "Enter your name.") alongside the existing invalid-format message — required dropping the
+      submit button's `disabled` state (the baked button is always drawn blue/enabled, and a
+      disabled button never fires `onClick` to surface the new errors). No baked close control
+      exists in the new images, so cancel now happens via a backdrop click or `Escape`, both
+      wired to `onCancel`. Kept the `.terminal-cursor` blinking-caret polish from P542.
+      Rebuilt `GmailComposeApp.jsx` the same way against his updated `gmail compose app.jpg`
+      (2000×1056, a real dimmed Gmail inbox behind a real "New Message" popup covering ~85% of
+      the frame) — shown via a CSS `background-size`/`background-position` "sprite" crop
+      (`118.0% 123.2%` / `49.84% 85.43%`) rather than a physically-cropped asset, since this repo
+      has no image-processing dependency and CLAUDE.md §2 bans adding one without sign-off; the
+      crop deliberately excludes the image's own baked "New Message"/"Logout" title-bar row since
+      `Window.jsx` (`Desktop.jsx` ~495-508) already renders a real one — duplicating it would show
+      "New Message" twice. Added a real working formatting toolbar in the blank pill the
+      reference reserves for it: extended the existing `TOOLBAR`/`exec()` `execCommand` helper
+      with font family, font size (Gmail's real Small/Normal/Large/Huge legacy-scale mapping),
+      text color (native color input), and three new alignment buttons (hand-built inline SVGs,
+      no clean single-glyph unicode existed); reused `bold`/`italic`/`underline`/list commands
+      already in place; reused `zoomChat/ZoomChatEmojiPicker.jsx` as-is for emoji (inserts via
+      `exec('insertText', emoji)`), positioned first in the toolbar row — directly above Send —
+      after Sonny clarified "add emoji at top of the send button" meant spatially above Send, not
+      right-pushed to the toolbar's far edge (first attempt used `ml-auto` and looked broken, a
+      large dead gap before the emoji button). Subject field's real `<input>` gets an opaque white
+      background instead of the login fields' transparent one, since (unlike Email/Name's
+      persistent floating labels) real Gmail's "Subject" is disappearing placeholder text — a
+      transparent overlay would show the baked word bleeding through anything typed. To field
+      stays locked to `CONTACT_EMAIL` (only Subject/body were asked to be typable). Added a new
+      `onLogout` prop, following the exact existing convention `GamesApp`/`BlogApp` already use
+      (`Desktop.jsx` already had `onLogout={() => { logout(); shared.onClose() }}` for both) —
+      Gmail's version additionally reopens the guest gate per Sonny's explicit mid-task
+      clarification: `() => { setGmailGuest(null); shared.onClose(); setGmailGateOpen(true) }`.
+      `Window`'s `defaultWidth`/`defaultHeight` (and `WINDOW_PREVIEW_SIZES.gmail`) moved from
+      `700×550` to `1000×505` to roughly match the popup crop's own `≈1.98:1` aspect ratio;
+      confirmed live that resizing/maximizing away from that ratio only stretches thin baked
+      border lines (the crop is mostly plain white) rather than anything visually jarring, so — as
+      planned — no `lockAspectRatio` was added to the shared `Window.jsx`. Per Sonny's separate
+      mid-task instruction, squared off the login card's corners (dropped `rounded-lg`) to match
+      this codebase's established square-cornered window convention (Phase 91, P530-P532).
+      **Pass condition:** confirmed live via Playwright through the full boot sequence — both
+      login steps visually match their reference images; empty/invalid/valid submissions on both
+      steps show the right message or advance correctly; Escape and backdrop-click both cancel,
+      clicking inside the card does not; every toolbar control visibly changes the compose body's
+      real formatting (bold/italic/underline toggle confirmed, font family → Georgia and size →
+      x-large and color → red all confirmed via `innerHTML` after selecting existing text, both
+      list types toggle, align-right confirmed via `text-align: right` in the resulting markup,
+      emoji inserts at the cursor); Logout clears the guest, closes the compose window, and
+      reopens the sign-in gate in one click; zero console errors at every step; `npm run verify`
+      passes (24/24 test files, 62/62 tests).
+- [x] **P544** — Two follow-ups on P543. First, a real bug: the `gmail compose app.jpg` crop
+      (`backgroundSize: 118.0% 123.2%` / `backgroundPosition: 49.84% 85.43%`, derived assuming
+      the container's own aspect ratio equals the crop's `1695/857`) was silently wrong — the
+      math was computed against the _whole window's_ `1000×550`, but `Window.jsx` eats 40px+
+      for its own title bar before `GmailComposeApp` ever renders, so the actual content-area
+      ratio it was painted into never matched what the percentages assumed, misaligning the
+      image at every size. Root-caused and fixed by wrapping both `GmailComposeApp.jsx` and
+      `GmailGuestGate.jsx`'s image in an `aspectRatio`-locked inner box (`1695/857` and
+      `1920/1056` respectively), centered inside a `flex items-center justify-center` outer
+      div — the image is now guaranteed pixel-accurate regardless of what the surrounding
+      window frame does; resizing/maximizing letterboxes instead of drifting out of alignment
+      (confirmed live, screenshotted at default size and maximized for both).
+      Second, Sonny asked for the login gate to get real minimize/maximize/close controls and
+      dragging — the exact same three controls (and the same labels) `Window.jsx` already gives
+      every other app. Rather than reinvent that, routed `GmailGuestGate` through the real
+      `Window`/`react-rnd` pipeline instead of the ad hoc `gmailGateOpen` boolean + raw
+      `fixed inset-0` modal it used before: added a `'gmail-login'` pseudo-app id through
+      `openApp`/`closeApp` (same mechanism every real app already uses, `desktopIcons.some(...)`
+      naturally excludes it from "recently used" since it isn't a real icon), `handleIconOpen`
+      now calls `openApp('gmail-login')` instead of `setGmailGateOpen(true)`, added the
+      `w.id === 'gmail-login'` branch alongside the existing `gmail` one (icon `✉️`, title
+      "Sign in"), added matching entries to `WINDOW_PREVIEW_SIZES` and the Taskbar label/icon
+      fallback ternaries (mirroring the existing `'projects'`/`'settings'` special-cases), and
+      deleted the old boolean state and its raw render block entirely. `GmailGuestGate.jsx`
+      dropped the backdrop-click-to-cancel (no backdrop now — it's real window content) and
+      `stopPropagation` wrapper (`Window.jsx`'s own `motion.div` already stops context-menu
+      propagation for everything it wraps); kept the `Escape`-to-cancel listener since it's
+      still a reasonable extra. `onCancel`/`onLogout` now just point at `shared.onClose` /
+      `openApp('gmail-login')`, reusing the exact same wiring pattern as every other window.
+      **Pass condition:** confirmed live via Playwright — login gate opens with a real title bar
+      showing "Sign in" plus working Minimize/Maximize/Close buttons, dragging the title bar
+      moves the window, minimizing hides it to the taskbar; both images render with no visible
+      distortion at default size and after maximizing; re-ran the full P543 validation-error and
+      toolbar-formatting suites against the restructured components with zero regressions and
+      zero console errors; `npm run verify` passes (24/24 test files, 62/62 tests).
+- [x] **P545** — Sonny caught a second real bug from a screenshot comparison: typed/overlay text
+      in both `GmailGuestGate.jsx` and `GmailComposeApp.jsx` stayed a fixed size while the
+      window was resized/maximized, drifting further out of sync with the baked image text
+      (which always scales exactly with the image, since it's raster pixels) the bigger the
+      window got. Root cause: every text element used `clamp(min,Xvw,max)`, and the chosen `max`
+      values were miscalibrated low enough that at any normal window width the `vw` term already
+      exceeded the cap — so in practice these were never actually scaling, just permanently
+      pinned at their ceiling, `vw` growth or not. Fixed properly rather than just raising the
+      cap: added `containerType: 'inline-size'` to each image's `aspectRatio`-locked box (from
+      P544) and switched every text size from `clamp(min,Xvw,max)` to `max(minPx,Xcqw)` —
+      container query units resolve as a percentage of that specific box's own rendered width,
+      not the viewport, so text now tracks the image pixel-for-pixel at any size with no
+      artificial ceiling; the `max(minPx, …)` floor only exists to stop text from vanishing if a
+      window is shrunk very small. Left icon/control chrome (toolbar button hit-targets, dropdown
+      widths) at their fixed `h-6 w-6` sizing on purpose — that's UI chrome, not baked-image text,
+      and real toolbars don't scale with zoom either; only fixed what was actually asked (text).
+      **Pass condition:** confirmed live via Playwright — measured the login email input's
+      `getComputedStyle().fontSize` at default window width (880px, 15.66px font) and again after
+      maximizing (1880px, 33.46px font): box-width ratio 2.136 vs font-size ratio 2.136, an exact
+      match (proportional scaling, not the old fixed-cap behavior); screenshotted both sizes and
+      visually confirmed the typed text now reads at the same relative size as the baked "Email"
+      label at both; zero console errors; `npm run verify` passes (24/24 test files, 62/62
+      tests).
 
 ---
 
