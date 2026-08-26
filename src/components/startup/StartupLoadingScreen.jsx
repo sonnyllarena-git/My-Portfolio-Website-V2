@@ -1,23 +1,46 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import bootVideo from './assets/loading-screen-v2.mp4'
 import { useUnmutedAutoplay } from './useUnmutedAutoplay.js'
 
 const MAX_PLAYBACK_MS = 10000
+const PAUSE_AT_S = 7.5
 
 function StartupLoadingScreen({ onSignIn }) {
   const { videoRef, needsClickToPlay, retryPlay } = useUnmutedAutoplay()
   const [isPlaying, setIsPlaying] = useState(false)
-  const [hasEnded, setHasEnded] = useState(false)
+  const [isPausedForClick, setIsPausedForClick] = useState(false)
+  const hasPausedAtMarkerRef = useRef(false)
+  const hasFinishedRef = useRef(false)
+
+  const finish = useCallback(() => {
+    if (hasFinishedRef.current) return
+    hasFinishedRef.current = true
+    onSignIn()
+  }, [onSignIn])
 
   useEffect(() => {
-    if (!isPlaying || hasEnded) return
-    const safetyTimeout = setTimeout(() => setHasEnded(true), MAX_PLAYBACK_MS)
+    if (!isPlaying) return
+    const safetyTimeout = setTimeout(finish, MAX_PLAYBACK_MS)
     return () => clearTimeout(safetyTimeout)
-  }, [isPlaying, hasEnded])
+  }, [isPlaying, finish])
 
   function handleScreenClick(e) {
     e.stopPropagation()
     if (needsClickToPlay) retryPlay()
+  }
+
+  function handleResumeClick(e) {
+    e.stopPropagation()
+    videoRef.current?.play()
+    setIsPausedForClick(false)
+  }
+
+  function handleTimeUpdate(e) {
+    if (hasPausedAtMarkerRef.current) return
+    if (e.target.currentTime < PAUSE_AT_S) return
+    hasPausedAtMarkerRef.current = true
+    e.target.pause()
+    setIsPausedForClick(true)
   }
 
   return (
@@ -40,21 +63,23 @@ function StartupLoadingScreen({ onSignIn }) {
           autoPlay
           playsInline
           onPlay={() => setIsPlaying(true)}
-          onEnded={() => setHasEnded(true)}
-          onError={() => setHasEnded(true)}
+          onPause={() => setIsPlaying(false)}
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={finish}
+          onError={finish}
         />
-        {hasEnded && (
+        {needsClickToPlay && (
+          <p className="absolute inset-x-0 bottom-[8%] text-center text-sm text-white/70">
+            Click anywhere to start
+          </p>
+        )}
+        {isPausedForClick && (
           <button
             type="button"
-            onClick={onSignIn}
+            onClick={handleResumeClick}
             aria-label="Sign in"
-            className="absolute top-[57.5%] left-[44%] h-[5.5%] w-[12%] cursor-pointer rounded-md"
+            className="absolute top-[57.5%] left-[45.5%] h-[4%] w-[9%] cursor-pointer rounded-md transition-shadow duration-200 hover:shadow-[0_0_14px_rgba(64,120,255,0.4)]"
           />
-        )}
-        {needsClickToPlay && !hasEnded && (
-          <p className="absolute inset-x-0 bottom-10 text-center text-sm text-white/70 [text-shadow:0_0_6px_rgba(0,0,0,0.9)]">
-            Click anywhere to continue
-          </p>
         )}
       </div>
     </div>

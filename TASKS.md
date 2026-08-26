@@ -5404,10 +5404,139 @@ buttons every other window used. Split by file since each is an independent, sel
       to match the red-on-hover affordance every other window's close button already has.
       **Pass condition:** Zoom Chat's caption buttons are flush and square-cornered with a
       red-hover Close, matching the rest of the app; `npm run verify` passes.
+- [x] **P533** — Sonny clarified "make their edges pointed" meant the window frames themselves,
+      not just the caption buttons: drop `rounded-lg` from `Window.jsx`'s default (non-`square`)
+      frame className and from `ResumeWindow.jsx`'s frame className, so every window's outer
+      corners are square like Command Prompt's, not just its buttons.
+      **Pass condition:** no window (Projects, Store, Resume, Zoom Chat, etc.) has rounded outer
+      corners any more; `npm run verify` passes.
 
 Blog's window was left out of scope — its minimize/maximize/restore controls live inside a
 dropdown menu (`BlogUserMenu`, opened from the avatar in `BlogTopNav`), not as a visible
 caption-button row, so there was nothing there resembling the Command Prompt pattern to restyle.
+
+---
+
+## PHASE 92 — REMOVE THE SECOND ("SIGNING IN") LOADING SCREEN
+
+_Sonny swapped in a new boot video (`startup screen(1).mp4`, replacing `loading-screen-v2.mp4`)
+and then asked to remove the second loading screen entirely — clicking Sign In on the boot video
+was jumping into a separate `SigningInScreen` video before finally reaching the desktop; he wants
+clicking straight through to the desktop instead, with nothing to accidentally jump into._
+
+- [x] **P534** — In `src/App.jsx`, drop the `'signing-in'` phase branch and its `SigningInScreen`
+      import; `StartupLoadingScreen`'s `onSignIn` now calls `setPhase('desktop')` directly instead
+      of `setPhase('signing-in')`. Delete the now-dead `src/components/startup/SigningInScreen.jsx`
+      and its video asset `src/components/startup/assets/loading-screen-2.mp4` (confirmed nothing
+      else imports either).
+      **Pass condition:** clicking Sign In on the boot video goes straight to the desktop with no
+      second video in between; confirmed live via Playwright (video count is 0 and the taskbar's
+      Start button is visible immediately after the click); `npm run verify` passes.
+
+---
+
+## PHASE 93 — BOOT VIDEO: MID-PLAYBACK SIGN-IN GATE, PLAYS INSTANTLY
+
+_Sonny wants the boot video to pause exactly where the "Sign in" button appears on screen (8.2s
+into `startup screen(1).mp4`), require a click on that specific button area (not anywhere on
+screen) to continue, and the video to start playing immediately with no visible "click to
+continue" prompt at any point — including the pre-existing autoplay-blocked fallback, which
+previously required a click before anything played at all._
+
+- [x] **P535** — In `src/components/startup/StartupLoadingScreen.jsx`: add an `onTimeUpdate`
+      handler that pauses the video the first time `currentTime` crosses `PAUSE_AT_S = 8.2` and
+      sets `isPausedForClick`; render a `Sign in`-labeled button positioned/sized to the actual
+      button graphic in the video frame (measured via a canvas pixel scan of the paused frame:
+      `top-[57.5%] left-[45.5%] h-[4%] w-[9%]`, replacing the old, differently-calibrated
+      coordinates left over from the removed P534 button) whose `onClick` resumes playback; remove
+      the "Click anywhere to continue" hint text and whole-screen resume-click entirely — the
+      resume gesture is now scoped to that one button. `onEnded`/`onError`/a 10s safety timeout
+      (reset via a new `onPause` handler so it doesn't fire mid-pause) all call the same `finish()`
+      (wrapped in `useCallback` to satisfy `exhaustive-deps`) straight into `onSignIn`, so nothing
+      else is needed at the end of the video.
+      **Pass condition:** the video pauses within a frame or two of 8.2s; clicking anywhere other
+      than the Sign in button does nothing; clicking the button resumes playback and the video
+      plays through to the desktop with no further prompt; confirmed live via Playwright, including
+      a canvas pixel scan proving the button's measured bounds actually match the video's visible
+      button graphic; `npm run verify` passes.
+- [x] **P536** — In `src/components/startup/useUnmutedAutoplay.js`: when the initial unmuted
+      `play()` is rejected (the browser's autoplay-without-gesture block), fall back to playing
+      **muted** immediately (browsers always allow muted autoplay) instead of leaving the video
+      frozen waiting for a click; add an `unmute()` export, called from
+      `StartupLoadingScreen.jsx`'s screen-click and Sign-in-button-click handlers, so sound is
+      restored transparently on the first real user gesture instead of requiring a dedicated
+      "click to continue" prompt.
+      **Pass condition:** with no user interaction at all, the video's `currentTime` is already
+      advancing within ~1.5s of page load (`muted: true`); after the Sign in button click,
+      `muted: false`; confirmed live via Playwright with zero clicks before the pause point;
+      `npm run verify` passes.
+- [x] **P537** — Sonny corrected P536: he doesn't want the muted-autoplay fallback at all — real
+      audio matters more than guaranteed instant playback. Reverted
+      `useUnmutedAutoplay.js`/`StartupLoadingScreen.jsx` to only ever attempt unmuted `play()`
+      (dropping the `video.muted = true` fallback branch and the now-unused `unmute()` export/
+      calls); if a browser blocks that, the video simply waits for any click (silently, no visible
+      prompt, per the earlier "no click anywhere to continue text" request) rather than starting
+      muted.
+      **Pass condition:** the video's `muted` property is `false` at every point, including before
+      any click, confirmed live via Playwright; `npm run verify` passes.
+- [x] **P538** — Swapped in Sonny's final boot video (`startup video final.mp4`, from
+      `src/components/windows startup/assets/`, replacing
+      `src/components/startup/assets/loading-screen-v2.mp4`, same filename so no import changes
+      needed) — confirmed H.264 (`avc1`) via the byte-scan technique from the earlier video-swap
+      lesson. Same underlying Sign In screen content as the previous export (identical measured
+      button color/bounds), but a different trim: the boot-logo → Sign In cut now happens between
+      7.40s–7.50s instead of ~8.2s, found by seeking `video.currentTime` directly across the new
+      11.517s duration and screenshotting until the frame flipped. Updated
+      `StartupLoadingScreen.jsx`'s `PAUSE_AT_S` from `8.2` to `7.5`; left the Sign
+      in button's `top-[57.5%] left-[45.5%] h-[4%] w-[9%]` bounds unchanged since the canvas pixel
+      scan reproduced the exact same color-transition percentages as before.
+      **Pass condition:** video plays immediately unmuted (or silently waits for a click if
+      blocked, never muted); pauses cleanly within a frame or two of 7.5s on a fully-settled Sign
+      In frame; only the Sign in button area resumes it (confirmed an off-target click during the
+      pause does nothing); resumes unmuted and continues straight to the desktop; confirmed live
+      via Playwright end-to-end; `npm run verify` passes.
+- [x] **P539** — Sonny re-exported `startup video final.mp4` (same source folder, file shrank from
+      ~19.6MB to ~16.8MB — a re-encode, not new content) and asked to reload it. Re-copied over
+      `loading-screen-v2.mp4`, re-confirmed H.264, and re-measured from scratch rather than
+      assuming the re-encode kept identical timing: duration is still 11.517s and the boot-logo →
+      Sign In cut still lands between 7.40s–7.50s, so `PAUSE_AT_S` stayed at `7.5`. Re-ran the
+      canvas pixel scan for the Sign in button too — same RGB (31,59,183) at the same ~46.0%–54.0%
+      / ~57.75%–61.25% boundaries, so the `top-[57.5%] left-[45.5%] h-[4%] w-[9%]` bounds from
+      P538 needed no change. No code touched; this was asset-swap + re-verification only.
+      **Pass condition:** confirmed live via Playwright — same pass conditions as P538, all still
+      hold against the re-encoded file; `npm run verify` passes.
+- [x] **P540** — Live-tested (Playwright) whether unmuted autoplay can ever start with zero click,
+      including across a reload in the _same_ browser profile after a prior engaged visit — it
+      cannot: Chromium blocks unmuted `autoPlay` per page-load regardless of prior interaction on
+      that origin, so the video sits on a frozen first frame until any click, every time. Given
+      the standing "don't mute the audio" rule (see LESSONS.md's muted-autoplay-fallback entry),
+      Sonny chose to keep real audio and add a visible hint instead of muting. Added
+      `{needsClickToPlay && <p>Click anywhere to start</p>}` to `StartupLoadingScreen.jsx`,
+      bottom-center, `text-sm text-white/70` — shown only while waiting for the very first
+      gesture; `retryPlay()` already flips `needsClickToPlay` false synchronously on click, so it
+      disappears the instant the video starts. Confirmed it does NOT reappear during the later
+      mid-video pause-for-Sign-in gate (P535/P537 stay hint-free, per that explicit instruction).
+      **Pass condition:** hint visible before first click, gone immediately after (count 0 in the
+      DOM), stays absent through the mid-video pause, off-target clicks during that pause still do
+      nothing, Sign in button still resumes and reaches the desktop; zero console errors;
+      confirmed live via Playwright; `npm run verify` passes (24/24 test files, 62/62 tests).
+- [x] **P541** — Added a hover glow to the invisible Sign in click-target from P538, so hovering
+      the exact button area gives visual feedback. Iterated through three passes based on Sonny's
+      visual feedback against live screenshots (zoomed crops, not just full-frame): 1. `hover:bg-white/10 hover:shadow-[0_0_18px_6px_rgba(64,120,255,0.6)]` — visible border
+      line; the flat `bg-white/10` fill has a hard edge at the `rounded-md` corners that reads
+      as a rectangle outline against the softer blurred shadow around it. 2. Removed the fill, widened/softened the shadow to
+      `hover:shadow-[0_0_28px_12px_rgba(64,120,255,0.45)]`, and shrank the hit-box itself
+      (`h-[3.8%] w-[7.2%]`, down from the P538-calibrated `h-[4%] w-[9%]`) — still a visible
+      line, this time INSIDE the button: the shrunk box no longer reached the real video
+      button's edges, so the blur bloomed against the button's own darker fill instead of
+      outward from its true boundary, reading as an inset ring. 3. Restored the hit-box to the original calibrated `top-[57.5%] left-[45.5%] h-[4%] w-[9%]`
+      (matches/slightly exceeds the real button — never shrink it below the P538 pixel-scan
+      measurements) and used a smaller blur-only shadow with no spread:
+      `hover:shadow-[0_0_14px_rgba(64,120,255,0.4)]`. Zoomed screenshot confirms a clean soft
+      outward glow with no hard edge inside or outside the button.
+      **Pass condition:** confirmed via Playwright hover + zoomed-crop screenshot on the paused
+      Sign In frame — glow is visibly present, borderless, and doesn't intrude into the button's
+      own fill; `npm run verify` passes (24/24 test files, 62/62 tests).
 
 ---
 
