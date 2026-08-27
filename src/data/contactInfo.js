@@ -1,67 +1,52 @@
 export const contactInfo = {
-  headline: 'YOUR NAME - OFFICIAL CONTACT',
+  headline: 'SONNY LLARENA - CONTACT CARD',
   fields: [
-    { label: 'Name', value: 'Your Name' },
-    { label: 'Role', value: 'Your Role / Title' },
-    { label: 'Based In', value: 'Your City, Country' },
+    { label: 'Name', value: 'Sonny Llarena' },
+    { label: 'Role', value: 'IT Specialist, Social Media Management' },
     {
       label: 'Phone and WhatsApp',
-      value: '+1 000 000 0000',
+      value: '+63 917 546 3039',
       kind: 'phone',
-      stat: {
-        label: 'Avg. Response Time',
-        value: '< 24 hrs',
-        isPlaceholder: true,
-      },
-    },
-    {
-      label: 'Website',
-      value: 'https://your-website.example',
-      isLink: true,
-      kind: 'website',
-      stat: { label: 'Monthly Visits', value: '8.2K', isPlaceholder: true },
     },
   ],
   profiles: [
     {
-      label: 'Twitter / X',
-      url: 'https://x.com/yourhandle',
-      kind: 'twitter',
-      stat: { label: 'Followers', value: '12.4K', isPlaceholder: true },
+      label: 'Email',
+      value: 'llarenasonny@yahoo.com',
+      url: 'mailto:llarenasonny@yahoo.com',
+      kind: 'email',
+    },
+    {
+      label: 'WhatsApp',
+      value: '+63 917 546 3039',
+      url: 'https://wa.me/639175463039',
+      kind: 'whatsapp',
+    },
+    {
+      label: 'Viber',
+      value: '+63 917 546 3039',
+      url: 'viber://chat?number=%2B639175463039',
+      kind: 'viber',
     },
     {
       label: 'Facebook',
-      url: 'https://www.facebook.com/yourhandle',
+      url: 'https://www.facebook.com/profile.php?id=100045247046713',
       kind: 'facebook',
-      stat: { label: 'Followers', value: '9.1K', isPlaceholder: true },
-    },
-    {
-      label: 'Instagram',
-      url: 'https://www.instagram.com/yourhandle',
-      kind: 'instagram',
-      stat: { label: 'Followers', value: '15.7K', isPlaceholder: true },
     },
     {
       label: 'LinkedIn',
-      url: 'https://www.linkedin.com/in/yourhandle',
+      url: 'https://linkedin.com/in/sonny-llarena-a8956130b',
       kind: 'linkedin',
-      stat: { label: 'Connections', value: '3.8K', isPlaceholder: true },
     },
     {
-      label: 'Spotify',
-      url: 'https://open.spotify.com/artist/yourid',
-      kind: 'spotify',
-      stat: { label: 'Monthly Listeners', value: '2.3K', isPlaceholder: true },
+      label: 'TikTok',
+      url: 'https://www.tiktok.com/@llarenachannel',
+      kind: 'tiktok',
+    },
+    {
+      label: 'YouTube',
+      url: 'https://www.youtube.com/@llarenachannel',
+      kind: 'youtube',
     },
   ],
-}
-
-export function buildContactText(info) {
-  const lines = [info.headline, '']
-  info.fields.forEach((field) => lines.push(`${field.label}: ${field.value}`))
-  lines.push('', 'Official Profiles')
-  info.profiles.forEach((profile) =>
-    lines.push(`${profile.label}: ${profile.url}`),
-  )
-  return lines.join('\n')
 }

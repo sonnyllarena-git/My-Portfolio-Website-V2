@@ -552,7 +552,7 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={650}
                 defaultHeight={500}
               >
-                <ContactInfoApp isMinimized={w.isMinimized} />
+                <ContactInfoApp />
               </Window>
             )
           }

@@ -1,79 +1,67 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { contactInfo } from '../data/contactInfo.js'
-import { CONTACT_ICON_LAYOUT } from '../data/contactSceneLayout.js'
-import { buildContactIcons } from '../utils/buildContactIcons.js'
-import { useIsMobile } from '../hooks/useIsMobile.js'
-import ContactMobileGrid from './contactScene/ContactMobileGrid.jsx'
-import ContactProfileModal from './contactScene/ContactProfileModal.jsx'
-import ContactModalLayer from './contactScene/ContactModalLayer.jsx'
+import SocialIcon from './contactCard/SocialIcon.jsx'
+import sIcon from '../assets/icons/S icon.png'
+import bgVideo from '../assets/HD background.mp4'
 
-const ContactSceneCanvas = lazy(
-  () => import('./contactScene/ContactSceneCanvas.jsx'),
-)
-
-function useContactIcons() {
-  return useMemo(() => {
-    const content = buildContactIcons(contactInfo)
-    return CONTACT_ICON_LAYOUT.map((layout) => ({
-      ...layout,
-      ...content.find((entry) => entry.id === layout.id),
-    }))
-  }, [])
+function getField(label) {
+  return contactInfo.fields.find((field) => field.label === label)?.value
 }
 
-function ContactInfoApp({ isMinimized = false }) {
-  const isMobile = useIsMobile()
-  const icons = useContactIcons()
-  const [activeId, setActiveId] = useState(null)
-  const [anchor, setAnchor] = useState(null)
-  const activeIcon = icons.find((icon) => icon.id === activeId) ?? null
-
-  function handleActivate(id, clickAnchor = null) {
-    setActiveId(id)
-    setAnchor(clickAnchor)
-  }
-
-  function handleClose() {
-    setActiveId(null)
-    setAnchor(null)
-  }
+function ContactInfoApp() {
+  const name = getField('Name')
+  const role = getField('Role')
 
   return (
-    <div className="h-full w-full">
-      {isMobile ? (
-        <ContactMobileGrid icons={icons} onSelectIcon={handleActivate} />
-      ) : (
-        <Suspense
-          fallback={
-            <div className="flex h-full items-center justify-center text-sm text-white/40">
-              Loading scene…
-            </div>
-          }
-        >
-          <ContactSceneCanvas
-            icons={icons}
-            activeId={activeId}
-            onActivate={handleActivate}
-            isMinimized={isMinimized}
+    <div className="relative flex h-full w-full items-center justify-center overflow-auto p-6">
+      <video
+        src={bgVideo}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-black/40" />
+      <motion.div
+        animate={{ y: [0, -12, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        className="relative w-full max-w-sm rounded-2xl border border-cyan-400/20 bg-[#0b1220]/60 p-6 shadow-2xl shadow-black/50 backdrop-blur-md"
+      >
+        <div className="flex items-center gap-4">
+          <img
+            src={sIcon}
+            alt=""
+            className="h-14 w-14 rounded-xl border border-white/10"
           />
-        </Suspense>
-      )}
-      {isMobile ? (
-        activeIcon && (
-          <ContactProfileModal icon={activeIcon} onClose={handleClose} />
-        )
-      ) : (
-        <AnimatePresence>
-          {activeIcon && (
-            <ContactModalLayer
-              icon={activeIcon}
-              anchor={anchor}
-              onClose={handleClose}
-            />
-          )}
-        </AnimatePresence>
-      )}
+          <div>
+            <div className="text-lg font-semibold">{name}</div>
+            <div className="text-sm text-white/60">{role}</div>
+          </div>
+        </div>
+        <div className="mt-6 space-y-2">
+          {contactInfo.profiles.map((profile) => (
+            <a
+              key={profile.label}
+              href={profile.url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm backdrop-blur-sm transition hover:bg-white/10"
+            >
+              <SocialIcon kind={profile.kind} />
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">{profile.label}</span>
+                {profile.value && (
+                  <span className="block truncate text-xs text-white/50">
+                    {profile.value}
+                  </span>
+                )}
+              </span>
+              <span className="text-white/30">↗</span>
+            </a>
+          ))}
+        </div>
+      </motion.div>
     </div>
   )
 }

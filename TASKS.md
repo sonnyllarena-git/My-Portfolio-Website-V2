@@ -28,8 +28,14 @@ gave the login gate real Minimize/Maximize/Close + dragging by routing it throug
 `Window`/`react-rnd` pipeline instead of an ad hoc modal — complete as of 2026-08-26. P545 — fixed
 overlay text in both Gmail components being permanently pinned at its `clamp()` ceiling instead of
 scaling with the window, by switching to container-query (`cqw`) units tied to each image's own
-box — complete as of 2026-08-26.
-**Last verified:** 2026-08-26 — `npm run verify` → PASS (24/24 test files, 62/62 tests)
+box — complete as of 2026-08-26. Phase 95 (P554-P558) — Sonny asked to remove the Phase 94 animated
+3D icon scene entirely and replace it with a plain "calling card" showing his real contact info;
+`ContactInfoApp.jsx` rewritten as a static DOM card (name/title header + one row per contact
+channel), `three`/`@react-three/fiber`/`@react-three/drei` uninstalled and dropped from CLAUDE.md
+§2, all `contactScene/` pieces + their supporting data/utils/hooks deleted, `contactInfo.js`
+rewritten with Sonny's real Facebook/LinkedIn/TikTok/YouTube/email/WhatsApp/Viber links — complete
+as of 2026-08-27.
+**Last verified:** 2026-08-27 — `npm run verify` → PASS (24/24 test files, 62/62 tests)
 **Verify command:** `npm run verify`
 
 ---
@@ -5778,6 +5784,43 @@ lighter DOM-only tap grid (same modal content), not the 3D scene, for bandwidth/
       **Pass condition:** all entry points open the correct experience for their breakpoint, all 7
       icons/tiles link to the correct platform, zero console errors throughout; `npm run verify`
       passes.
+
+---
+
+## PHASE 95 — CONTACT INFO: REVERT TO A PLAIN CALLING CARD (REMOVES THE 3D SCENE)
+
+_Sonny asked to remove the Phase 94 animated 3D icon scene and replace it with a simple "calling
+card" showing his real contact info and socials — no more WebGL, no more placeholder stats._
+
+- [x] **P554** — Delete every Phase 94 file: `src/components/contactScene/` (all 7 files),
+      `src/data/contactSceneLayout.js`, `src/utils/buildContactIcons.js` +
+      `buildContactIcons.test.js`, `src/hooks/useGlyphTexture.js`, `src/utils/projectToScreen.js`.
+      `npm uninstall three @react-three/fiber @react-three/drei`; remove their 3 rows from
+      CLAUDE.md §2 (the Phase 94 exception no longer applies).
+      **Pass condition:** no reference to the deleted files/packages remains; `npm run build`
+      still green.
+- [x] **P555** — Rewrite `src/data/contactInfo.js` with Sonny's real info: Name "Sonny Llarena",
+      Role "IT Specialist, Social Media Management", `Phone and WhatsApp` field kept (same label,
+      for `ContactPage.jsx` compatibility); `profiles` now Email (mailto), WhatsApp (`wa.me`),
+      Viber (`viber://chat`), Facebook, LinkedIn, TikTok, YouTube — dropped Twitter/X, Instagram,
+      Spotify, Website (not part of Sonny's real presence) and all the placeholder `stat` fields.
+      **Pass condition:** `src/components/settings/ContactPage.jsx` (which shares this data file)
+      still renders correctly with zero code changes.
+- [x] **P556** — Add `src/components/contactCard/SocialIcon.jsx`: a small colored circular badge
+      per contact `kind` (brand-colored background + a generic glyph — envelope/phone/play/note —
+      or a plain "f"/"in" letter mark; no traced brand logos, to avoid guessing at path data).
+      Rewrite `src/components/ContactInfoApp.jsx` as a static centered card (avatar using the
+      existing `S icon.png`, name + role header, one clickable row per `contactInfo.profiles`
+      entry) — no `useIsMobile` branch needed since it's plain responsive DOM, unlike the old
+      WebGL scene. Dropped the now-pointless `isMinimized` prop from `Desktop.jsx`'s render call
+      (nothing left to pause).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P557** — Manual Playwright verification: desktop double-click "Contact Info" icon (1400×900
+      viewport) and mobile tap (390×844 viewport) both render the card with all 7 rows and correct
+      `href`s (`mailto:`, `wa.me`, `viber://`, and the 4 social URLs), zero console errors; Settings
+      → Contact tab re-checked for zero regression.
+      **Pass condition:** confirmed live via Playwright at both breakpoints plus the Settings tab;
+      `npm run verify` passes (24/24 test files, 62/62 tests).
 
 ---
 

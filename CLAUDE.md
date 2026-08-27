@@ -57,9 +57,6 @@ command you actually ran.
 | Styling            | Tailwind CSS (+ @tailwindcss/vite) | 4.3.3 / 4.3.3               | Explicitly required in Sonny's spec. v4 uses a native Vite plugin, not PostCSS/autoprefixer — see LESSONS.md. |
 | Animation          | Framer Motion                      | 13.1.0                      | Explicitly required for drag/drop and icon animation.                                                         |
 | Window drag/resize | react-rnd                          | 10.5.3                      | Explicitly named by Sonny for 8-direction window resize + title-bar drag.                                     |
-| 3D rendering       | three.js                           | 0.185.1                     | Explicitly approved by Sonny for the animated Contact Info icon scene (Phase 94), replacing the notepad app.  |
-| 3D React bindings  | @react-three/fiber                 | 9.7.0                       | React renderer for three.js; approved alongside three.js for this feature only.                               |
-| 3D scene helpers   | @react-three/drei                  | 10.7.8                      | Standard R3F helper components (RoundedBox, Decal, etc.); approved alongside @react-three/fiber.              |
 | State / data       | React local state + Context API    | n/a                         | Explicitly requested; no external state library needed for a desktop-shell UI.                                |
 | Backend            | none                               | n/a                         | Static/client-only for v1; Contact app's backend need is deferred to Phase 1.                                 |
 | Database           | none                               | n/a                         | No persistent data needed for the v1 shell.                                                                   |
