@@ -470,6 +470,7 @@ function Desktop({ onExitToBoot }) {
                 {...shared}
                 cascadeOffset={cascadeOffset}
                 onOpenNewWindow={() => openNewInstance('this-pc')}
+                onOpenApp={handleIconOpen}
               />
             )
           if (w.id === 'developer-lab')
@@ -480,6 +481,7 @@ function Desktop({ onExitToBoot }) {
                 cascadeOffset={cascadeOffset}
                 onOpenNewWindow={() => openNewInstance('developer-lab')}
                 onOpenProjects={() => handleIconOpen('projects')}
+                onOpenApp={handleIconOpen}
               />
             )
           if (w.id === 'projects') {

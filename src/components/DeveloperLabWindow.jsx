@@ -2,6 +2,7 @@ import {
   quickAccess,
   pcDrives,
   folders,
+  drives,
 } from '../data/developerLabLocations.js'
 import ExplorerWindow from './explorer/ExplorerWindow.jsx'
 
@@ -11,6 +12,7 @@ function DeveloperLabWindow({
   onMinimizeToggle,
   onOpenNewWindow,
   onOpenProjects,
+  onOpenApp,
   cascadeOffset,
   zIndex,
   onFocus,
@@ -25,6 +27,7 @@ function DeveloperLabWindow({
       quickAccess={quickAccess}
       pcDrives={pcDrives}
       folders={folders}
+      devices={drives}
       onClose={onClose}
       isMinimized={isMinimized}
       onMinimizeToggle={onMinimizeToggle}
@@ -33,7 +36,7 @@ function DeveloperLabWindow({
       zIndex={zIndex}
       onFocus={onFocus}
       onOpenApp={(appId) =>
-        appId === 'projects-compilation' && onOpenProjects()
+        appId === 'projects-compilation' ? onOpenProjects() : onOpenApp(appId)
       }
     />
   )

@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import ContextMenu from '../ContextMenu.jsx'
 import EmptyFolderView from './EmptyFolderView.jsx'
-import ItemIcon from './ItemIcon.jsx'
 import RibbonMenu from './RibbonMenu.jsx'
 import RootView from './RootView.jsx'
-import Tile from './Tile.jsx'
+import SidebarNode from './SidebarNode.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
+
+const MIN_SIDEBAR_WIDTH = 144
+// Wide enough that the longest drive label ("System Reserved (D:)") never truncates.
+const DEFAULT_SIDEBAR_WIDTH = 200
+const MAX_SIDEBAR_WIDTH = 400
 
 function ExplorerBody({
   rootLabel,
@@ -25,7 +29,37 @@ function ExplorerBody({
   const [tileMenu, setTileMenu] = useState(null)
   const [activeRibbonTab, setActiveRibbonTab] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [expandedPaths, setExpandedPaths] = useState(new Set())
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
   const current = history[historyIndex]
+
+  function startSidebarResize(e) {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = sidebarWidth
+
+    function handleMouseMove(moveEvent) {
+      const next = startWidth + (moveEvent.clientX - startX)
+      setSidebarWidth(
+        Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, next)),
+      )
+    }
+    function handleMouseUp() {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+  }
+
+  function toggleExpand(path) {
+    setExpandedPaths((prev) => {
+      const next = new Set(prev)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+  }
 
   function navigateTo(location) {
     setHistory((prev) => [...prev.slice(0, historyIndex + 1), location])
@@ -112,7 +146,7 @@ function ExplorerBody({
   ]
 
   return (
-    <div className="contents" onClick={clearOverlays}>
+    <div className="flex h-full flex-col" onClick={clearOverlays}>
       <div className="flex items-center gap-2 border-b border-white/10 bg-[#202225] px-2 py-1.5 text-white/80">
         <button
           aria-label="Back"
@@ -159,58 +193,65 @@ function ExplorerBody({
           setActiveRibbonTab((prev) => (prev === label ? null : label))
         }
       />
-      <div className={isMobile ? 'flex flex-col' : 'flex'}>
+      <div
+        className={
+          isMobile
+            ? 'flex flex-1 flex-col overflow-hidden'
+            : 'flex flex-1 overflow-hidden'
+        }
+      >
         <div
+          style={isMobile ? undefined : { width: sidebarWidth }}
           className={
             isMobile
               ? 'flex w-full shrink-0 items-center gap-2 overflow-x-auto border-b border-white/10 bg-[#1f2126] px-2 py-2 text-xs'
-              : 'w-36 shrink-0 border-r border-white/10 bg-[#1f2126] py-2 text-xs'
+              : 'shrink-0 overflow-x-hidden overflow-y-auto bg-[#1f2126] py-2 text-xs'
           }
         >
           {!isMobile && (
             <div className="px-3 py-1 text-white/50">Quick access</div>
           )}
           {quickAccess.map((item) => (
-            <Tile
+            <SidebarNode
               key={item.label}
-              isSelected={selectedTile === item.label}
-              onSelect={() => setSelectedTile(item.label)}
-              onOpen={() => openItem(item)}
-              onContextMenu={(x, y) => setTileMenu({ x, y, item })}
+              item={item}
+              path={item.label}
+              depth={0}
+              selectedTile={selectedTile}
+              onSelect={setSelectedTile}
+              onOpen={openItem}
+              onContextMenu={(x, y, it) => setTileMenu({ x, y, item: it })}
               isMobile={isMobile}
-              className={
-                isMobile
-                  ? 'flex shrink-0 cursor-pointer items-center gap-2 rounded px-2 py-1.5 whitespace-nowrap'
-                  : 'flex cursor-pointer items-center gap-2 px-3 py-1.5'
-              }
-            >
-              <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
-              <span>{item.label}</span>
-            </Tile>
+              expandedPaths={expandedPaths}
+              onToggleExpand={toggleExpand}
+            />
           ))}
           {!isMobile && (
             <div className="mt-2 px-3 py-1 text-white/50">This PC</div>
           )}
           {pcDrives.map((item) => (
-            <Tile
+            <SidebarNode
               key={item.label}
-              isSelected={selectedTile === item.label}
-              onSelect={() => setSelectedTile(item.label)}
-              onOpen={() => openItem(item)}
-              onContextMenu={(x, y) => setTileMenu({ x, y, item })}
+              item={item}
+              path={item.label}
+              depth={0}
+              selectedTile={selectedTile}
+              onSelect={setSelectedTile}
+              onOpen={openItem}
+              onContextMenu={(x, y, it) => setTileMenu({ x, y, item: it })}
               isMobile={isMobile}
-              className={
-                isMobile
-                  ? 'flex shrink-0 cursor-pointer items-center gap-2 rounded px-2 py-1.5 whitespace-nowrap'
-                  : 'flex cursor-pointer items-center gap-2 px-3 py-1.5'
-              }
-            >
-              <ItemIcon id={item.id} icon={item.icon} imgClassName="h-4 w-4" />
-              <span>{item.label}</span>
-            </Tile>
+              expandedPaths={expandedPaths}
+              onToggleExpand={toggleExpand}
+            />
           ))}
         </div>
-        <div className="flex-1 p-3 text-xs text-white/80">
+        {!isMobile && (
+          <div
+            onMouseDown={startSidebarResize}
+            className="w-1.5 shrink-0 cursor-col-resize border-r border-white/10 bg-transparent hover:border-cyan-400/60"
+          />
+        )}
+        <div className="flex-1 overflow-y-auto p-3 text-xs text-white/80">
           {current.type === 'root' || current.children ? (
             <RootView
               folders={current.type === 'root' ? folders : current.children}

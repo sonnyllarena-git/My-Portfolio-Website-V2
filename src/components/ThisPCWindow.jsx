@@ -9,6 +9,7 @@ function ThisPCWindow({
   cascadeOffset,
   zIndex,
   onFocus,
+  onOpenApp,
 }) {
   return (
     <ExplorerWindow
@@ -28,6 +29,7 @@ function ThisPCWindow({
       cascadeOffset={cascadeOffset}
       zIndex={zIndex}
       onFocus={onFocus}
+      onOpenApp={onOpenApp}
     />
   )
 }
