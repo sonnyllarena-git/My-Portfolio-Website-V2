@@ -5938,6 +5938,42 @@ isMinimized={shared.isMinimized} />` inside a `Window` (`defaultWidth=1000`,
 
 ---
 
+## PHASE 97 — THIS PC: DESKTOP FOLDER CONTENTS + ACCESS-DENIED MODAL
+
+_Sonny asked that every folder inside the This PC explorer actually do something: opening the
+"Desktop" quick-access folder should show the same apps that are on the real desktop, and opening
+any other folder/file with no real content behind it should show a modal reading "Only Sonny has
+permission to open this file." instead of silently doing nothing._
+
+- [x] **P570** — Add `DESKTOP_CHILDREN` to `src/data/diskContents.js` (app shortcuts for every
+      `desktopIcons` entry without `hideFromDesktop`, reusing the existing `toAppShortcut` helper).
+      Wire it as the `children` of the `Desktop` entry in `src/data/thisPcLocations.js`'s
+      `quickAccess` export.
+      **Pass condition:** `npm run verify` passes; opening This PC > Desktop lists the real desktop
+      apps and double-clicking one opens that app.
+- [x] **P571** — Add `src/components/explorer/AccessDeniedModal.jsx` (title "Access Denied", body
+      "Only Sonny has permission to open this file.", OK/close button, styled like the existing
+      `StoreSizeChartModal.jsx` pattern). In `src/components/explorer/ExplorerBody.jsx`: `openItem`
+      now opens the modal for any item with neither `kind: 'app'` nor `children` (instead of
+      navigating into it); route the ribbon's "Frequent places" list through `openItem` too, instead
+      of calling `navigateTo` directly, so it stays consistent with sidebar/tile clicks. Delete
+      `EmptyFolderView.jsx` and its now-dead render branch (unreachable once `openItem` never
+      navigates into a childless location). Sonny then asked mid-task for a specific look (a real
+      Windows "Install Windows" error-dialog screenshot) plus a sound: rebuilt the modal as a white
+      classic-dialog box (thin blue border, plain title bar with an × close button, red circle-X
+      icon, blue "OK" button) instead of the dark-theme version, and added a `play()`-on-mount error
+      chime. Sonny supplied the real sound file into a stray `src/audio src/` folder — moved it to
+      `src/assets/sounds/access-denied-error.mp3` (matching the existing `volume-change.mp3`
+      system-sound convention) and imported it from there.
+      **Pass condition:** `npm run verify` passes; opening any This PC quick-access folder with no
+      real content (Downloads, Documents, Pictures, Music, Videos) shows the modal instead of an
+      empty view. Live Playwright check confirms: This PC > Desktop lists the real desktop apps and
+      double-clicking Resume opens the real Resume window; This PC > Downloads shows the redesigned
+      Access Denied modal with the exact message and triggers the real error sound's `play()`; This
+      PC > Local Disk (C:) app shortcuts still work (no regression); zero console/page errors.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.

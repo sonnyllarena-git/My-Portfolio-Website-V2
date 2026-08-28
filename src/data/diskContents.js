@@ -34,3 +34,9 @@ function toAppShortcut(id) {
 
 export const LOCAL_DISK_C_CHILDREN = C_DRIVE_APP_IDS.map(toAppShortcut)
 export const SYSTEM_RESERVED_D_CHILDREN = D_DRIVE_APP_IDS.map(toAppShortcut)
+
+const DESKTOP_APP_IDS = desktopIcons
+  .filter((icon) => !icon.hideFromDesktop)
+  .map((icon) => icon.id)
+
+export const DESKTOP_CHILDREN = DESKTOP_APP_IDS.map(toAppShortcut)

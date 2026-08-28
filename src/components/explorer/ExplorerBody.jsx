@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import ContextMenu from '../ContextMenu.jsx'
-import EmptyFolderView from './EmptyFolderView.jsx'
+import AccessDeniedModal from './AccessDeniedModal.jsx'
 import RibbonMenu from './RibbonMenu.jsx'
 import RootView from './RootView.jsx'
 import SidebarNode from './SidebarNode.jsx'
@@ -31,6 +31,7 @@ function ExplorerBody({
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedPaths, setExpandedPaths] = useState(new Set())
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
+  const [accessDeniedOpen, setAccessDeniedOpen] = useState(false)
   const current = history[historyIndex]
 
   function startSidebarResize(e) {
@@ -69,12 +70,14 @@ function ExplorerBody({
   function openItem(item) {
     if (item.kind === 'app') {
       onOpenApp(item.appId)
-    } else {
+    } else if (item.children) {
       navigateTo({
         type: 'location',
         label: item.label,
         children: item.children,
       })
+    } else {
+      setAccessDeniedOpen(true)
     }
   }
 
@@ -113,7 +116,7 @@ function ExplorerBody({
         { label: 'Frequent places', header: true },
         ...quickAccess.map((item) => ({
           label: item.label,
-          onClick: () => navigateTo({ type: 'location', label: item.label }),
+          onClick: () => openItem(item),
         })),
       ],
     },
@@ -252,20 +255,16 @@ function ExplorerBody({
           />
         )}
         <div className="flex-1 overflow-y-auto p-3 text-xs text-white/80">
-          {current.type === 'root' || current.children ? (
-            <RootView
-              folders={current.type === 'root' ? folders : current.children}
-              devices={current.type === 'root' ? devices : undefined}
-              selectedTile={selectedTile}
-              onSelectTile={setSelectedTile}
-              onOpenTile={openItem}
-              onTileContextMenu={(x, y, item) => setTileMenu({ x, y, item })}
-              searchTerm={searchTerm}
-              isMobile={isMobile}
-            />
-          ) : (
-            <EmptyFolderView />
-          )}
+          <RootView
+            folders={current.type === 'root' ? folders : current.children}
+            devices={current.type === 'root' ? devices : undefined}
+            selectedTile={selectedTile}
+            onSelectTile={setSelectedTile}
+            onOpenTile={openItem}
+            onTileContextMenu={(x, y, item) => setTileMenu({ x, y, item })}
+            searchTerm={searchTerm}
+            isMobile={isMobile}
+          />
         </div>
       </div>
       {tileMenu && (
@@ -275,6 +274,9 @@ function ExplorerBody({
           onClose={() => setTileMenu(null)}
           items={tileMenuItems(tileMenu.item)}
         />
+      )}
+      {accessDeniedOpen && (
+        <AccessDeniedModal onClose={() => setAccessDeniedOpen(false)} />
       )}
     </div>
   )

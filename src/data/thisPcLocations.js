@@ -1,12 +1,13 @@
 import {
   LOCAL_DISK_C_CHILDREN,
   SYSTEM_RESERVED_D_CHILDREN,
+  DESKTOP_CHILDREN,
 } from './diskContents.js'
 
 export const ROOT_LOCATION = { type: 'root', label: 'This PC' }
 
 export const quickAccess = [
-  { label: 'Desktop', icon: '🖥️', id: 'desktop' },
+  { label: 'Desktop', icon: '🖥️', id: 'desktop', children: DESKTOP_CHILDREN },
   { label: 'Downloads', icon: '⬇️', id: 'downloads' },
   { label: 'Documents', icon: '📄' },
   { label: 'Pictures', icon: '🖼️', id: 'pictures' },
