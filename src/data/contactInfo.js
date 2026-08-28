@@ -1,8 +1,13 @@
 export const contactInfo = {
   headline: 'SONNY LLARENA - CONTACT CARD',
+  tagline:
+    'For business and collaboration, please reach out to me through my contacts and socials.',
   fields: [
     { label: 'Name', value: 'Sonny Llarena' },
-    { label: 'Role', value: 'IT Specialist, Social Media Management' },
+    {
+      label: 'Role',
+      value: 'Fullstack Developer, IT Specialist, Social Media Management',
+    },
     {
       label: 'Phone and WhatsApp',
       value: '+63 917 546 3039',
@@ -32,6 +37,11 @@ export const contactInfo = {
       label: 'Facebook',
       url: 'https://www.facebook.com/profile.php?id=100045247046713',
       kind: 'facebook',
+    },
+    {
+      label: 'Instagram',
+      url: 'https://www.instagram.com/sonnyllarenainsta',
+      kind: 'instagram',
     },
     {
       label: 'LinkedIn',

@@ -59,7 +59,7 @@ const CLOSE_ANIMATION_MS = 180
 const WINDOW_PREVIEW_SIZES = {
   gmail: [1000, 550],
   'gmail-login': [900, 539],
-  'contact-info': [980, 620],
+  'contact-info': [1020, 900],
   'tech-stack': [1000, 700],
   paint: [1200, 800],
   'visitor-arts': [1200, 800],
@@ -565,8 +565,8 @@ function Desktop({ onExitToBoot }) {
                 {...shared}
                 icon="📇"
                 title="Contact Info"
-                defaultWidth={980}
-                defaultHeight={620}
+                defaultWidth={1020}
+                defaultHeight={900}
               >
                 <ContactInfoApp />
               </Window>

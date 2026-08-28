@@ -1,6 +1,6 @@
 import { contactInfo } from '../data/contactInfo.js'
 import SocialIcon from './contactCard/SocialIcon.jsx'
-import neonCardPhoto from './contactCard/assets/neon card photo.png'
+import neonCardPhoto from './contactCard/assets/Black.png'
 import bgVideo from '../assets/HD background.mp4'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 
@@ -25,17 +25,37 @@ function ContactInfoApp() {
             : 'flex gap-6 px-6 py-8 md:gap-10 md:px-10'
         }`}
       >
-        <img
-          src={neonCardPhoto}
-          alt="Sonny Llarena"
+        <div
           className={
             isMobile
-              ? 'h-64 w-full shrink-0 rounded-2xl object-contain'
-              : 'min-w-0 grow-[55] basis-0 self-stretch rounded-2xl object-contain'
+              ? 'flex w-full flex-col gap-4'
+              : 'flex min-w-0 grow-[55] basis-0 flex-col gap-4 self-stretch'
           }
-        />
+        >
+          <img
+            src={neonCardPhoto}
+            alt="Sonny Llarena"
+            className={
+              isMobile
+                ? 'h-64 w-full shrink-0 rounded-2xl object-contain'
+                : 'min-h-0 flex-1 rounded-2xl object-contain'
+            }
+          />
+          <div>
+            <h2 className="text-xl font-bold text-cyan-300 md:text-2xl">
+              Sonny Llarena
+            </h2>
+            <p className="text-sm font-semibold text-cyan-300 md:text-base">
+              Fullstack Developer, IT Specialist
+            </p>
+            <p className="text-sm font-semibold text-cyan-300 md:text-base">
+              Social Media Management
+            </p>
+            <p className="mt-3 text-xs text-white/60">{contactInfo.tagline}</p>
+          </div>
+        </div>
         <div
-          className={`flex min-w-0 flex-col justify-center gap-3 ${
+          className={`flex min-w-0 flex-col justify-center gap-2 ${
             isMobile ? 'w-full' : 'grow-[45] basis-0'
           }`}
         >
@@ -45,7 +65,7 @@ function ContactInfoApp() {
               href={profile.url}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 transition hover:bg-white/10"
+              className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 transition hover:bg-white/10"
             >
               <SocialIcon kind={profile.kind} />
               <span className="min-w-0 flex-1">

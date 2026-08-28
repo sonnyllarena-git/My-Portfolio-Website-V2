@@ -5916,6 +5916,25 @@ isMinimized={shared.isMinimized} />` inside a `Window` (`defaultWidth=1000`,
       drift across 3 timestamped screenshots, a visible near/far depth read with correct occlusion,
       the scene populated within ~0.6s of opening (not blank for seconds), and zero console/page
       errors.
+- [x] **P569** — Sonny supplied a reference screenshot + real brand icon PNGs
+      (`src/components/contactCard/assets/*.png`) and asked the card be rebuilt to match: real
+      circular brand badges instead of hand-drawn glyphs, an Instagram row added
+      (`https://www.instagram.com/sonnyllarenainsta`), and a name/role/tagline text block under the
+      photo. Rewrote `SocialIcon.jsx` to render the real PNG per `kind` (email keeps its generic
+      envelope badge — no PNG supplied for it). Added `tagline` field and an `instagram` profile
+      entry to `contactInfo.js`; updated `Role` to "Fullstack Developer, IT Specialist, Social Media
+      Management" per Sonny's exact wording. Added the name/role/tagline block under the photo in
+      `ContactInfoApp.jsx` (kept as static JSX text, not derived from `contactInfo.fields`, since the
+      two-line role split is a presentational choice specific to this card). Live-checked via
+      Playwright and switched the photo import to `assets/Black.png` per Sonny's follow-up — same
+      neon photo, but without the baked-in "FRONTEND DEVELOPER..." caption that clashed with the new
+      live role text. Also tightened row spacing (`gap-3`→`gap-2`, `py-4`→`py-3`) and resized the
+      `contact-info` window in `Desktop.jsx` (980×620 → 1020×900, both `WINDOW_PREVIEW_SIZES` and the
+      `<Window>` render call) — the extra Instagram row plus the new text block no longer fit the old
+      size and were clipping top/bottom on open.
+      **Pass condition:** `npm run verify` passes; live Playwright check at 1400×900 confirms all 8
+      profile rows + the full name/role/tagline block render with no clipping and zero console
+      errors; 390×844 mobile check confirms the stacked layout with real brand icons and no errors.
 
 ---
 
