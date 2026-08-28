@@ -34,7 +34,13 @@ box — complete as of 2026-08-26. Phase 95 (P554-P558) — Sonny asked to remov
 channel), `three`/`@react-three/fiber`/`@react-three/drei` uninstalled and dropped from CLAUDE.md
 §2, all `contactScene/` pieces + their supporting data/utils/hooks deleted, `contactInfo.js`
 rewritten with Sonny's real Facebook/LinkedIn/TikTok/YouTube/email/WhatsApp/Viber links — complete
-as of 2026-08-27.
+as of 2026-08-27. Phase 96 (P559-P568) — built the "Tech Stack" app behind the existing placeholder
+desktop icon: originally a falling-3D-keycaps scene ported from Sonny's separate older portfolio
+project (re-approving `three`/`@react-three/fiber`/`@react-three/drei` as a one-time exception, same
+3 CLAUDE.md §2 rows Phase 94 used), then reworked per Sonny's direct follow-up (P568) into a
+no-gravity floating scene — keycaps drift/tumble forever instead of falling into a pile, in one
+single `<Canvas>` (not two) so every keycap is properly interactive and three.js's own depth buffer
+gives a real near/far 3D read — complete as of 2026-08-27.
 **Last verified:** 2026-08-27 — `npm run verify` → PASS (24/24 test files, 62/62 tests)
 **Verify command:** `npm run verify`
 
@@ -5821,6 +5827,95 @@ card" showing his real contact info and socials — no more WebGL, no more place
       → Contact tab re-checked for zero regression.
       **Pass condition:** confirmed live via Playwright at both breakpoints plus the Settings tab;
       `npm run verify` passes (24/24 test files, 62/62 tests).
+
+---
+
+## PHASE 96 — TECH STACK APP: FALLING KEYCAPS 3D SCENE
+
+_Sonny wants the existing "Tech Stack" desktop icon (currently the generic "Coming soon" placeholder
+window) to open a real app: every listed technology falls in as a physical keycap and settles into a
+pile, ported from a "falling keys" 3D effect in a separate older project. Explicitly re-approved
+`three`/`@react-three/fiber`/`@react-three/drei` as a one-time exception (same as Phase 94, reverted
+in Phase 95) after being told the effect requires them; also explicitly chose "fall once when the
+window opens" over the old project's scroll-into-section trigger, since this app is one fixed window,
+not a scrolling multi-section page. Plan: `can-you-integrate-that-staged-babbage.md`._
+
+- [x] **P559** — `npm install three@0.185.1 @react-three/fiber@9.7.0 @react-three/drei@10.7.8`; add
+      the 3 rows to CLAUDE.md §2 (done). Add `src/data/techStackKeycaps.js` exporting
+      `TECH_STACK_KEYCAPS`: one `{ name, category, color, icon }` entry per technology, Devicon CDN
+      icon URLs + keycap colors, ported from the old project's `data/techStack.js` tables.
+      **Pass condition:** `npm run verify` passes (new file only, no consumers yet).
+- [x] **P560** — Add `src/data/keycapFallConfig.js` (verbatim port — deterministic per-keycap
+      speed/offset/rotation/drift/depth via seeded hash, no adaptation) and
+      `src/utils/ndcToWorldOnPlane.js` (verbatim port — three.js Raycaster/Plane math).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P561** — Add `src/hooks/useIconTexture.js` (verbatim port). Add `src/hooks/useKeycapTargets.js`
+      ported from the old project, dropping the unused `activePage` param and replacing the old
+      page-header/footer `arena` measurement with `useThree().size` directly (no header/footer chrome
+      inside a Window — the Canvas already fills the window's content area).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P562** — Add `src/hooks/useOnceFallProgress.js`: returns a ref `{ localT }` animating 0→1 once
+      via `requestAnimationFrame` over ~1.4s (eased) from mount, then holds at 1 — replaces the old
+      scroll-driven `useSectionFallProgress.js` per Sonny's "fall once on open" answer.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P563** — Add `src/components/techStack/KeyCap.jsx`, ported essentially verbatim from the old
+      project's `KeyCap.jsx` (fixed-depth-plane drag with decaying offset, hover-context wiring,
+      per-frame position from `getKeycapFallPosition`).
+      **Pass condition:** `npm run verify` passes (component exists, not yet rendered).
+- [x] **P564** — Add `src/components/techStack/TechStackMobileGrid.jsx`: static Tailwind grid of
+      `TECH_STACK_KEYCAPS` (icon + name chip), no animation, no three.js — the mobile/reduced-motion
+      fallback and the taskbar hover-preview body.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P565** — Add `src/components/techStack/TechStackApp.jsx` adapted from the old project's
+      `KeyPhysicsOverlay.jsx`: root `relative h-full w-full overflow-hidden` (not `fixed inset-0`),
+      two z-depth-split `<Canvas>` layers as `absolute inset-0`, `frameloop={isMinimized ? 'never' :
+'always'}` on both (accepts an `isMinimized` prop), `ParticleTextCanvas` hover name-reveal kept
+      verbatim, mobile/reduced-motion check renders `TechStackMobileGrid` instead of `null`.
+      **Pass condition:** `npm run verify` passes (component exists, not yet wired into Desktop).
+- [x] **P566** — Wire into `src/components/Desktop.jsx`: import `TechStackApp` +
+      `TechStackMobileGrid`; add `'tech-stack': [1000, 700]` to `WINDOW_PREVIEW_SIZES`; add
+      `if (w.id === 'tech-stack') return <TechStackMobileGrid />` to `renderPreviewBody`; add the
+      `tech-stack` branch to the main open-window if-chain rendering `<TechStackApp
+isMinimized={shared.isMinimized} />` inside a `Window` (`defaultWidth=1000`,
+      `defaultHeight=700`).
+      **Pass condition:** `npm run verify` passes; double-clicking the Tech Stack desktop icon opens
+      the real scene instead of "Coming soon."
+- [x] **P567** — Manual Playwright verification: desktop (~1400×900) — keycaps fall once and settle
+      into a real 3D pile with correct icons/colors, hovering starts the assemble particle-text
+      effect, minimizing/restoring the window works with no errors and the pile state survives,
+      the taskbar hover-preview shows `TechStackMobileGrid`'s real grid (not blank). Mobile
+      (~390×844) and `prefers-reduced-motion: reduce` — confirmed `TechStackMobileGrid` renders
+      instead of WebGL (`document.querySelectorAll('canvas')` empty), zero console/page errors in
+      all three contexts.
+      **Pass condition met:** confirmed live via Playwright at both breakpoints + reduced-motion;
+      `npm run verify` passes. Screenshot capture needed `gl={{ preserveDrawingBuffer: true }}`
+      temporarily added/removed for the check only — see LESSONS.md, this is a headless-Chromium
+      screenshot artifact, not shipped in the real component. Not separately re-verified this pass:
+      the drag-then-release ease-back (the automated click missed the pile's exact on-screen
+      pixels; the underlying pointer/plane-drag logic is an unmodified port) and the
+      `frameloop="never"` minimize-pause specifically via the drawArrays/drawElements monkeypatch
+      (only confirmed minimize/restore itself is error-free and preserves keycap state).
+- [x] **P568** — Sonny tried the falling/pile version live and asked for a rework: no gravity — the
+      keycaps should float and drift in random directions forever, with a real 3D depth read (some
+      visibly in front, some a little behind), and better interactivity/hover accuracy. Root cause
+      of the interactivity complaint: the old two-`<Canvas>` front/back split only made the ~60% of
+      keycaps landing in the "back" layer hoverable/draggable at all — the "front" layer was
+      permanently `pointer-events-none` by design. Replaced both canvases with one, letting three.js's
+      own depth buffer give real front/back occlusion and making every keycap equally interactive.
+      Deleted `src/data/keycapFallConfig.js` and `src/hooks/useOnceFallProgress.js`; added
+      `src/data/keycapFloatConfig.js` (per-keycap drift amplitude/frequency/phase per axis, tumble
+      speed, depth) and rewrote `src/hooks/useKeycapTargets.js`'s `getKeycapFallPosition` into
+      `getKeycapFloatPosition` — a pure function of elapsed time with no "settle," driven directly by
+      `state.clock.elapsedTime` in `KeyCap.jsx`'s own `useFrame` instead of a fall-progress ref.
+      `TechStackApp.jsx`'s `KeycapField` now renders all keycaps into one `<Canvas>`. Also fixed a
+      real ~1-2s blank-scene pop-in on open (R3F's `<Canvas>` wraps children in one Suspense by
+      default, so `<Text>`'s first-time font fetch was blocking every keycap's mesh) by wrapping just
+      the `<Text>` in a local `<Suspense fallback={null}>` per `KeyCap.jsx`.
+      **Pass condition:** `npm run verify` passes; live Playwright check (desktop, 1400×900,
+      `preserveDrawingBuffer` temporarily on for the screenshot only) confirms continuous non-settling
+      drift across 3 timestamped screenshots, a visible near/far depth read with correct occlusion,
+      the scene populated within ~0.6s of opening (not blank for seconds), and zero console/page
+      errors.
 
 ---
 

@@ -7,6 +7,8 @@ import ResumeWindow from './ResumeWindow.jsx'
 import ThisPCWindow from './ThisPCWindow.jsx'
 import DeveloperLabWindow from './DeveloperLabWindow.jsx'
 import ContactInfoApp from './ContactInfoApp.jsx'
+import TechStackApp from './techStack/TechStackApp.jsx'
+import TechStackMobileGrid from './techStack/TechStackMobileGrid.jsx'
 import GmailGuestGate from './GmailGuestGate.jsx'
 import GamesNameGate from './games/GamesNameGate.jsx'
 import GamesLoadingScreen from './games/GamesLoadingScreen.jsx'
@@ -57,6 +59,7 @@ const WINDOW_PREVIEW_SIZES = {
   gmail: [1000, 550],
   'gmail-login': [900, 539],
   'contact-info': [650, 500],
+  'tech-stack': [1000, 700],
   paint: [1200, 800],
   'visitor-arts': [1200, 800],
   'memory-wall': [950, 650],
@@ -102,6 +105,7 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'gmail')
     return <GmailComposeApp guest={gmailGuest} onLogout={() => {}} />
   if (w.id === 'contact-info') return <ContactInfoApp />
+  if (w.id === 'tech-stack') return <TechStackMobileGrid />
   if (w.id === 'paint') return <PaintApp onOpenGallery={() => {}} />
   if (w.id === 'visitor-arts') return <VisitorArtsApp onOpenPaint={() => {}} />
   if (w.id === 'memory-wall') return <MemoryWallApp />
@@ -555,6 +559,20 @@ function Desktop({ onExitToBoot }) {
                 defaultHeight={500}
               >
                 <ContactInfoApp />
+              </Window>
+            )
+          }
+          if (w.id === 'tech-stack') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🧰"
+                title="Tech Stack"
+                defaultWidth={1000}
+                defaultHeight={700}
+              >
+                <TechStackApp isMinimized={shared.isMinimized} />
               </Window>
             )
           }

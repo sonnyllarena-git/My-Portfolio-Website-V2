@@ -63,6 +63,9 @@ command you actually ran.
 | Auth               | none                               | n/a                         | Single-owner portfolio, no user accounts in v1.                                                               |
 | Tests              | Vitest + React Testing Library     | 4.1.10 / 16.3.2             | Pairs natively with Vite; boring standard for React.                                                          |
 | Lint / format      | ESLint + Prettier                  | 10.8.1 / 3.9.6              | Standard, boring choice for JS/React.                                                                         |
+| 3D rendering       | three                              | 0.185.1                     | Explicit one-time exception (2026-08-27): powers the Tech Stack app's falling-keycaps scene (Phase 96).       |
+| 3D/React bridge    | @react-three/fiber                 | 9.7.0                       | React renderer for the three.js scene (same exception as above).                                              |
+| 3D helpers         | @react-three/drei                  | 10.7.8                      | `RoundedBox`/`Text`/`Decal` used to build each keycap mesh (same exception as above).                         |
 
 **Record real installed versions, not the versions you intended.** After install, read them back
 from the lockfile or manifest. "latest" is not a version — pin what actually landed.
