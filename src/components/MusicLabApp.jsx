@@ -4,10 +4,11 @@ import MusicLabSidebar from './musicLab/MusicLabSidebar.jsx'
 import MusicLabScreen from './musicLab/MusicLabScreen.jsx'
 import MusicLabAbout from './musicLab/MusicLabAbout.jsx'
 import MusicLabPlayerBar from './musicLab/MusicLabPlayerBar.jsx'
+import MusicLabFloatingPlayer from './musicLab/MusicLabFloatingPlayer.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 
-function MusicLabApp() {
+function MusicLabApp({ isMinimized = false, onRestore }) {
   const isMobile = useIsMobile()
   const { volume: masterVolume, isMuted: isMasterMuted } = useSystemSettings()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -140,6 +141,7 @@ function MusicLabApp() {
             activeType={activeType}
             activeItem={activeItem}
             isPlaying={isPlaying}
+            volume={volume}
             onTogglePlay={handleTogglePlay}
             onShuffle={handleShuffle}
             videoRef={videoRef}
@@ -172,6 +174,18 @@ function MusicLabApp() {
         onVolumeChange={setVolume}
         onClose={handleClose}
       />
+      {isMinimized && (
+        <MusicLabFloatingPlayer
+          activeItem={activeItem}
+          isPlaying={isPlaying}
+          onTogglePlay={handleTogglePlay}
+          onPrev={() => stepItem(-1)}
+          onNext={() => stepItem(1)}
+          volume={volume}
+          onVolumeChange={setVolume}
+          onRestore={onRestore}
+        />
+      )}
     </div>
   )
 }

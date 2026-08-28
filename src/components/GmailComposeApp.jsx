@@ -123,7 +123,10 @@ function GmailComposeApp({ guest, onLogout = () => {} }) {
   return (
     <div className="@container relative flex h-full w-full flex-col overflow-auto bg-white text-[#202124]">
       <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3">
-        <span className="text-sm font-medium text-gray-800">New Message</span>
+        <span className="text-sm font-medium text-gray-800">
+          © 2026 Sonny. All rights reserved. For commercial partnerships,
+          technical consultations, or business inquiries, contact Sonny.
+        </span>
         <button
           type="button"
           onClick={onLogout}

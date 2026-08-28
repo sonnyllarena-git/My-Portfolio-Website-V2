@@ -6,6 +6,7 @@ function MusicLabScreen({
   activeType,
   activeItem,
   isPlaying,
+  volume,
   onTogglePlay,
   onShuffle,
   videoRef,
@@ -34,7 +35,7 @@ function MusicLabScreen({
         )}
         {activeType === 'music' && activeItem && (
           <>
-            <MusicWave isPlaying={isPlaying} />
+            <MusicWave isPlaying={isPlaying} volume={volume} />
             {activeItem.mediaSrc && (
               <audio
                 ref={audioRef}

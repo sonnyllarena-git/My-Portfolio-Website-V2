@@ -6,6 +6,11 @@ import {
   useState,
 } from 'react'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
+import { contactInfo } from '../data/contactInfo.js'
+
+const SOCIAL_URLS = Object.fromEntries(
+  contactInfo.profiles.map((p) => [p.kind, p.url]),
+)
 
 const BOOT_LINES = [
   'Sonny Windows [ Version 10.0.239495.090 ]',
@@ -97,6 +102,69 @@ const COMMANDS = [
     label: 'Volume',
     description: 'Open the volume settings',
   },
+  {
+    command: '/techstack',
+    kind: 'open',
+    appId: 'tech-stack',
+    label: 'Tech Stack',
+    description: 'Open Tech Stack',
+  },
+  {
+    command: '/aichat',
+    kind: 'open',
+    appId: 'zoom-chat',
+    label: 'Zoom Chat',
+    description: 'Open AI Chat',
+  },
+  {
+    command: '/sonnyfacebook',
+    kind: 'link',
+    url: SOCIAL_URLS.facebook,
+    label: 'Facebook',
+    description: "Open Sonny's Facebook profile",
+  },
+  {
+    command: '/sonnyyoutube',
+    kind: 'link',
+    url: SOCIAL_URLS.youtube,
+    label: 'YouTube',
+    description: "Open Sonny's YouTube channel",
+  },
+  {
+    command: '/sonnylinkedin',
+    kind: 'link',
+    url: SOCIAL_URLS.linkedin,
+    label: 'LinkedIn',
+    description: "Open Sonny's LinkedIn profile",
+  },
+  {
+    command: '/sonnytiktok',
+    kind: 'link',
+    url: SOCIAL_URLS.tiktok,
+    label: 'TikTok',
+    description: "Open Sonny's TikTok profile",
+  },
+  {
+    command: '/sleep',
+    kind: 'power',
+    action: 'sleep',
+    label: 'Sleeping',
+    description: 'Put the system to sleep',
+  },
+  {
+    command: '/restart',
+    kind: 'power',
+    action: 'restart',
+    label: 'Restarting',
+    description: 'Restart the system',
+  },
+  {
+    command: '/shutdown',
+    kind: 'power',
+    action: 'shutdown',
+    label: 'Shutting down',
+    description: 'Shut down the system',
+  },
 ]
 
 function findCommand(raw) {
@@ -111,7 +179,7 @@ function buildHelpLines() {
 }
 
 const TerminalApp = forwardRef(function TerminalApp(
-  { onOpenApp = () => {}, isActive = false },
+  { onOpenApp = () => {}, onPowerAction = () => {}, isActive = false },
   ref,
 ) {
   const { setIsVolumeFlyoutOpen } = useSystemSettings()
@@ -150,21 +218,31 @@ const TerminalApp = forwardRef(function TerminalApp(
       setIsVolumeFlyoutOpen(true)
       return
     }
+    if (entry.kind === 'link') {
+      window.open(entry.url, '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (entry.kind === 'power') {
+      onPowerAction(entry.action)
+      return
+    }
     onOpenApp(entry.appId)
   }
 
   function runOpenCommand(entry) {
+    const phrase =
+      entry.kind === 'power' ? entry.label : `Opening ${entry.label}`
     let dots = 1
-    setLoadingLine(`Opening ${entry.label}.`)
+    setLoadingLine(`${phrase}.`)
     intervalRef.current = setInterval(() => {
       dots = dots === DOT_CYCLE_MAX ? 1 : dots + 1
-      setLoadingLine(`Opening ${entry.label}${'.'.repeat(dots)}`)
+      setLoadingLine(`${phrase}${'.'.repeat(dots)}`)
     }, DOT_INTERVAL_MS)
     timeoutRef.current = setTimeout(() => {
       clearInterval(intervalRef.current)
       if (!isMountedRef.current) return
       setLoadingLine(null)
-      setHistory((prev) => [...prev, `Opening ${entry.label}... done.`])
+      setHistory((prev) => [...prev, `${phrase}... done.`])
       dispatchOpen(entry)
     }, LOADING_DURATION_MS)
   }

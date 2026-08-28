@@ -10,6 +10,7 @@ import ContactInfoApp from './ContactInfoApp.jsx'
 import TechStackApp from './techStack/TechStackApp.jsx'
 import TechStackMobileGrid from './techStack/TechStackMobileGrid.jsx'
 import GmailGuestGate from './GmailGuestGate.jsx'
+import GmailLoadingScreen from './GmailLoadingScreen.jsx'
 import GamesNameGate from './games/GamesNameGate.jsx'
 import GamesLoadingScreen from './games/GamesLoadingScreen.jsx'
 import { useGames } from '../context/GamesContext.jsx'
@@ -138,6 +139,7 @@ function Desktop({ onExitToBoot }) {
   const [iconSize, setIconSize] = useState('medium')
   const [sortBy, setSortBy] = useState('name')
   const [gmailGuest, setGmailGuest] = useState(null)
+  const [gmailLoadingGuest, setGmailLoadingGuest] = useState(null)
   const [gamesGateOpen, setGamesGateOpen] = useState(false)
   const [gamesLoadingName, setGamesLoadingName] = useState(null)
   const [blogGateOpen, setBlogGateOpen] = useState(false)
@@ -459,6 +461,7 @@ function Desktop({ onExitToBoot }) {
             isMinimized: w.isMinimized,
             isClosing: w.isClosing,
             onMinimizeToggle: () => toggleMinimize(w.instanceId),
+            onRestore: () => handleTaskbarClick(w.instanceId),
             onClose: () => closeApp(w.instanceId),
             zIndex: 20 + index,
             onFocus: () => bringToFront(w.instanceId),
@@ -514,14 +517,21 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={900}
                 defaultHeight={539}
               >
-                <GmailGuestGate
-                  onSubmit={(guest) => {
-                    setGmailGuest(guest)
-                    shared.onClose()
-                    openApp('gmail')
-                  }}
-                  onCancel={shared.onClose}
-                />
+                {gmailLoadingGuest ? (
+                  <GmailLoadingScreen
+                    onDone={() => {
+                      setGmailGuest(gmailLoadingGuest)
+                      setGmailLoadingGuest(null)
+                      shared.onClose()
+                      openApp('gmail')
+                    }}
+                  />
+                ) : (
+                  <GmailGuestGate
+                    onSubmit={(guest) => setGmailLoadingGuest(guest)}
+                    onCancel={shared.onClose}
+                  />
+                )}
               </Window>
             )
           }
@@ -654,6 +664,7 @@ function Desktop({ onExitToBoot }) {
                 <TerminalApp
                   ref={terminalHandleRef}
                   onOpenApp={handleIconOpen}
+                  onPowerAction={setPowerAction}
                   isActive={index === openWindows.length - 1 && !w.isMinimized}
                 />
               </Window>
@@ -709,7 +720,10 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <MusicLabApp />
+                <MusicLabApp
+                  isMinimized={shared.isMinimized}
+                  onRestore={shared.onRestore}
+                />
               </Window>
             )
           }
