@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import MusicWave from './MusicWave.jsx'
 import ContextMenu from '../ContextMenu.jsx'
 import PlayIcon from '../icons/PlayIcon.jsx'
@@ -74,15 +74,30 @@ function MusicLabFloatingPlayer({
   onRestore,
 }) {
   const wrapRef = useRef(null)
+  const volumeHideTimeoutRef = useRef(null)
   const [isWaveVisible, setIsWaveVisible] = useState(false)
   const [isWaveHovered, setIsWaveHovered] = useState(false)
   const [waveColor, setWaveColor] = useState('rainbow')
   const [colorMenu, setColorMenu] = useState(null)
   const [hoveredControl, setHoveredControl] = useState(null)
+  const [isVolumeIndicatorVisible, setIsVolumeIndicatorVisible] =
+    useState(false)
   const [pos, setPos] = useState(() => ({
     x: window.innerWidth - SIZE - MARGIN,
     y: window.innerHeight - TASKBAR_HEIGHT - MARGIN - SIZE,
   }))
+
+  useEffect(() => {
+    return () => clearTimeout(volumeHideTimeoutRef.current)
+  }, [])
+
+  function showVolumeIndicator() {
+    setIsVolumeIndicatorVisible(true)
+    clearTimeout(volumeHideTimeoutRef.current)
+    volumeHideTimeoutRef.current = setTimeout(() => {
+      setIsVolumeIndicatorVisible(false)
+    }, 2000)
+  }
 
   function handleDragStart(e) {
     e.preventDefault()
@@ -177,6 +192,24 @@ function MusicLabFloatingPlayer({
           </div>
         )}
 
+        <AnimatePresence>
+          {isVolumeIndicatorVisible && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-1/2 -left-5 h-[140px] w-2 -translate-y-1/2 overflow-hidden rounded-full bg-black/25 shadow-inner"
+            >
+              <motion.div
+                className="absolute inset-x-0 bottom-0 rounded-full bg-gradient-to-t from-[#4fada7] to-[#8ee5db]"
+                animate={{ height: `${Math.max(0, Math.min(100, volume))}%` }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div
           onMouseDown={handleDragStart}
           style={{ width: SIZE, height: SIZE }}
@@ -231,7 +264,10 @@ function MusicLabFloatingPlayer({
           >
             <div className="absolute top-3 left-1/2 -translate-x-1/2">
               <button
-                onClick={() => onVolumeChange(Math.min(100, volume + 10))}
+                onClick={() => {
+                  onVolumeChange(Math.min(100, volume + 10))
+                  showVolumeIndicator()
+                }}
                 onMouseDown={stopDrag}
                 {...hoverProps('volume-up')}
                 aria-label="Volume up"
@@ -274,7 +310,10 @@ function MusicLabFloatingPlayer({
 
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
               <button
-                onClick={() => onVolumeChange(Math.max(0, volume - 10))}
+                onClick={() => {
+                  onVolumeChange(Math.max(0, volume - 10))
+                  showVolumeIndicator()
+                }}
                 onMouseDown={stopDrag}
                 {...hoverProps('volume-down')}
                 aria-label="Volume down"

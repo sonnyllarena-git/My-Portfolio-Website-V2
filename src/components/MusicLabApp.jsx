@@ -8,6 +8,25 @@ import MusicLabFloatingPlayer from './musicLab/MusicLabFloatingPlayer.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 
+const FADE_DURATION_MS = 350
+
+function fadeElementVolume(el, from, to, duration) {
+  return new Promise((resolve) => {
+    if (!el) {
+      resolve()
+      return
+    }
+    const start = performance.now()
+    function tick(now) {
+      const t = Math.min(1, (now - start) / duration)
+      el.volume = from + (to - from) * t
+      if (t < 1) requestAnimationFrame(tick)
+      else resolve()
+    }
+    requestAnimationFrame(tick)
+  })
+}
+
 function MusicLabApp({ isMinimized = false, onRestore }) {
   const isMobile = useIsMobile()
   const { volume: masterVolume, isMuted: isMasterMuted } = useSystemSettings()
@@ -79,11 +98,36 @@ function MusicLabApp({ isMinimized = false, onRestore }) {
     setDuration(item.mediaSrc ? 0 : (item.duration ?? 0))
   }
 
-  function stepItem(offset) {
+  async function stepItem(offset) {
     if (!activeItem) return
     const index = items.findIndex((item) => item.id === activeItem.id)
     const next = items[(index + offset + items.length) % items.length]
+    const targetVolume = isMasterMuted
+      ? 0
+      : (volume / 100) * (masterVolume / 100)
+    const currentEl =
+      activeType === 'video'
+        ? videoRef.current
+        : activeItem.mediaSrc
+          ? audioRef.current
+          : null
+
+    if (currentEl) {
+      await fadeElementVolume(currentEl, currentEl.volume, 0, FADE_DURATION_MS)
+    }
+
     handleSelectItem(next)
+    setIsPlaying(true)
+
+    requestAnimationFrame(() => {
+      const nextEl =
+        activeType === 'video'
+          ? videoRef.current
+          : next.mediaSrc
+            ? audioRef.current
+            : null
+      if (nextEl) fadeElementVolume(nextEl, 0, targetVolume, FADE_DURATION_MS)
+    })
   }
 
   function handleShuffle() {
