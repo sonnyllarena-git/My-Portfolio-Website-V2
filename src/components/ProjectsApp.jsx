@@ -4,6 +4,7 @@ import ProjectsCategorySidebar from './projects/ProjectsCategorySidebar.jsx'
 import ProjectsHero from './projects/ProjectsHero.jsx'
 import ProjectsMoreList from './projects/ProjectsMoreList.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
+import projectsBackground from './projects/assets/projects background.png'
 
 function ProjectsApp() {
   const isMobile = useIsMobile()
@@ -19,7 +20,13 @@ function ProjectsApp() {
   const selectedProject = projects.find((project) => project.id === selectedId)
 
   return (
-    <div className="scrollbar-dark h-full overflow-y-auto bg-[#0b0d12] text-white">
+    <div
+      className="scrollbar-dark h-full overflow-y-auto bg-[#0b0d12] bg-center bg-no-repeat text-white"
+      style={{
+        backgroundImage: `url(${projectsBackground})`,
+        backgroundSize: '1536px 1024px',
+      }}
+    >
       <div className="mx-auto w-full max-w-6xl px-6">
         <div className="mb-8 border-b border-white/10 pt-8 pb-6">
           <div className="text-xs font-semibold tracking-widest text-blue-400 uppercase">

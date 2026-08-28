@@ -2,7 +2,7 @@ function ProjectsHero({ project, isMobile = false }) {
   if (!project) {
     return (
       <div
-        className={`flex items-center justify-center rounded-xl border border-white/10 bg-[#141414] text-white/40 ${
+        className={`flex items-center justify-center rounded-xl border border-white/10 bg-[#141414]/60 text-white/40 backdrop-blur-sm ${
           isMobile ? 'py-16' : 'h-[500px]'
         }`}
       >
@@ -13,7 +13,7 @@ function ProjectsHero({ project, isMobile = false }) {
 
   return (
     <div
-      className={`flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#141414] ${
+      className={`flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#141414]/60 backdrop-blur-sm ${
         isMobile ? '' : 'h-[500px]'
       }`}
     >
@@ -58,7 +58,7 @@ function ProjectsHero({ project, isMobile = false }) {
         </div>
       </div>
       {project.projectLink && (
-        <div className="shrink-0 border-t border-white/10 bg-[#141414] px-6 py-4 text-center">
+        <div className="shrink-0 border-t border-white/10 bg-[#141414]/60 px-6 py-4 text-center backdrop-blur-sm">
           <a
             href={project.projectLink}
             target="_blank"

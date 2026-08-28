@@ -1,19 +1,14 @@
-import { motion } from 'framer-motion'
 import { contactInfo } from '../data/contactInfo.js'
 import SocialIcon from './contactCard/SocialIcon.jsx'
-import sIcon from '../assets/icons/S icon.png'
+import neonCardPhoto from './contactCard/assets/neon card photo.png'
 import bgVideo from '../assets/HD background.mp4'
-
-function getField(label) {
-  return contactInfo.fields.find((field) => field.label === label)?.value
-}
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function ContactInfoApp() {
-  const name = getField('Name')
-  const role = getField('Role')
+  const isMobile = useIsMobile()
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-auto p-6">
+    <div className="relative flex h-full w-full items-center justify-center overflow-auto p-6 text-white">
       <video
         src={bgVideo}
         autoPlay
@@ -23,45 +18,51 @@ function ContactInfoApp() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-black/40" />
-      <motion.div
-        animate={{ y: [0, -12, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="relative w-full max-w-sm rounded-2xl border border-cyan-400/20 bg-[#0b1220]/60 p-6 shadow-2xl shadow-black/50 backdrop-blur-md"
+      <div
+        className={`relative w-full max-w-4xl overflow-hidden rounded-2xl border border-blue-400/40 bg-black/60 ${
+          isMobile
+            ? 'flex flex-col gap-6 p-6'
+            : 'flex gap-6 px-6 py-8 md:gap-10 md:px-10'
+        }`}
       >
-        <div className="flex items-center gap-4">
-          <img
-            src={sIcon}
-            alt=""
-            className="h-14 w-14 rounded-xl border border-white/10"
-          />
-          <div>
-            <div className="text-lg font-semibold">{name}</div>
-            <div className="text-sm text-white/60">{role}</div>
-          </div>
-        </div>
-        <div className="mt-6 space-y-2">
+        <img
+          src={neonCardPhoto}
+          alt="Sonny Llarena"
+          className={
+            isMobile
+              ? 'h-64 w-full shrink-0 rounded-2xl object-contain'
+              : 'min-w-0 grow-[55] basis-0 self-stretch rounded-2xl object-contain'
+          }
+        />
+        <div
+          className={`flex min-w-0 flex-col justify-center gap-3 ${
+            isMobile ? 'w-full' : 'grow-[45] basis-0'
+          }`}
+        >
           {contactInfo.profiles.map((profile) => (
             <a
               key={profile.label}
               href={profile.url}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm backdrop-blur-sm transition hover:bg-white/10"
+              className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 transition hover:bg-white/10"
             >
               <SocialIcon kind={profile.kind} />
               <span className="min-w-0 flex-1">
-                <span className="block font-medium">{profile.label}</span>
+                <span className="block text-base font-semibold">
+                  {profile.label}
+                </span>
                 {profile.value && (
-                  <span className="block truncate text-xs text-white/50">
+                  <span className="block truncate text-sm text-white/50">
                     {profile.value}
                   </span>
                 )}
               </span>
-              <span className="text-white/30">↗</span>
+              <span className="text-lg text-white/30">↗</span>
             </a>
           ))}
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }
