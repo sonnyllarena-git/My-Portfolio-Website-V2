@@ -5,6 +5,7 @@ import { dirname, join, extname } from 'node:path'
 import { existsSync, mkdirSync } from 'node:fs'
 import authRouter from './routes/auth.js'
 import productsRouter from './routes/products.js'
+import resumeTemplatesRouter from './routes/resumeTemplates.js'
 import requireAuth from './middleware/requireAuth.js'
 
 const uploadsDir = join(dirname(fileURLToPath(import.meta.url)), 'uploads')
@@ -27,6 +28,7 @@ app.use(express.json())
 app.use('/uploads', express.static(uploadsDir))
 app.use('/api', authRouter)
 app.use('/api/products', productsRouter)
+app.use('/api/resume-templates', resumeTemplatesRouter)
 
 app.post(
   '/api/uploads',

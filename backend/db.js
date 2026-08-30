@@ -49,4 +49,19 @@ if (!productColumns.some((column) => column.name === 'published')) {
   )
 }
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS resumeTemplates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE,
+    templateKey TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    thumbnailUrl TEXT,
+    accentHex TEXT,
+    published INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL
+  )
+`)
+
 export default db

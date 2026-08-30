@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import AdminLogin from './AdminLogin.jsx'
 import AdminLayout from './AdminLayout.jsx'
 import AdminProductsPage from './AdminProductsPage.jsx'
+import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
 import AdminSettingsPage from './AdminSettingsPage.jsx'
 import { AdminSettingsProvider } from './AdminSettingsContext.jsx'
 import { getToken, clearToken } from './api.js'
@@ -45,7 +46,13 @@ export default function AdminApp() {
         onNavigate={setView}
         onLogout={handleLogout}
       >
-        {view === 'products' ? <AdminProductsPage /> : <AdminSettingsPage />}
+        {view === 'products' ? (
+          <AdminProductsPage />
+        ) : view === 'resume-templates' ? (
+          <AdminResumeTemplatesPage />
+        ) : (
+          <AdminSettingsPage />
+        )}
       </AdminLayout>
     </AdminSettingsProvider>
   )

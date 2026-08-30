@@ -310,7 +310,32 @@ function initialDetails(product) {
   return details
 }
 
-export default function AdminProductForm({ product, onSaved, onCancel }) {
+async function defaultSavePayload(payload, existingProduct) {
+  return existingProduct
+    ? apiFetch(`/products/${existingProduct.code}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      })
+    : apiFetch('/products', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+async function defaultUploadFiles(files) {
+  const formData = new FormData()
+  files.forEach((file) => formData.append('photos', file))
+  const uploaded = await apiFetch('/uploads', {
+    method: 'POST',
+    body: formData,
+  })
+  return uploaded.urls
+}
+
+export default function AdminProductForm({
+  product,
+  onSaved,
+  onCancel,
+  savePayload = defaultSavePayload,
+  uploadFiles = defaultUploadFiles,
+}) {
   const [name, setName] = useState(product?.name ?? '')
   const [title, setTitle] = useState(product?.title ?? '')
   const [description, setDescription] = useState(product?.description ?? '')
@@ -348,13 +373,7 @@ export default function AdminProductForm({ product, onSaved, onCancel }) {
     const slotsToUpload = photoSlots.filter((slot) => slot.file)
     let uploadedUrls = []
     if (slotsToUpload.length) {
-      const formData = new FormData()
-      slotsToUpload.forEach((slot) => formData.append('photos', slot.file))
-      const uploaded = await apiFetch('/uploads', {
-        method: 'POST',
-        body: formData,
-      })
-      uploadedUrls = uploaded.urls
+      uploadedUrls = await uploadFiles(slotsToUpload.map((slot) => slot.file))
     }
     let uploadIndex = 0
     return photoSlots
@@ -380,15 +399,7 @@ export default function AdminProductForm({ product, onSaved, onCancel }) {
         ...details,
       }
 
-      const saved = product
-        ? await apiFetch(`/products/${product.code}`, {
-            method: 'PUT',
-            body: JSON.stringify(payload),
-          })
-        : await apiFetch('/products', {
-            method: 'POST',
-            body: JSON.stringify(payload),
-          })
+      const saved = await savePayload(payload, product)
 
       onSaved(saved)
     } catch (err) {

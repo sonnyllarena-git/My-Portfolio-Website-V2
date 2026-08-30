@@ -40,8 +40,34 @@ project (re-approving `three`/`@react-three/fiber`/`@react-three/drei` as a one-
 3 CLAUDE.md §2 rows Phase 94 used), then reworked per Sonny's direct follow-up (P568) into a
 no-gravity floating scene — keycaps drift/tumble forever instead of falling into a pile, in one
 single `<Canvas>` (not two) so every keycap is properly interactive and three.js's own depth buffer
-gives a real near/far 3D read — complete as of 2026-08-27.
-**Last verified:** 2026-08-27 — `npm run verify` → PASS (24/24 test files, 62/62 tests)
+gives a real near/far 3D read — complete as of 2026-08-27. Phase 98 (P572-P605) — built the new
+public Resume Generator app end-to-end: reused the existing Express/better-sqlite3 backend for an
+admin-managed `resumeTemplates` table (Draft→Preview→Publish, mirroring the Store catalog), a
+9-step visitor wizard (Personal Details, Experience, Education, Trainings/Certs, Skills, Projects,
+Achievements, References, Summary) with ephemeral client-only state and a native
+`contentEditable`/`execCommand` rich-text field (no new dependency), browser print-to-PDF via a
+`.resume-generator-print-area` CSS rule, and the `resume-generator` desktop icon/window. Phase 98
+Addendum (P606-P616) — added a photo-upload field (client-side `URL.createObjectURL`, never sent
+to the server) and Website/References/Achievements/Projects to the shared wizard, then built 3 real
+coded templates (`OfficeAssistantTemplate`, `EngineerSidebarTemplate`, `SalesSidebarTemplate`)
+recreating Sonny's supplied design references; live-verification caught and fixed a real bug where
+"Change template" from the Preview step reset the wizard to step 1 instead of returning to Preview
+— complete as of 2026-08-29. Also fixed an unrelated accidental data loss during this thread:
+`backend/data/catalog.db` (the Store's product catalog) was deleted while verifying a schema
+change and could not be recovered — the Store's product list is now empty and needs repopulating
+via the admin portal whenever Sonny gets to it. Direct fix (2026-08-30, no phase number): resized
+the resume paper to a fixed 8.5in × 11in (US Letter) on screen across all four templates
+(`ClassicTemplate`/`OfficeAssistantTemplate`/`EngineerSidebarTemplate`/`SalesSidebarTemplate`) and
+switched `resumeGeneratorPrint.css`'s `@page` size from A4 to `letter` to match. Phase 99
+(P617-P626) — added a "Admin Demo" desktop app so guests can try the real Products/Resume
+Templates admin UI without risk: `AdminProductForm.jsx`/`AdminResumeTemplateForm.jsx` gained
+optional `savePayload`/`uploadFiles` override props (defaulting to their original `apiFetch`
+behavior, so the real `/admin` portal is untouched), a new `src/guestAdmin/` folder seeds its state
+once from the real **published** products/templates and mutates only local React state (never
+writes to the real `catalog.db`), with a "Reset demo" button and automatic reset on window
+close/reopen or page refresh — live-verified end-to-end including confirming real DB row counts
+are unchanged after adding/resetting demo data — complete as of 2026-08-30.
+**Last verified:** 2026-08-30 — `npm run verify` → PASS (51/51 test files, 96/96 tests)
 **Verify command:** `npm run verify`
 
 ---
@@ -5971,6 +5997,315 @@ permission to open this file." instead of silently doing nothing._
       double-clicking Resume opens the real Resume window; This PC > Downloads shows the redesigned
       Access Denied modal with the exact message and triggers the real error sound's `play()`; This
       PC > Local Disk (C:) app shortcuts still work (no regression); zero console/page errors.
+
+---
+
+## PHASE 98 — RESUME GENERATOR (PUBLIC APP + ADMIN-MANAGED TEMPLATES)
+
+_Sonny asked for a public Resume Generator app: a visitor fills a multi-step wizard (personal
+info, work experience, education, trainings/certifications, skills, professional summary), picks
+a coded template recreating a Canva-designed look, and downloads a PDF via the browser's own
+print-to-PDF. Visitor data is ephemeral (never sent to or stored on the server); only the
+templates themselves are admin-managed and persisted, reusing the Express + better-sqlite3
+backend already built for the Store catalog. Full design in the approved plan at
+`C:\Users\SonnyLlarena\.claude\plans\can-we-create-a-zazzy-prism.md`._
+
+- [x] **P572** — Fix CLAUDE.md §2's stale `Backend: none` / `Database: none` rows to name the real
+      Express + better-sqlite3 backend already running for the Store (`backend/server.js`,
+      `backend/db.js`), noting this phase adds a `resumeTemplates` table to the same DB.
+      **Pass condition:** `npm run verify` passes; §2's Backend/Database rows name Express/
+      better-sqlite3 with a one-line "why" referencing the Store backend.
+- [x] **P573** — Extract `stripImmutableFields` out of `backend/productCode.js` into
+      `backend/utils/stripImmutableFields.js`; update `backend/productCode.js` and
+      `backend/routes/products.js` imports.
+      **Pass condition:** `npm run verify` passes; existing `backend/productCode.test.js` still
+      passes unchanged.
+- [x] **P574** — Add `backend/resumeTemplateCode.js` exporting `generateTemplateCode(id)` →
+      `TPL-0001`-style string, plus `backend/resumeTemplateCode.test.js`.
+      **Pass condition:** `npm run verify` passes; new test passes.
+- [x] **P575** — Add the `resumeTemplates` table (code, templateKey, name, description,
+      thumbnailUrl, accentHex, published, createdAt, updatedAt) to `backend/db.js`.
+      **Pass condition:** `npm run verify` passes; `npm run server` boots and creates the table in
+      `backend/data/catalog.db` with no errors.
+- [x] **P576** — Add `backend/routes/resumeTemplates.js` with GET list (`?published=true` filter)
+      and GET-by-code only; mount at `/api/resume-templates` in `backend/server.js`.
+      **Pass condition:** `npm run verify` passes; `curl localhost:4000/api/resume-templates`
+      returns `[]` on an empty table.
+- [x] **P577** — Add POST `/` and PUT `/:code` to `resumeTemplates.js`, `requireAuth`-gated, using
+      `generateTemplateCode` + shared `stripImmutableFields`.
+      **Pass condition:** `npm run verify` passes; POST with a valid admin bearer token creates a
+      `TPL-0001` row; POST without a token returns 401.
+- [x] **P578** — Add PATCH `/:code/publish` and DELETE `/:code` to `resumeTemplates.js`,
+      `requireAuth`-gated.
+      **Pass condition:** `npm run verify` passes; PATCH flips `published` 0→1; DELETE removes a
+      row and a second DELETE of the same code returns 404.
+- [x] **P579** — Add `src/components/resumeGenerator/templates/index.js` (empty `RESUME_TEMPLATES
+= {}` registry) + `templates/sampleResumeData.js` (one fixed fake resume covering all six
+      sections) + a trivial test asserting the fixture's top-level keys.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P580** — Add `src/components/resumeGenerator/RichTextField.jsx`: a `contentEditable` field
+      with a bold/italic/underline/bullet-list/numbered-list toolbar using
+      `document.execCommand`, storing the result as a sanitized HTML string. No new dependency.
+      **Pass condition:** `npm run verify` passes; test confirms clicking Bold wraps a selection
+      and the field's value updates.
+- [x] **P581** — Add `src/components/resumeGenerator/ResumeGeneratorContext.jsx`: ephemeral
+      Provider/hook (`selectedTemplateKey`, `personalInfo`, `workExperience[]`, `education[]`,
+      `trainings[]`, `skills[]`, `summary` + setters), pure `useState`, no localStorage/fetch.
+      **Pass condition:** `npm run verify` passes; test confirms adding a work-experience row
+      appends it and a fresh mount starts empty.
+- [x] **P582** — Add `src/context/ResumeTemplatesContext.jsx` fetching
+      `/api/resume-templates?published=true` once (mirrors `StoreCatalogContext.jsx`, no
+      localStorage).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P583** — Add `src/components/resumeGenerator/TemplatePickerScreen.jsx`: grid of published
+      templates from `useResumeTemplates()`; selecting one sets `selectedTemplateKey` and advances
+      the wizard.
+      **Pass condition:** `npm run verify` passes; test with two mock templates confirms clicking
+      one fires the expected callback.
+- [x] **P584** — Add `src/components/resumeGenerator/RepeatableFieldList.jsx`: generic add/
+      remove-row shell for the four repeatable sections.
+      **Pass condition:** `npm run verify` passes; test confirms "Add" appends a row and "Remove"
+      removes only the targeted row.
+- [x] **P585** — Add `src/components/resumeGenerator/sections/PersonalInfoSection.jsx`: name,
+      address, phone, email, optional target-role field, bound to context.
+      **Pass condition:** `npm run verify` passes; test confirms typing updates context state.
+- [x] **P586** — Add `src/components/resumeGenerator/sections/WorkExperienceSection.jsx` on
+      `RepeatableFieldList` (employer, title, start/end date, city/state, `RichTextField`
+      description).
+      **Pass condition:** `npm run verify` passes; test confirms editing one entry doesn't affect
+      a second added entry.
+- [x] **P587** — Add `src/components/resumeGenerator/sections/EducationSection.jsx` on
+      `RepeatableFieldList` (school, degree, start/end date, city, `RichTextField` description).
+      **Pass condition:** `npm run verify` passes; test confirms add/remove/edit per-entry.
+- [x] **P588** — Add `src/components/resumeGenerator/sections/TrainingsSection.jsx` on
+      `RepeatableFieldList` (name, issuing organization, date).
+      **Pass condition:** `npm run verify` passes; test confirms add/remove.
+- [x] **P589** — Add `src/components/resumeGenerator/sections/SkillsSection.jsx` on
+      `RepeatableFieldList` (skill name + a plain `<select>` proficiency level).
+      **Pass condition:** `npm run verify` passes; test confirms add/remove.
+- [x] **P590** — Add `src/components/resumeGenerator/sections/ProfessionalSummarySection.jsx`: a
+      single `RichTextField` bound to context's `summary`.
+      **Pass condition:** `npm run verify` passes; test confirms typing updates context state.
+- [x] **P591** — Add `src/components/resumeGenerator/templates/ClassicTemplate.jsx`: print-ready
+      single-column layout rendering all six sections from a `resumeData` prop, registered as
+      `'classic'` in `templates/index.js`.
+      **Pass condition:** `npm run verify` passes; rendering it with `sampleResumeData` shows all
+      six sections with zero console errors.
+- [x] **P592** — Add `src/components/resumeGenerator/resumeGeneratorPrint.css` (`@media print`
+      hide-all-except-`.resume-generator-print-area` + `@page` size rule), not yet imported
+      anywhere.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P593** — Add `src/components/resumeGenerator/ResumeLivePreview.jsx`: resolves
+      `RESUME_TEMPLATES[selectedTemplateKey]`, renders it with live context data (falling back to
+      `sampleResumeData` for empty fields), wrapped in `.resume-generator-print-area`, plus a
+      "Change template" link and a "Print / Save as PDF" button calling `window.print()`.
+      **Pass condition:** `npm run verify` passes; test confirms changed context data re-renders
+      visible preview text and clicking the button calls the mocked `window.print`.
+- [x] **P594** — Add `src/components/resumeGenerator/ResumeBuilderForm.jsx`: the wizard shell —
+      step index state (0 = template picker, 1-6 = the six sections, 7 = preview & download), one
+      shared Back/Next + progress-dots control strip, renders the active step's component.
+      **Pass condition:** `npm run verify` passes; test confirms clicking Next advances the step
+      and Back returns to the previous one.
+- [x] **P595** — Add `src/components/resumeGenerator/ResumeGeneratorApp.jsx`: mounts both
+      providers, imports the print CSS, renders `ResumeBuilderForm`.
+      **Pass condition:** `npm run verify` passes; test renders the app, selects a mock template,
+      and confirms the wizard advances through to the preview step.
+- [x] **P596** — `git mv "src/components/resume generator/Resume Generator.png"
+src/assets/icons/resume-generator.png`; delete the now-empty `src/components/resume
+generator/` folder (including the two reference JPGs). Register the PNG in
+      `src/assets/icons/index.js`.
+      **Pass condition:** `npm run verify` passes; no remaining reference to the old path.
+- [x] **P597** — Add `{ id: 'resume-generator', label: 'Resume Generator', icon: '📄', sizeKB: 640
+}` to `src/data/desktopIcons.js`; add a `WINDOW_PREVIEW_SIZES` entry and a
+      `renderPreviewBody()` branch in `src/components/Desktop.jsx`.
+      **Pass condition:** `npm run verify` passes; the new icon appears on the desktop grid with
+      the real PNG glyph.
+- [x] **P598** — Add the `<Window>`-wrapped open-window branch for `w.id === 'resume-generator'`
+      in `Desktop.jsx` (title "Resume Generator", `defaultWidth={1200}`, `defaultHeight={800}`).
+      **Pass condition:** `npm run verify` passes; live Playwright check confirms double-clicking
+      the icon opens a draggable/resizable window showing the template picker, zero console
+      errors.
+- [x] **P599** — Mobile pass: verify responsive spacing/sizing across a few representative wizard
+      steps at 390×844 (relies on `Window.jsx`'s existing mobile-fullscreen behavior — no separate
+      mobile layout component needed for a single-step-at-a-time wizard). Resequenced after P596-598
+      since a live mobile check needs the app reachable via its real desktop icon first.
+      **Pass condition:** `npm run verify` passes; live Playwright check at 390×844 shows no
+      clipping and a reachable Back/Next strip across the checked steps.
+- [x] **P600** — Add `src/admin/AdminResumeTemplatesPage.jsx` (list table only) + nav wiring into
+      `AdminLayout.jsx`/`AdminApp.jsx`.
+      **Pass condition:** `npm run verify` passes; `/admin` shows a "Resume Templates" nav item
+      listing existing rows (empty-state message if none).
+- [x] **P601** — Add `src/admin/AdminResumeTemplateForm.jsx` (name/description/templateKey
+      select/accentHex select/single thumbnail upload) wired to Add/Edit in
+      `AdminResumeTemplatesPage.jsx`.
+      **Pass condition:** `npm run verify` passes; creating a template persists it with a
+      generated `TPL-000N` code.
+- [x] **P602** — Add `src/admin/AdminResumeTemplatePreview.jsx` (renders the coded template with
+      `sampleResumeData` + Publish button) wired into `AdminResumeTemplatesPage.jsx`.
+      **Pass condition:** `npm run verify` passes; live Playwright check confirms Preview shows the
+      sample resume in the chosen template and Publish flips the status badge.
+- [x] **P603** — Add an empty-state message in `TemplatePickerScreen.jsx` for zero published
+      templates.
+      **Pass condition:** `npm run verify` passes; live Playwright check with zero published
+      templates shows the empty-state message, not a blank grid.
+- [ ] **P604** — Manual Chrome print-preview check of `resumeGeneratorPrint.css` (page size/
+      margins, chrome fully hidden).
+      **Pass condition:** manual Chrome print-preview screenshot shows only resume content, no
+      desktop chrome, no cropped edges — confirmed by Sonny.
+- [ ] **P605** — Full-flow live Playwright check at 1400×900 and 390×844: pick a template, fill
+      all six wizard steps with ≥2 repeatable rows in Work Experience, use rich-text formatting in
+      a description, reach Preview & Download, change template (data persists), print-preview,
+      close the window (state resets on reopen).
+      **Pass condition:** zero console/page errors across both viewports; `npm run verify` passes.
+
+---
+
+## PHASE 98 ADDENDUM — RESUME GENERATOR: PHOTO/WEBSITE/REFERENCES/ACHIEVEMENTS/PROJECTS + 3 NEW TEMPLATES
+
+_Sonny supplied three real resume design references (Adeline Palmerston/Office Assistant,
+Benjamin Shah/Mechatronics Engineer, Jack Rowe/Sales Executive) to recreate as coded templates.
+All three need a photo and website field; Adeline's needs a References section; Jack Rowe's needs
+Achievements and Projects sections. Sonny confirmed (2026-08-29) he wants full fidelity — new
+wizard steps for all of these, not adapted/simplified versions. Certifications across all three
+reuses the existing Trainings/Certifications data (relabeled per-template); Languages (Benjamin's
+design) reuses the existing Skills list — neither needs a new field._
+
+- [x] **P606** — Extend `ResumeGeneratorContext.jsx`'s `EMPTY_PERSONAL_INFO` with `photoUrl` and
+      `website`; add `references[]`, `achievements[]`, `projects[]` state + setters. Extend
+      `templates/sampleResumeData.js` to match (sample references/achievements/projects entries,
+      `website`, `photoUrl: null`).
+      **Pass condition:** `npm run verify` passes; existing `ResumeGeneratorContext.test.jsx` still
+      passes unchanged.
+- [x] **P607** — Extend `sections/PersonalInfoSection.jsx`: add a `Website` text input, and a photo
+      upload control using `URL.createObjectURL(file)` client-side only (never `POST`ed anywhere —
+      the existing `/api/uploads` endpoint is admin-auth-gated and unreachable by a visitor anyway,
+      consistent with decision #5's ephemeral/never-sent-to-server rule).
+      **Pass condition:** `npm run verify` passes; test confirms selecting a file sets a preview
+      `<img>` and typing in Website updates context state.
+- [x] **P608** — Add `sections/ReferencesSection.jsx` on `RepeatableFieldList` (name, title/company,
+      email, phone) + test.
+      **Pass condition:** `npm run verify` passes; test confirms add/remove/edit per-entry.
+- [x] **P609** — Add `sections/AchievementsSection.jsx` on `RepeatableFieldList` (single
+      `description` field per row) + test.
+      **Pass condition:** `npm run verify` passes; test confirms add/remove/edit per-entry.
+- [x] **P610** — Add `sections/ProjectsSection.jsx` on `RepeatableFieldList` (name, date,
+      description) + test.
+      **Pass condition:** `npm run verify` passes; test confirms add/remove/edit per-entry.
+- [x] **P611** — Wire `ProjectsSection`, `AchievementsSection`, `ReferencesSection` into
+      `ResumeBuilderForm.jsx`'s `SECTION_STEPS` array (after Skills, before Summary — order:
+      Personal → Experience → Education → Trainings/Certs → Skills → Projects → Achievements →
+      References → Summary → Preview). `LAST_STEP`'s existing `SECTION_STEPS.length + 1` formula
+      needs no manual change.
+      **Pass condition:** `npm run verify` passes; existing `ResumeBuilderForm.test.jsx` still
+      passes; live check confirms all 9 steps are reachable via Next/Back in order.
+- [x] **P612** — Update `ResumeLivePreview.jsx`'s `resolveResumeData` fallback merge to cover the
+      new fields (`photoUrl`/`website` per-field fallback like the rest of `personalInfo`;
+      `references`/`achievements`/`projects` empty-list fallback like `workExperience`/`education`).
+      **Pass condition:** `npm run verify` passes; existing `ResumeLivePreview.test.jsx` still
+      passes.
+- [x] **P613** — Add `templates/OfficeAssistantTemplate.jsx` recreating the Adeline Palmerston
+      reference (bold caps name/title header, photo top-right, contact-icon row, CAREER OVERVIEW,
+      two-column Education+Skills / Experience, REFERENCE section from `references[0]`). Register as
+      `'office-assistant'` in `templates/index.js`.
+      **Pass condition:** `npm run verify` passes; rendering with `sampleResumeData` shows all
+      sections with zero console errors.
+- [x] **P614** — Add `templates/EngineerSidebarTemplate.jsx` recreating the Benjamin Shah reference
+      (photo top-left beside a name/address/phone/email/website block, accent-colored section
+      headings, single-column Work Experience/Education, one "Additional Information" section
+      listing Skills under "Technical Skills" and Trainings/Certifications under "Certifications").
+      Register as `'engineer-sidebar'`.
+      **Pass condition:** `npm run verify` passes; rendering with `sampleResumeData` shows all
+      sections with zero console errors.
+- [x] **P615** — Add `templates/SalesSidebarTemplate.jsx` recreating the Jack Rowe reference (narrow
+      left sidebar: photo, phone/website, Education, Certifications from Trainings data,
+      Achievements; main column: name/title, Professional Summary, Work Experience, Projects).
+      Register as `'sales-sidebar'`.
+      **Pass condition:** `npm run verify` passes; rendering with `sampleResumeData` shows all
+      sections with zero console errors.
+- [x] **P616** — Live-verify end-to-end: in the admin portal, create and publish all three new
+      templates (no thumbnail needed); in the public app, complete the full 9-step wizard including
+      a photo, website, and at least one Reference/Achievement/Project entry; confirm each of the
+      four templates (Classic + 3 new) renders correctly in Preview & Download and switching between
+      them preserves the entered data; print-preview at least one of the new templates to confirm
+      the existing `resumeGeneratorPrint.css` still isolates it correctly.
+      **Pass condition:** zero console/page errors; `npm run verify` passes.
+
+---
+
+## PHASE 99 — GUEST ADMIN SANDBOX (try-it-yourself Products + Resume Templates demo)
+
+_Sonny asked (2026-08-30) to add the admin portal to the desktop so any visitor can try it, but
+guest edits must never touch the real `catalog.db` (shared with the live Store/Resume Generator).
+Decision confirmed with Sonny: keep the real `/admin` portal exactly as-is; build a separate new
+desktop app that looks/behaves like it but writes only to local React state, seeded once from the
+real **published** products/templates (`GET /api/products?published=true` and
+`GET /api/resume-templates?published=true` — both public, no auth). Sonny will publish real
+products/templates later via the real admin portal, and those become this sandbox's defaults
+automatically. Closing the window (or a full page refresh) unmounts the sandbox's state, which
+re-seeds fresh on reopen — the same "resets to default" behavior already proven for the Resume
+Generator's ephemeral visitor state, no extra reset job needed. No login gate — there is no real
+account to protect in a local-only sandbox._
+
+- [x] **P617** — In `src/admin/AdminProductForm.jsx`, add two optional props: `savePayload`
+      (async `(payload, existingProduct) => savedProduct`) and `uploadFiles` (async
+      `(files) => urls[]`), each defaulting to the current hardcoded `apiFetch` calls when not
+      passed. Replace the direct `apiFetch` calls in `handleSubmit`/`buildImages` with these.
+      **Pass condition:** `npm run verify` passes (no existing test file for this component; manual
+      check confirms the real `/admin` Products flow still saves/uploads via `apiFetch` when no
+      override props are passed).
+- [x] **P618** — Same change in `src/admin/AdminResumeTemplateForm.jsx`: optional `savePayload` and
+      `uploadFile` (single-file version) props, defaulting to the current `apiFetch` calls.
+      **Pass condition:** `npm run verify` passes (no existing test file for this component; manual
+      check confirms the real `/admin` Resume Templates flow still saves/uploads via `apiFetch`
+      when no override props are passed).
+- [x] **P619** — Add `src/guestAdmin/useSandboxCollection.js`: a hook taking a seed URL + a code
+      prefix, that fetches the seed URL once on mount into local state, and exposes
+      `{items, loading, add(item), update(code, item), remove(code), publish(code)}` — all pure
+      local mutations, generating `${prefix}-DEMO-000N` codes for new items, never calling the
+      network for writes.
+      **Pass condition:** `npm run verify` passes; test confirms `add` appends a locally-coded item
+      and `remove`/`publish` mutate only local state (mocked `fetch` called once, for the seed GET).
+- [x] **P620** — Add `src/guestAdmin/GuestAdminLayout.jsx`: sidebar+header shell like
+      `AdminLayout.jsx` but `h-full` (not `min-h-screen`, since it renders inside a desktop
+      `Window`), a "Guest Mode — changes reset on refresh" badge instead of a Log out button, and a
+      "Reset demo" button calling an `onReset` prop.
+      **Pass condition:** `npm run verify` passes; test renders the badge and calls `onReset` on
+      click.
+- [x] **P621** — Add `src/guestAdmin/GuestAdminProductsPage.jsx`: same table/Add/Edit/Preview/
+      Delete/Publish UI as `AdminProductsPage.jsx`, wired to
+      `useSandboxCollection('/api/products?published=true', 'PROD')`, passing local no-network
+      `savePayload`/`uploadFiles` (using `URL.createObjectURL` for photos) into `AdminProductForm`.
+      **Pass condition:** `npm run verify` passes; test confirms adding a product appends it locally
+      with zero `fetch` write calls.
+- [x] **P622** — Add `src/guestAdmin/GuestAdminResumeTemplatesPage.jsx`: same pattern as P621 for
+      `useSandboxCollection('/api/resume-templates?published=true', 'TPL')` and
+      `AdminResumeTemplateForm`.
+      **Pass condition:** `npm run verify` passes; test confirms adding a template appends it
+      locally with zero `fetch` write calls.
+- [x] **P623** — Add `src/guestAdmin/GuestAdminApp.jsx`: mounts `GuestAdminLayout` with a `view`
+      state toggling between `GuestAdminProductsPage`/`GuestAdminResumeTemplatesPage`; `onReset`
+      remounts both pages (e.g. a `resetKey` bumped into their `key` prop) to re-seed from real
+      published data.
+      **Pass condition:** `npm run verify` passes; test confirms clicking "Reset demo" clears a
+      locally-added item.
+- [x] **P624** — Add `{ id: 'admin-demo', label: 'Admin Demo', icon: '🧪', sizeKB: 512 }` to
+      `src/data/desktopIcons.js`; add a `WINDOW_PREVIEW_SIZES` entry and a `renderPreviewBody()`
+      branch in `src/components/Desktop.jsx` (emoji-only glyph — no custom PNG supplied for this
+      icon).
+      **Pass condition:** `npm run verify` passes; the new icon appears on the desktop grid.
+- [x] **P625** — Add the `<Window>`-wrapped open-window branch for `w.id === 'admin-demo'` in
+      `Desktop.jsx` (title "Admin Demo", `defaultWidth={1200}`, `defaultHeight={800}`), rendering
+      `GuestAdminApp`.
+      **Pass condition:** `npm run verify` passes; live Playwright check confirms double-clicking
+      the icon opens a window showing real published products/templates as seeded defaults, zero
+      console errors.
+- [x] **P626** — Live-verify end-to-end: add/edit/publish/delete a demo product and a demo template
+      in the sandbox, confirm the changes show immediately; click "Reset demo" and confirm it goes
+      back to the real published defaults; close the window, reopen it, confirm defaults again (not
+      the guest's edits); confirm `GET /api/products` and `GET /api/resume-templates` show no new
+      rows from any of this (proving nothing was written to the real database).
+      **Pass condition:** zero console/page errors; `npm run verify` passes; real DB row counts
+      unchanged before/after.
 
 ---
 

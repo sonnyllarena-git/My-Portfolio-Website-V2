@@ -1,5 +1,3 @@
-import logo from '../components/store/assets/components/sonny store logo.png'
-import { useAdminSettings } from './AdminSettingsContext.jsx'
 import {
   ADMIN_SIDEBAR_BG,
   ADMIN_SIDEBAR_BORDER,
@@ -11,32 +9,26 @@ import {
   ADMIN_ACCENT_TEXT,
   ADMIN_BODY_TEXT,
   ADMIN_SECONDARY_TEXT,
-} from './adminTheme.js'
+} from '../admin/adminTheme.js'
 
 const NAV_ITEMS = [
   { id: 'products', label: 'Products' },
   { id: 'resume-templates', label: 'Resume Templates' },
-  { id: 'settings', label: 'Settings' },
 ]
 
-export default function AdminLayout({
+export default function GuestAdminLayout({
   children,
   activeView,
   onNavigate,
-  onLogout,
+  onReset,
 }) {
-  const { accentHex } = useAdminSettings()
-
   return (
-    <div
-      className={`flex min-h-screen ${ADMIN_PAGE_BG}`}
-      style={{ '--admin-accent': accentHex }}
-    >
+    <div className={`flex h-full ${ADMIN_PAGE_BG}`}>
       <aside
         className={`flex w-56 shrink-0 flex-col ${ADMIN_SIDEBAR_BG} border-r ${ADMIN_SIDEBAR_BORDER}`}
       >
-        <div className="flex items-center gap-2 px-4 py-4">
-          <img src={logo} alt="Sonny" className="h-7 shrink-0" />
+        <div className="px-4 py-4 text-sm font-semibold text-white">
+          Admin Demo
         </div>
         <nav className="flex flex-col gap-1 px-2">
           {NAV_ITEMS.map((item) => (
@@ -56,17 +48,21 @@ export default function AdminLayout({
       </aside>
       <div className="flex flex-1 flex-col">
         <header
-          className={`flex h-14 items-center justify-end gap-4 border-b ${ADMIN_HEADER_BORDER} bg-white px-6`}
+          className={`flex h-14 items-center justify-between gap-4 border-b ${ADMIN_HEADER_BORDER} bg-white px-6`}
         >
-          <span className={`text-sm ${ADMIN_SECONDARY_TEXT}`}>Admin</span>
+          <span className={`text-sm ${ADMIN_SECONDARY_TEXT}`}>
+            Guest Mode — changes reset on refresh
+          </span>
           <button
-            onClick={onLogout}
+            onClick={onReset}
             className={`text-sm ${ADMIN_ACCENT_TEXT} hover:underline`}
           >
-            Log out
+            Reset demo
           </button>
         </header>
-        <main className={`flex-1 p-6 ${ADMIN_BODY_TEXT}`}>{children}</main>
+        <main className={`flex-1 overflow-auto p-6 ${ADMIN_BODY_TEXT}`}>
+          {children}
+        </main>
       </div>
     </div>
   )

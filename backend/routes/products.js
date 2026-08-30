@@ -1,7 +1,8 @@
 import { Router } from 'express'
 import db from '../db.js'
 import requireAuth from '../middleware/requireAuth.js'
-import { generateProductCode, stripImmutableFields } from '../productCode.js'
+import { generateProductCode } from '../productCode.js'
+import { stripImmutableFields } from '../utils/stripImmutableFields.js'
 
 const router = Router()
 

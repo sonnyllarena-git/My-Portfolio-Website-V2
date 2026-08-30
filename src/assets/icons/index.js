@@ -15,6 +15,7 @@ import pictures from './pictures.png'
 import power from './power.png'
 import projects from './projects.png'
 import recycleBin from './recycle-bin.png'
+import resumeGenerator from './resume-generator.png'
 import search from './search.png'
 import settings from './settings.png'
 import start from './start.png'
@@ -54,4 +55,5 @@ export const iconImages = {
   'tech-stack': techStack,
   'zoom-chat': zoomChat,
   terminal,
+  'resume-generator': resumeGenerator,
 }

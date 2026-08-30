@@ -1,0 +1,29 @@
+import { describe, it, expect, afterEach } from 'vitest'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { ResumeGeneratorProvider } from '../ResumeGeneratorContext.jsx'
+import ProjectsSection from './ProjectsSection.jsx'
+
+afterEach(cleanup)
+
+describe('ProjectsSection', () => {
+  it('adds and removes entries independently', () => {
+    render(
+      <ResumeGeneratorProvider>
+        <ProjectsSection />
+      </ResumeGeneratorProvider>,
+    )
+
+    const addButton = screen.getByText('+ one more project')
+    fireEvent.click(addButton)
+    fireEvent.click(addButton)
+
+    const nameInputs = screen.getAllByLabelText('Project name')
+    fireEvent.change(nameInputs[0], { target: { value: 'Design System' } })
+    expect(nameInputs[1].value).toBe('')
+
+    fireEvent.click(screen.getAllByLabelText('Remove')[0])
+    const remaining = screen.getAllByLabelText('Project name')
+    expect(remaining).toHaveLength(1)
+    expect(remaining[0].value).toBe('')
+  })
+})

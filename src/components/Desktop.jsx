@@ -29,6 +29,8 @@ import ZoomChatApp from './ZoomChatApp.jsx'
 import ProjectsApp from './ProjectsApp.jsx'
 import StoreApp from './StoreApp.jsx'
 import TerminalApp from './TerminalApp.jsx'
+import ResumeGeneratorApp from './resumeGenerator/ResumeGeneratorApp.jsx'
+import GuestAdminApp from '../guestAdmin/GuestAdminApp.jsx'
 import AppGlyph from './icons/AppGlyph.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
@@ -74,6 +76,8 @@ const WINDOW_PREVIEW_SIZES = {
   resume: [420, 560],
   store: [1200, 800],
   terminal: [700, 450],
+  'resume-generator': [1200, 800],
+  'admin-demo': [1200, 800],
 }
 
 function renderPreviewBody(w, gmailGuest) {
@@ -120,6 +124,8 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'projects') return <ProjectsApp />
   if (w.id === 'store') return <StoreApp />
   if (w.id === 'terminal') return <TerminalApp onOpenApp={() => {}} />
+  if (w.id === 'resume-generator') return <ResumeGeneratorApp />
+  if (w.id === 'admin-demo') return <GuestAdminApp />
   return null
 }
 
@@ -641,6 +647,34 @@ function Desktop({ onExitToBoot }) {
                 defaultHeight={800}
               >
                 <StoreApp />
+              </Window>
+            )
+          }
+          if (w.id === 'resume-generator') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="📄"
+                title="Resume Generator"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <ResumeGeneratorApp />
+              </Window>
+            )
+          }
+          if (w.id === 'admin-demo') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🧪"
+                title="Admin Demo"
+                defaultWidth={1200}
+                defaultHeight={800}
+              >
+                <GuestAdminApp />
               </Window>
             )
           }

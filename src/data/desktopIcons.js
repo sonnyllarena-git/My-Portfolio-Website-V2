@@ -17,6 +17,13 @@ export const desktopIcons = [
   { id: 'tech-stack', label: 'Tech Stack', icon: '🧰', sizeKB: 700 },
   { id: 'zoom-chat', label: 'Zoom Chat', icon: '📹', sizeKB: 1200 },
   {
+    id: 'resume-generator',
+    label: 'Resume Generator',
+    icon: '📄',
+    sizeKB: 640,
+  },
+  { id: 'admin-demo', label: 'Admin Demo', icon: '🧪', sizeKB: 512 },
+  {
     id: 'terminal',
     label: 'Command Prompt',
     icon: '>_',
