@@ -14,7 +14,10 @@ export function ResumeTemplatesProvider({ children }) {
         return response.json()
       })
       .then((rows) => setTemplates(rows))
-      .catch(() => setError('Could not load resume templates right now.'))
+      .catch((err) => {
+        console.error('Failed to load resume templates:', err)
+        setError('Could not load resume templates right now.')
+      })
       .finally(() => setLoading(false))
   }, [])
 

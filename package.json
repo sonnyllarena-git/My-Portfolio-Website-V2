@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "server": "node --env-file=backend/.env backend/server.js",
+    "dev:all": "node scripts/dev-all.js",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",

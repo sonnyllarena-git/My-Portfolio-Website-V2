@@ -141,7 +141,7 @@ _Framework-specific behaviour that bit us: lifecycle, state, rendering, routing,
 
 _Queries, migrations, transactions, caching, serialisation. Delete this section if there is no data layer._
 
-- _(none yet)_
+- [2026-08-30] Sonny reported the Resume Generator's templates "gone again" after a fresh visit/refresh — a direct sqlite read of `backend/data/catalog.db` proved all 4 templates were still there and still `published`, and `curl localhost:4000/...` returned connection-refused: the real cause was that `npm run server` (the Express backend) simply wasn't running, only `npm run dev` (Vite) was, so `ResumeTemplatesContext`'s fetch failed and the UI showed the same "no templates" state a genuinely empty table would show. This project runs two independent local processes with no combined start command, so forgetting/closing one silently breaks every DB-backed app (Resume Generator, Store) while looking exactly like data loss → added `npm run dev:all` (`scripts/dev-all.js`, plain `node:child_process`, no new dependency) to start both together, and added `console.error` logging of the actual fetch failure in `ResumeTemplatesContext.jsx`/`StoreCatalogContext.jsx` so "can't reach the server" is now distinguishable from "the table is empty" in the browser console.
 
 ---
 
@@ -159,4 +159,10 @@ you learn it, not after it bites._
 _Promote an entry here once the same class of mistake has happened twice._
 _Entries here are as binding as CLAUDE.md._
 
-- _(none yet)_
+- "Templates/products are gone" has now been reported three times for three different reasons (an
+  actually-empty table, my own test-data cleanup deleting a real row, the backend process not
+  running) — before answering a "my data disappeared" report, always verify at the data layer
+  first (a direct sqlite read or an authenticated API call), never assume from the symptom alone.
+  Any fetch-on-mount data context (`*Context.jsx` under `src/context/`) must `console.error` the
+  real failure in its `.catch`, not just set a generic user-facing message, so "can't reach the
+  server" is distinguishable from "the table is empty" without needing a fresh investigation.

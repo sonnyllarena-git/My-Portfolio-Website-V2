@@ -66,7 +66,18 @@ behavior, so the real `/admin` portal is untouched), a new `src/guestAdmin/` fol
 once from the real **published** products/templates and mutates only local React state (never
 writes to the real `catalog.db`), with a "Reset demo" button and automatic reset on window
 close/reopen or page refresh — live-verified end-to-end including confirming real DB row counts
-are unchanged after adding/resetting demo data — complete as of 2026-08-30.
+are unchanged after adding/resetting demo data — complete as of 2026-08-30. Direct fix (2026-08-30,
+no phase number): Sonny reported the resume templates "gone again" after a fresh visit/refresh —
+investigation found the real cause is that this project runs two separate local processes (`npm
+run dev` for Vite, `npm run server` for the Express/better-sqlite3 backend), and whenever only the
+frontend is running, `ResumeTemplatesContext`'s fetch to `/api/resume-templates` fails silently
+from the visitor's point of view; the underlying data was intact the whole time (confirmed via a
+direct sqlite read — all 4 templates still `published`). Added `npm run dev:all`
+(`scripts/dev-all.js`, pure `node:child_process`, no new dependency) to start both processes
+together as one command so this can't recur from forgetting the second terminal, and added
+`console.error` logging of the real fetch failure in `ResumeTemplatesContext.jsx`/
+`StoreCatalogContext.jsx` (user-facing message stays generic) so a silent connection failure is
+now visible in the browser console instead of looking like lost data.
 **Last verified:** 2026-08-30 — `npm run verify` → PASS (51/51 test files, 96/96 tests)
 **Verify command:** `npm run verify`
 

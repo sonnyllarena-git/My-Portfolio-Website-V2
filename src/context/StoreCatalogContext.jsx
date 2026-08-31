@@ -15,7 +15,10 @@ export function StoreCatalogProvider({ children }) {
         return response.json()
       })
       .then((rows) => setProducts(rows.map(mapCatalogProductToStoreProduct)))
-      .catch(() => setError('Could not load products right now.'))
+      .catch((err) => {
+        console.error('Failed to load products:', err)
+        setError('Could not load products right now.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
