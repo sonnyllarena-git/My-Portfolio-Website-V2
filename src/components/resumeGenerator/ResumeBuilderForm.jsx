@@ -26,6 +26,20 @@ const SECTION_STEPS = [
 
 const LAST_STEP = SECTION_STEPS.length + 1
 
+const STEP_LABELS = [
+  'Template',
+  'Personal Details',
+  'Work Experience',
+  'Education',
+  'Trainings & Certifications',
+  'Skills',
+  'Projects',
+  'Achievements',
+  'References',
+  'Professional Summary',
+  'Preview & Download',
+]
+
 function ResumeBuilderForm() {
   const { setSelectedTemplateKey } = useResumeGenerator()
   const [step, setStep] = useState(0)
@@ -33,6 +47,11 @@ function ResumeBuilderForm() {
 
   function goToStep(index) {
     setStep(Math.max(0, Math.min(LAST_STEP, index)))
+  }
+
+  function handleDotClick(index) {
+    if (index === 0 && step !== 0) setReturnStep(step)
+    goToStep(index)
   }
 
   function handleChangeTemplate() {
@@ -68,13 +87,20 @@ function ResumeBuilderForm() {
             Back
           </button>
           <div className="flex gap-1">
-            {Array.from({ length: LAST_STEP + 1 }, (_, index) => (
-              <span
-                key={index}
-                className={`h-1.5 w-1.5 rounded-full ${
-                  index === step ? 'bg-blue-400' : 'bg-white/20'
-                }`}
-              />
+            {STEP_LABELS.map((label, index) => (
+              <div key={label} className="group relative flex items-center">
+                <button
+                  type="button"
+                  onClick={() => handleDotClick(index)}
+                  aria-label={label}
+                  className={`h-1.5 w-1.5 rounded-full transition hover:scale-150 ${
+                    index === step ? 'bg-blue-400' : 'bg-white/20'
+                  }`}
+                />
+                <span className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100">
+                  {label}
+                </span>
+              </div>
             ))}
           </div>
           {!isLastStep ? (

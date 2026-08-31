@@ -77,9 +77,53 @@ direct sqlite read — all 4 templates still `published`). Added `npm run dev:al
 together as one command so this can't recur from forgetting the second terminal, and added
 `console.error` logging of the real fetch failure in `ResumeTemplatesContext.jsx`/
 `StoreCatalogContext.jsx` (user-facing message stays generic) so a silent connection failure is
-now visible in the browser console instead of looking like lost data.
-**Last verified:** 2026-08-30 — `npm run verify` → PASS (51/51 test files, 96/96 tests)
-**Verify command:** `npm run verify`
+now visible in the browser console instead of looking like lost data. Direct fix (2026-08-31, no
+phase number): Sonny reported 4 Resume Generator issues from a screenshot — (1) the extra
+date/title/URL text in the print preview is the browser's own print header/footer, not something
+the app renders, so a hint below the buttons now tells the visitor to uncheck "Headers and
+footers" in the print dialog's More settings; (2) the print preview was genuinely clipping content
+on the right edge — the P604/605-era paper-size fix set the templates to a fixed `w-[8.5in]` while
+`resumeGeneratorPrint.css`'s `@page` kept a `12mm` margin, so the printable area was narrower than
+the paper itself — fixed by setting that margin to `0` and letting each template's own `p-10`
+padding serve as the visible margin, confirmed via a Playwright print-preview screenshot showing
+full untruncated text; (3) split the single "Print / Save as PDF" button into separate "Print" and
+"Save as PDF" buttons in `ResumeLivePreview.jsx` — both still call `window.print()` (the only
+implemented mechanism, per the original architecture decision), but "Save as PDF" now temporarily
+sets `document.title` to the visitor's name so Chrome's Save dialog suggests a real filename
+instead of the page's own title; (4) `ResumeBuilderForm.jsx`'s progress dots are now real buttons
+with a hover tooltip naming their step and jump straight to that step on click, live-verified with
+a screenshot showing the "Skills" tooltip on hover. Direct fix (2026-08-31, no phase number):
+Sonny reported the print preview was misaligned (a huge blank left margin, real content shifted
+right and clipped at the page edge) and that "Save as PDF" seemed to just show the same preview
+without saving. Root cause of the alignment bug: `.resume-generator-print-area` was nested inside
+the Resume Generator's `Window`, and react-rnd (via `react-draggable`) positions that window with a
+CSS `transform`, which makes the window a new containing block for the print area's
+`position: absolute` — so "left: 0; width: 100%" resolved against the window's on-screen
+position/size instead of the physical page, however the window happened to be dragged. Fixed by
+rendering the print copy through a `createPortal` straight to `document.body` (so it's a sibling of
+`#root`, not nested inside any transformed ancestor) and simplifying `resumeGeneratorPrint.css` to
+just toggle `display` between `#root` and `.resume-generator-print-area` — live-verified by
+dragging the window off-center on purpose and confirming a fully centered, uncut print-preview
+screenshot. On "Save as PDF": confirmed with Sonny this stays on the existing no-new-dependency
+`window.print()` architecture — there is no way to skip the OS/browser's own print dialog and save
+a file with zero further clicks without adding a real PDF-generation library, which Sonny did not
+ask for; instead the button's helper copy now spells out the two-step flow (choose "Save as PDF" as
+the printer, then click that dialog's own Save button). Direct fix (2026-08-31, no phase number):
+Sonny asked for "Save as PDF" to become a true one-click download instead of going through the
+print dialog — this needed a real stack change (CLAUDE.md §2 updated with explicit approval), since
+`window.print()` alone can never skip the OS dialog. Added `html2canvas`
+
+- `jspdf` to render `ResumeLivePreview.jsx`'s on-screen preview to a canvas and save it as a real
+  multi-page PDF via `pdf.save(...)`; `html2canvas` itself turned out to be unmaintained for Tailwind
+  v4's `oklab()` colors (threw "unsupported color function" on every attempt) and was swapped for
+  `html2canvas-pro`, an API-compatible maintained fork, before it worked. Also switched the embedded
+  image from PNG to JPEG (0.95 quality) after a first successful download came back at 15MB — JPEG
+  brought a one-page resume down to ~220KB. Live-verified via Playwright's `download` event: a real
+  `%PDF-`-prefixed file lands with no dialog, named after the visitor (e.g. "Jamie Rivera
+  Resume.pdf"), and manually inspected the PDF's rendered page to confirm layout/colors/text are all
+  correct.
+  **Last verified:** 2026-08-31 — `npm run verify` → PASS (51/51 test files, 98/98 tests)
+  **Verify command:** `npm run verify`
 
 ---
 

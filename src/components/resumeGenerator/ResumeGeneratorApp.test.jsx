@@ -28,6 +28,6 @@ describe('ResumeGeneratorApp', () => {
       fireEvent.click(screen.getByText('Next'))
     }
 
-    expect(screen.getByText('Print / Save as PDF')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Download PDF' })).toBeTruthy()
   })
 })

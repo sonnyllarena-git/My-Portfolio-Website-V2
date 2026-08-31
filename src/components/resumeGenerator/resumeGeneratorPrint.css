@@ -1,19 +1,19 @@
+/* Rendered via a portal to document.body (see ResumeLivePreview.jsx) so print output is never
+   affected by the Desktop shell's own positioning/transforms (react-rnd windows use `transform`
+   to drag, which would otherwise hijack an absolutely-positioned print overlay nested inside). */
+.resume-generator-print-area {
+  display: none;
+}
+
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  .resume-generator-print-area,
-  .resume-generator-print-area * {
-    visibility: visible;
+  #root {
+    display: none !important;
   }
   .resume-generator-print-area {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+    display: block !important;
   }
   @page {
     size: letter;
-    margin: 12mm;
+    margin: 0;
   }
 }
