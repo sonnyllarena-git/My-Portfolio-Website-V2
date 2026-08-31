@@ -24,19 +24,25 @@ function StoreFooter() {
   const isMobile = useIsMobile()
 
   return (
-    <div
-      className={`grid shrink-0 gap-4 px-6 py-6 text-white ${isMobile ? 'grid-cols-1' : 'grid-cols-4'} ${STORE_FOOTER_BG}`}
-    >
-      {FOOTER_COLUMNS.map((column) => (
-        <div key={column.title}>
-          <h4 className="mb-2 text-sm font-semibold">{column.title}</h4>
-          <ul className="space-y-1 text-sm text-white/80">
-            {column.links.map((link) => (
-              <li key={link}>{link}</li>
-            ))}
-          </ul>
-        </div>
-      ))}
+    <div className={`shrink-0 text-white ${STORE_FOOTER_BG}`}>
+      <div
+        className={`grid gap-4 px-6 py-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-4'}`}
+      >
+        {FOOTER_COLUMNS.map((column) => (
+          <div key={column.title}>
+            <h4 className="mb-2 text-sm font-semibold">{column.title}</h4>
+            <ul className="space-y-1 text-sm text-white/80">
+              {column.links.map((link) => (
+                <li key={link}>{link}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <p className="border-t border-white/10 px-6 py-3 text-center text-[11px] text-white/50">
+        © 2026 Sonny. All rights reserved. For commercial partnerships,
+        technical consultations, or business inquiries, contact Sonny.
+      </p>
     </div>
   )
 }

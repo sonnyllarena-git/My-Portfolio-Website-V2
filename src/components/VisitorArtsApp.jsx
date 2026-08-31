@@ -72,87 +72,96 @@ function VisitorArtsApp({ onOpenPaint }) {
   }
 
   return (
-    <div
-      className={`flex h-full text-sm text-white ${isMobile ? 'flex-col' : ''}`}
-    >
-      <aside
-        className={`flex shrink-0 flex-col gap-4 bg-[#12141a] p-4 ${
-          isMobile
-            ? 'w-full border-b border-white/10'
-            : 'w-60 border-r border-white/10'
-        }`}
+    <div className="flex h-full flex-col text-sm text-white">
+      <div
+        className={`flex flex-1 overflow-hidden ${isMobile ? 'flex-col' : ''}`}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-lg">
-            🎨
-          </div>
-          <div>
-            <div className="font-semibold">Visual Arts</div>
-            <div className="text-xs text-white/50">
-              Shared portfolio gallery
+        <aside
+          className={`flex shrink-0 flex-col gap-4 bg-[#12141a] p-4 ${
+            isMobile
+              ? 'w-full border-b border-white/10'
+              : 'w-60 border-r border-white/10'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-lg">
+              🎨
+            </div>
+            <div>
+              <div className="font-semibold">Visual Arts</div>
+              <div className="text-xs text-white/50">
+                Shared portfolio gallery
+              </div>
             </div>
           </div>
-        </div>
-        <p className="text-xs leading-relaxed text-white/70">
-          Visitor drawings become part of Pouya Shahri&apos;s interactive
-          portfolio. Open Paint, create a small visual memory, save it, and
-          future visitors can browse it here.
-        </p>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-          <div className="text-2xl font-bold">{artworks.length}</div>
-          <div className="text-xs text-white/50">saved artworks</div>
-        </div>
-        <button
-          onClick={onOpenPaint}
-          className="rounded bg-blue-600 py-2 text-sm font-medium hover:bg-blue-700"
-        >
-          Open Paint
-        </button>
-      </aside>
-      <div className="flex flex-1 flex-col bg-[#0d0e11]">
-        <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 text-white/80">
-          <button aria-label="Back" className="rounded px-1 hover:bg-white/10">
-            ←
-          </button>
+          <p className="text-xs leading-relaxed text-white/70">
+            Visitor drawings become part of Sonny&apos;s interactive portfolio.
+            Open Paint, create a small visual memory, save it, and future
+            visitors can browse it here.
+          </p>
+          <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+            <div className="text-2xl font-bold">{artworks.length}</div>
+            <div className="text-xs text-white/50">saved artworks</div>
+          </div>
           <button
-            aria-label="Forward"
-            className="rounded px-1 hover:bg-white/10"
+            onClick={onOpenPaint}
+            className="rounded bg-blue-600 py-2 text-sm font-medium hover:bg-blue-700"
           >
-            →
+            Open Paint
           </button>
-          <button aria-label="Up" className="rounded px-1 hover:bg-white/10">
-            ↑
-          </button>
-          <div className="flex-1 rounded-full bg-white/5 px-3 py-1 text-xs">
-            D:/Visitor Arts
+        </aside>
+        <div className="flex flex-1 flex-col bg-[#0d0e11]">
+          <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 text-white/80">
+            <button
+              aria-label="Back"
+              className="rounded px-1 hover:bg-white/10"
+            >
+              ←
+            </button>
+            <button
+              aria-label="Forward"
+              className="rounded px-1 hover:bg-white/10"
+            >
+              →
+            </button>
+            <button aria-label="Up" className="rounded px-1 hover:bg-white/10">
+              ↑
+            </button>
+            <div className="flex-1 rounded-full bg-white/5 px-3 py-1 text-xs">
+              D:/Visitor Arts
+            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search"
+              className="w-40 rounded-full bg-white/5 px-3 py-1 text-xs placeholder-white/40 focus:outline-none"
+            />
           </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search"
-            className="w-40 rounded-full bg-white/5 px-3 py-1 text-xs placeholder-white/40 focus:outline-none"
-          />
-        </div>
-        <div className="flex-1 overflow-auto p-4">
-          <div
-            className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}
-          >
-            {filtered.map((artwork) => (
-              <ArtCard
-                key={artwork.id}
-                artwork={artwork}
-                onView={setPreviewArtwork}
-                onDelete={handleDelete}
-                isMobile={isMobile}
-              />
-            ))}
+          <div className="flex-1 overflow-auto p-4">
+            <div
+              className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}
+            >
+              {filtered.map((artwork) => (
+                <ArtCard
+                  key={artwork.id}
+                  artwork={artwork}
+                  onView={setPreviewArtwork}
+                  onDelete={handleDelete}
+                  isMobile={isMobile}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="border-t border-white/10 px-3 py-1.5 text-xs text-white/60">
-          {filtered.length} items
+          <div className="border-t border-white/10 px-3 py-1.5 text-xs text-white/60">
+            {filtered.length} items
+          </div>
         </div>
       </div>
+      <p className="shrink-0 border-t border-white/10 px-3 py-2 text-center text-[11px] text-white/50">
+        © 2026 Sonny. All rights reserved. For commercial partnerships,
+        technical consultations, or business inquiries, contact Sonny.
+      </p>
       {previewArtwork && (
         <div
           onClick={() => setPreviewArtwork(null)}

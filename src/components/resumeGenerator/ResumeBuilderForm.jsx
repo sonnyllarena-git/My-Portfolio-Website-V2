@@ -116,6 +116,10 @@ function ResumeBuilderForm() {
           )}
         </div>
       )}
+      <p className="shrink-0 border-t border-white/10 px-3 py-2 text-center text-[11px] text-white/50">
+        © 2026 Sonny. All rights reserved. For commercial partnerships,
+        technical consultations, or business inquiries, contact Sonny.
+      </p>
     </div>
   )
 }

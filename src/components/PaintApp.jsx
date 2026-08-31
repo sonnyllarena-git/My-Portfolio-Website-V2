@@ -37,8 +37,7 @@ function PaintApp({ onOpenGallery }) {
     <div className="flex h-full flex-col bg-gray-50 text-gray-900">
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2 text-sm text-gray-600">
         <span>
-          🖼️ Draw a visual memory for Pouya Shahri&apos;s shared portfolio
-          gallery.
+          🖼️ Draw a visual memory for Sonny&apos;s shared portfolio gallery.
         </span>
         <button
           onClick={onOpenGallery}
@@ -81,6 +80,10 @@ function PaintApp({ onOpenGallery }) {
           </div>
         )}
       </div>
+      <p className="shrink-0 border-t border-gray-200 bg-white px-4 py-1.5 text-center text-[11px] text-gray-500">
+        © 2026 Sonny. All rights reserved. For commercial partnerships,
+        technical consultations, or business inquiries, contact Sonny.
+      </p>
     </div>
   )
 }
