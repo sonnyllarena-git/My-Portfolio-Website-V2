@@ -7,8 +7,10 @@ import authRouter from './routes/auth.js'
 import productsRouter from './routes/products.js'
 import resumeTemplatesRouter from './routes/resumeTemplates.js'
 import requireAuth from './middleware/requireAuth.js'
+import { initSchema } from './db.js'
 
 const uploadsDir = join(dirname(fileURLToPath(import.meta.url)), 'uploads')
+const distDir = join(dirname(fileURLToPath(import.meta.url)), '../dist')
 if (!existsSync(uploadsDir)) mkdirSync(uploadsDir)
 
 const upload = multer({
@@ -41,7 +43,23 @@ app.post(
   },
 )
 
-const port = process.env.PORT || 4000
-app.listen(port, () => {
-  console.log(`Admin portal API listening on port ${port}`)
+app.use(express.static(distDir))
+app.get('*', (req, res) => {
+  res.sendFile(join(distDir, 'index.html'))
 })
+
+const port = process.env.PORT || 4000
+
+async function start() {
+  try {
+    await initSchema()
+    app.listen(port, () => {
+      console.log(`Admin portal API listening on port ${port}`)
+    })
+  } catch (err) {
+    console.error('Failed to initialize database:', err)
+    process.exit(1)
+  }
+}
+
+start()
