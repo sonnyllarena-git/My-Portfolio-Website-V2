@@ -4,7 +4,7 @@ import gameOverCard from './assets/components/game over.png'
 import startPrompt from './assets/components/start.png'
 import backgroundMusic from './assets/audio/flappy bird audio.mp3'
 import gameOverSound from './assets/audio/game over.mp3'
-import jumpSound from './assets/audio/jump.mp3'
+import jumpSound from './assets/audio/jump.MP3'
 import { useGames } from '../../../context/GamesContext.jsx'
 import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
 
