@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import db from '../db.js'
+import { pool } from '../db.js'
 import requireAuth from '../middleware/requireAuth.js'
 import { generateProductCode } from '../productCode.js'
 import { stripImmutableFields } from '../utils/stripImmutableFields.js'
@@ -49,99 +49,143 @@ function serializeInput(body) {
   return values
 }
 
-router.get('/', (req, res) => {
-  const rows =
-    req.query.published === 'true'
-      ? db
-          .prepare('SELECT * FROM products WHERE published = 1 ORDER BY id')
-          .all()
-      : db.prepare('SELECT * FROM products ORDER BY id').all()
-  res.json(rows.map(deserializeProduct))
+router.get('/', async (req, res) => {
+  try {
+    const query =
+      req.query.published === 'true'
+        ? 'SELECT * FROM products WHERE published = 1 ORDER BY id'
+        : 'SELECT * FROM products ORDER BY id'
+    const result = await pool.query(query)
+    res.json(result.rows.map(deserializeProduct))
+  } catch (err) {
+    console.error('Error fetching products:', err)
+    res.status(500).json({ error: 'Failed to fetch products' })
+  }
 })
 
-router.get('/:code', (req, res) => {
-  const row = db
-    .prepare('SELECT * FROM products WHERE code = ?')
-    .get(req.params.code)
-  if (!row) return res.status(404).json({ error: 'Product not found' })
-  res.json(deserializeProduct(row))
+router.get('/:code', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM products WHERE code = $1', [
+      req.params.code,
+    ])
+    if (result.rows.length === 0)
+      return res.status(404).json({ error: 'Product not found' })
+    res.json(deserializeProduct(result.rows[0]))
+  } catch (err) {
+    console.error('Error fetching product:', err)
+    res.status(500).json({ error: 'Failed to fetch product' })
+  }
 })
 
-router.post('/', requireAuth, (req, res) => {
-  const values = serializeInput(stripImmutableFields(req.body ?? {}))
-  const now = new Date().toISOString()
-  const columns = [
-    ...PRODUCT_FIELDS,
-    'colors',
-    'sizes',
-    'images',
-    'createdAt',
-    'updatedAt',
-  ]
+router.post('/', requireAuth, async (req, res) => {
+  try {
+    const values = serializeInput(stripImmutableFields(req.body ?? {}))
+    const now = new Date().toISOString()
+    const columns = [
+      ...PRODUCT_FIELDS,
+      'colors',
+      'sizes',
+      'images',
+      'createdAt',
+      'updatedAt',
+    ]
 
-  const insert = db.prepare(
-    `INSERT INTO products (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
-  )
-  const info = insert.run(
-    ...columns.map((column) =>
-      column === 'createdAt' || column === 'updatedAt' ? now : values[column],
-    ),
-  )
+    const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ')
+    const columnsList = columns.join(', ')
 
-  db.prepare('UPDATE products SET code = ? WHERE id = ?').run(
-    generateProductCode(info.lastInsertRowid),
-    info.lastInsertRowid,
-  )
+    const insertResult = await pool.query(
+      `INSERT INTO products (${columnsList}) VALUES (${placeholders}) RETURNING id`,
+      columns.map((column) =>
+        column === 'createdAt' || column === 'updatedAt' ? now : values[column],
+      ),
+    )
 
-  const row = db
-    .prepare('SELECT * FROM products WHERE id = ?')
-    .get(info.lastInsertRowid)
-  res.status(201).json(deserializeProduct(row))
+    const insertId = insertResult.rows[0].id
+
+    await pool.query('UPDATE products SET code = $1 WHERE id = $2', [
+      generateProductCode(insertId),
+      insertId,
+    ])
+
+    const row = await pool.query('SELECT * FROM products WHERE id = $1', [
+      insertId,
+    ])
+    res.status(201).json(deserializeProduct(row.rows[0]))
+  } catch (err) {
+    console.error('Error creating product:', err)
+    res.status(500).json({ error: 'Failed to create product' })
+  }
 })
 
-router.put('/:code', requireAuth, (req, res) => {
-  const existing = db
-    .prepare('SELECT * FROM products WHERE code = ?')
-    .get(req.params.code)
-  if (!existing) return res.status(404).json({ error: 'Product not found' })
+router.put('/:code', requireAuth, async (req, res) => {
+  try {
+    const existing = await pool.query(
+      'SELECT * FROM products WHERE code = $1',
+      [req.params.code],
+    )
+    if (existing.rows.length === 0)
+      return res.status(404).json({ error: 'Product not found' })
 
-  const values = serializeInput(stripImmutableFields(req.body ?? {}))
-  const now = new Date().toISOString()
-  const setColumns = [...PRODUCT_FIELDS, 'colors', 'sizes', 'images']
+    const values = serializeInput(stripImmutableFields(req.body ?? {}))
+    const now = new Date().toISOString()
+    const setColumns = [...PRODUCT_FIELDS, 'colors', 'sizes', 'images']
 
-  db.prepare(
-    `UPDATE products SET ${setColumns.map((column) => `${column} = ?`).join(', ')}, updatedAt = ? WHERE code = ?`,
-  ).run(...setColumns.map((column) => values[column]), now, req.params.code)
+    const setClause = setColumns
+      .map((col, i) => `${col} = $${i + 1}`)
+      .join(', ')
+    const updateValues = setColumns.map((column) => values[column])
 
-  const row = db
-    .prepare('SELECT * FROM products WHERE code = ?')
-    .get(req.params.code)
-  res.json(deserializeProduct(row))
+    await pool.query(
+      `UPDATE products SET ${setClause}, updatedAt = $${setColumns.length + 1} WHERE code = $${setColumns.length + 2}`,
+      [...updateValues, now, req.params.code],
+    )
+
+    const row = await pool.query('SELECT * FROM products WHERE code = $1', [
+      req.params.code,
+    ])
+    res.json(deserializeProduct(row.rows[0]))
+  } catch (err) {
+    console.error('Error updating product:', err)
+    res.status(500).json({ error: 'Failed to update product' })
+  }
 })
 
-router.patch('/:code/publish', requireAuth, (req, res) => {
-  const existing = db
-    .prepare('SELECT * FROM products WHERE code = ?')
-    .get(req.params.code)
-  if (!existing) return res.status(404).json({ error: 'Product not found' })
+router.patch('/:code/publish', requireAuth, async (req, res) => {
+  try {
+    const existing = await pool.query(
+      'SELECT * FROM products WHERE code = $1',
+      [req.params.code],
+    )
+    if (existing.rows.length === 0)
+      return res.status(404).json({ error: 'Product not found' })
 
-  db.prepare(
-    'UPDATE products SET published = 1, updatedAt = ? WHERE code = ?',
-  ).run(new Date().toISOString(), req.params.code)
+    await pool.query(
+      'UPDATE products SET published = 1, updatedAt = $1 WHERE code = $2',
+      [new Date().toISOString(), req.params.code],
+    )
 
-  const row = db
-    .prepare('SELECT * FROM products WHERE code = ?')
-    .get(req.params.code)
-  res.json(deserializeProduct(row))
+    const row = await pool.query('SELECT * FROM products WHERE code = $1', [
+      req.params.code,
+    ])
+    res.json(deserializeProduct(row.rows[0]))
+  } catch (err) {
+    console.error('Error publishing product:', err)
+    res.status(500).json({ error: 'Failed to publish product' })
+  }
 })
 
-router.delete('/:code', requireAuth, (req, res) => {
-  const info = db
-    .prepare('DELETE FROM products WHERE code = ?')
-    .run(req.params.code)
-  if (info.changes === 0)
-    return res.status(404).json({ error: 'Product not found' })
-  res.status(204).end()
+router.delete('/:code', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM products WHERE code = $1', [
+      req.params.code,
+    ])
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: 'Product not found' })
+    res.status(204).end()
+  } catch (err) {
+    console.error('Error deleting product:', err)
+    res.status(500).json({ error: 'Failed to delete product' })
+  }
 })
 
 export default router
