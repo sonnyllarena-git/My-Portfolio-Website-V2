@@ -44,7 +44,7 @@ app.post(
 )
 
 app.use(express.static(distDir))
-app.get('/*', (req, res) => {
+app.get('/*splat', (req, res) => {
   res.sendFile(join(distDir, 'index.html'))
 })
 
