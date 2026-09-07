@@ -10,7 +10,7 @@ import {
 import flappyPlayerSprite from './assets/components/flappy spiderman.png'
 import flappyMapBackground from './assets/components/flappy spiderman map.jpg'
 import flappyPipeSprite from './assets/components/pipe.png'
-import jumpSound from './assets/audio/jump.mp3'
+import jumpSound from './assets/audio/jump.MP3'
 import { useGames } from '../../../context/GamesContext.jsx'
 import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
 
