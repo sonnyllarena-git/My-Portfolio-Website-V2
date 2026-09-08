@@ -5,6 +5,7 @@ import {
   mockLeaderboardSeeds,
   mockRatingSeedsV2,
 } from './mockArcadeData.js'
+import { memoryWallSeeds } from './memoryWallSeeds.js'
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -104,6 +105,28 @@ async function initSchema() {
         totalPlays INTEGER NOT NULL DEFAULT 0
       )
     `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS memoryWallNotes (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        message TEXT NOT NULL,
+        rating INTEGER NOT NULL DEFAULT 0,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    const memoryWallCount = await client.query(
+      'SELECT COUNT(*) FROM memoryWallNotes',
+    )
+    if (Number(memoryWallCount.rows[0].count) === 0) {
+      for (const seed of memoryWallSeeds) {
+        await client.query(
+          'INSERT INTO memoryWallNotes (name, message, rating, createdAt) VALUES ($1, $2, $3, $4)',
+          [seed.name, seed.message, seed.rating, seed.timestamp],
+        )
+      }
+    }
 
     const ratingsCount = await client.query('SELECT COUNT(*) FROM gameRatings')
     if (Number(ratingsCount.rows[0].count) === 0) {

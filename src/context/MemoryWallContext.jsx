@@ -1,17 +1,36 @@
 import { createContext, useContext, useState } from 'react'
-import { memoryWallNotes } from '../data/memoryWallNotes.js'
+import {
+  fetchMemoryWallNotes,
+  submitMemoryWallNote,
+} from '../utils/memoryWallApi.js'
 
 const MemoryWallContext = createContext(null)
 
 export function MemoryWallProvider({ children }) {
-  const [notes, setNotes] = useState(memoryWallNotes)
+  const [notes, setNotes] = useState([])
+  const [loaded, setLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  function addNote(note) {
-    setNotes((prev) => [note, ...prev])
+  async function loadNotes() {
+    if (loaded) return
+    setLoading(true)
+    try {
+      const rows = await fetchMemoryWallNotes()
+      setNotes(rows)
+      setLoaded(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function addNote({ name, message, rating }) {
+    const updated = await submitMemoryWallNote({ name, message, rating })
+    setNotes(updated)
+    return updated
   }
 
   return (
-    <MemoryWallContext.Provider value={{ notes, addNote }}>
+    <MemoryWallContext.Provider value={{ notes, loading, loadNotes, addNote }}>
       {children}
     </MemoryWallContext.Provider>
   )

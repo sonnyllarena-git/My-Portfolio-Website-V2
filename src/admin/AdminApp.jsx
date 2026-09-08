@@ -3,6 +3,7 @@ import AdminLogin from './AdminLogin.jsx'
 import AdminLayout from './AdminLayout.jsx'
 import AdminProductsPage from './AdminProductsPage.jsx'
 import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
+import AdminMemoryWallPage from './AdminMemoryWallPage.jsx'
 import AdminSettingsPage from './AdminSettingsPage.jsx'
 import { AdminSettingsProvider } from './AdminSettingsContext.jsx'
 import { getToken, clearToken } from './api.js'
@@ -50,6 +51,8 @@ export default function AdminApp() {
           <AdminProductsPage />
         ) : view === 'resume-templates' ? (
           <AdminResumeTemplatesPage />
+        ) : view === 'memory-wall' ? (
+          <AdminMemoryWallPage />
         ) : (
           <AdminSettingsPage />
         )}

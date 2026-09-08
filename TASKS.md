@@ -6472,6 +6472,53 @@ so it applies automatically on next deploy with no manual DB step needed._
       alongside the mock rows.
       **Pass condition:** met via the checks above — confirmed live, not just code review.
 
+## PHASE 102 — MEMORY WALL DATABASE + ADMIN MODERATION
+
+_Sonny asked (2026-09-08) to give Memory Wall the same shared-database treatment as the arcade.
+Memory Wall (Phase 12) was session-only React state — reset on every reload, never shared between
+real visitors, per Sonny's original 2026-08-18 decision. Since it now accepts free-text messages
+(not just a score or star rating) that persist forever and are visible to every visitor, Sonny
+was asked whether he wanted a way to remove an inappropriate note; he confirmed yes, and chose
+reusing the existing `/admin` portal (its own login, same as Products/Resume Templates) over a
+password prompt inside the Memory Wall window itself._
+
+- [x] **P637** — Add a `memoryWallNotes` table to `initSchema()` in `backend/db.js`, seeded once
+      (if empty) from the existing 6 placeholder notes, moved from `src/data/memoryWallNotes.js`
+      to `backend/memoryWallSeeds.js` (backend-only now that the frontend reads via the API).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P638** — Add `backend/routes/memoryWall.js`: public `GET`/`POST /api/memory-wall` (name
+      ≤40 chars, message ≤420 chars matching the existing client-side cap, rating 0-5 integer),
+      and an admin-only `DELETE /api/memory-wall/:id` gated by the existing `requireAuth`
+      middleware (same admin login already used for Store/Resume Templates). Mounted in
+      `backend/server.js`.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P639** — Rewrite `MemoryWallContext.jsx` to fetch/post notes via a new
+      `src/utils/memoryWallApi.js` instead of local `useState` seeded from static data. Update
+      `MemoryWallApp.jsx`: fetch notes on mount, `handlePost` is now async with a `posting` guard,
+      fixed `colorForNote`/sort/timestamp display for the renamed `createdAt` field and numeric
+      `id` (previously assumed a string id). Corrected the Settings → Privacy & Security copy,
+      which previously told visitors Memory Wall data is session-only and never saved — no longer
+      true now that it's a shared database.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P640** — Add `src/admin/AdminMemoryWallPage.jsx` (list + Delete, same table/`window.confirm`
+      pattern as `AdminProductsPage.jsx`) and wire it into `AdminLayout.jsx`'s nav and
+      `AdminApp.jsx`'s view switcher as "Memory Wall".
+      **Pass condition:** `npm run verify` passes.
+- [x] **P641** — Live-verify: restarted the local backend to apply the migration, confirmed via
+      direct API calls that GET returns the 6 seeded notes, POST validates and inserts correctly,
+      DELETE requires a valid admin token (401 without one, 204 with one). Verified in the browser:
+      posted a real note through the Memory Wall UI (count 6→7, appeared correctly sorted), and
+      confirmed the admin `/admin` → Memory Wall page lists all notes with working data (the
+      Delete button's `window.confirm` didn't fire in the automated browser tab — a testing-tool
+      limitation, not a code issue, since the same button pattern already works for Products/Resume
+      Templates and the underlying `DELETE` endpoint was independently proven via an authenticated
+      curl call). Cleaned up all test rows afterward — table is back to its 6 seeded notes.
+      **Pass condition:** met via the checks above.
+
+---
+
+## Backlog — DO NOT START
+
 Anything here is out of scope until Sonny moves it up.
 
 - Anything listed as "explicitly NOT in v1" in CLAUDE.md §1

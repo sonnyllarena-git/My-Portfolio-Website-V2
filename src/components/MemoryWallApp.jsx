@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMemoryWall } from '../context/MemoryWallContext.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 
@@ -13,9 +13,10 @@ const CARD_PALETTE = [
 ]
 
 function colorForNote(id) {
+  const key = String(id)
   let hash = 0
-  for (let i = 0; i < id.length; i += 1) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0
+  for (let i = 0; i < key.length; i += 1) {
+    hash = (hash * 31 + key.charCodeAt(i)) | 0
   }
   return CARD_PALETTE[Math.abs(hash) % CARD_PALETTE.length]
 }
@@ -43,7 +44,7 @@ function NoteCard({ note }) {
         </span>
       </div>
       <div className="mt-0.5 text-xs opacity-60">
-        {formatTimestamp(note.timestamp)}
+        {formatTimestamp(note.createdAt)}
       </div>
       <p className="mt-2 text-sm">{note.message}</p>
     </div>
@@ -69,7 +70,7 @@ function StarRatingInput({ rating, onChange }) {
 }
 
 function MemoryWallApp() {
-  const { notes, addNote } = useMemoryWall()
+  const { notes, loading, loadNotes, addNote } = useMemoryWall()
   const isMobile = useIsMobile()
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
@@ -77,6 +78,13 @@ function MemoryWallApp() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortOrder, setSortOrder] = useState('newest')
   const [ratingFilter, setRatingFilter] = useState('all')
+  const [posting, setPosting] = useState(false)
+
+  useEffect(() => {
+    loadNotes()
+    // loadNotes guards against refetching once notes are loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const visibleNotes = notes
     .filter(
@@ -91,22 +99,23 @@ function MemoryWallApp() {
       )
     })
     .sort((a, b) => {
-      const diff = new Date(a.timestamp) - new Date(b.timestamp)
+      const diff = new Date(a.createdAt) - new Date(b.createdAt)
       return sortOrder === 'newest' ? -diff : diff
     })
 
-  function handlePost() {
-    if (!name.trim() || !message.trim()) return
-    addNote({
-      id: `note-${Date.now()}`,
-      name: name.trim(),
-      message: message.trim(),
-      rating,
-      timestamp: new Date().toISOString(),
-    })
-    setName('')
-    setMessage('')
-    setRating(0)
+  async function handlePost() {
+    if (!name.trim() || !message.trim() || posting) return
+    setPosting(true)
+    try {
+      await addNote({ name: name.trim(), message: message.trim(), rating })
+      setName('')
+      setMessage('')
+      setRating(0)
+    } catch {
+      // Best-effort — a network hiccup just means the note didn't post this time.
+    } finally {
+      setPosting(false)
+    }
   }
 
   return (
@@ -186,10 +195,10 @@ function MemoryWallApp() {
           </div>
           <button
             onClick={handlePost}
-            disabled={!name.trim() || !message.trim()}
+            disabled={!name.trim() || !message.trim() || posting}
             className="w-full rounded bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            ➤ Post to the wall
+            {posting ? 'Posting…' : '➤ Post to the wall'}
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
@@ -223,7 +232,11 @@ function MemoryWallApp() {
               <option value="0">0 stars</option>
             </select>
           </div>
-          {visibleNotes.length === 0 ? (
+          {loading && notes.length === 0 ? (
+            <div className="flex h-40 items-center justify-center text-white/40">
+              Loading the wall…
+            </div>
+          ) : visibleNotes.length === 0 ? (
             <div className="flex h-40 items-center justify-center text-white/40">
               No notes match
             </div>

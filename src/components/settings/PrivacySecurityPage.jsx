@@ -31,11 +31,12 @@ function PrivacySecurityPage() {
         distribution, or modification is prohibited.
       </InfoBlock>
       <InfoBlock title="Data Collection">
-        SonnyOS temporarily holds Memory Wall notes and Visitor Arts submissions
-        in your current browser session so you can see them appear on the shared
-        wall/gallery while you're here. Nothing is saved after you close or
-        reload the page, and no personal information is required to explore the
-        portfolio.
+        Memory Wall notes (name, message, and rating) are stored in a shared
+        database and visible to every visitor of the portfolio — please avoid
+        sharing anything personal or sensitive. Visitor Arts submissions still
+        only live in your current browser session and are not saved after you
+        close or reload the page. No account is required for either, and Memory
+        Wall notes may be removed at Sonny's discretion.
       </InfoBlock>
     </div>
   )
