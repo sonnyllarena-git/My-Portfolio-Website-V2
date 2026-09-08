@@ -6650,6 +6650,48 @@ based, so it could not be reused for visitor-facing saves as-is._
       pieces.
       **Pass condition:** met via the checks above — confirmed live, not just code review.
 
+## PHASE 107 — MOBILE GAME RESPONSIVENESS: TOUCH-TAP DELAY + SOUND LATENCY
+
+_Sonny reported (2026-09-08) Flappy Spider-Man feels delayed on mobile when tapping to flap, then
+asked to also check sound delay across the games. Root cause of the tap delay: the canvas used a
+React `onClick` handler, which on mobile browsers only fires after the browser's tap-vs-scroll/
+zoom disambiguation window (no `touch-action` was set to tell it to skip that wait) — the exact
+problem `PaintCanvas.jsx` had already solved correctly (Pointer Events + `touch-action: none`),
+just never applied here. Root cause of the sound delay: every game's sound effects used a shared
+`&lt;audio&gt;` element reset via `currentTime = 0` + `.play()` on each trigger — a pattern with real
+playback latency on mobile, especially for rapidly-retriggered sounds (a flap, a keystroke, a card
+flip). Background music was left untouched in both games' cases — it doesn't suffer either
+problem (not touch-driven, not rapidly retriggered)._
+
+- [x] **P654** — `FlappyBirdCanvas.jsx`: swapped the canvas's `onClick={handleJump}` for
+      `onPointerDown={handleJump}` and added `touch-none` (`touch-action: none`) to its className.
+      Same fix applied to the "tap the screen to play" start overlay in `FlappyBirdGame.jsx`.
+      `MemoryCard.jsx`'s tap-to-flip button was deliberately left as `onClick` — it's a real
+      `&lt;button&gt;` that also relies on native Enter/Space keyboard activation (which only fires a
+      `click`, not a `pointerdown`), and the slower-paced matching gameplay makes the delay far
+      less perceptible than a flap/reflex game, unlike Flappy Bird which already has its own
+      dedicated keyboard listener independent of the canvas's pointer handler.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P655** — Added `src/utils/games/lowLatencySound.js`: a small Web Audio API helper
+      (`preloadSound(url)` decodes and caches an `AudioBuffer` once; `playSound(url, volume)` plays
+      it through a fresh `AudioBufferSourceNode` each call — near-instant once decoded, and correctly
+      overlaps repeated rapid triggers instead of cutting the previous play off). Replaced the
+      one-shot SFX `&lt;audio&gt;`-element pattern with this everywhere it was used: Flappy Bird's jump
+      and game-over sounds, Memory Flip's flip/correct/wrong sounds, Typing Speed's per-keystroke
+      sound. Background music (Flappy Bird, Memory Flip, Typing Speed) intentionally left as
+      `&lt;audio&gt;` elements — looping/pausable playback isn't what this utility is for.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P656** — Live-verify: confirmed via `getComputedStyle` that the Flappy Bird canvas now
+      reports `touch-action: none`. Restarted the dev server (a stale HMR module graph from the
+      mid-edit state was throwing an old "identifier already declared" error in the live console
+      that a fresh `npm run build` and a direct `grep` of the file both proved wasn't actually
+      present in the current source — logged as its own lesson below). Dispatched real
+      `pointerdown` events at the canvas (5 rapid taps) with a temporary `window.onerror` listener
+      attached — zero errors, and the network log showed `jump.MP3` fetched exactly once (cached
+      thereafter) despite 5 plays, confirming the buffer-cache/re-decode-avoidance actually works.
+      Smoke-tested Memory Flip's flip sound the same way (dispatched a card click, zero errors).
+      **Pass condition:** met via the checks above — confirmed live, not just code review.
+
 ---
 
 ## Backlog — DO NOT START

@@ -7,6 +7,10 @@ import gameOverSound from './assets/audio/game over.mp3'
 import jumpSound from './assets/audio/jump.MP3'
 import { useGames } from '../../../context/GamesContext.jsx'
 import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
+import {
+  playSound,
+  preloadSound,
+} from '../../../utils/games/lowLatencySound.js'
 
 const GAME_ID = 'flappy-bird'
 
@@ -36,26 +40,20 @@ export default function FlappyBirdGame({ onExit }) {
   const [runKey, setRunKey] = useState(0)
   const [score, setScore] = useState(0)
   const bgMusicRef = useRef(null)
-  const gameOverAudioRef = useRef(null)
-  const jumpAudioRef = useRef(null)
 
   useEffect(() => {
     bgMusicRef.current = new Audio(backgroundMusic)
     bgMusicRef.current.loop = true
-    gameOverAudioRef.current = new Audio(gameOverSound)
-    jumpAudioRef.current = new Audio(jumpSound)
+    preloadSound(gameOverSound)
+    preloadSound(jumpSound)
     return () => {
       bgMusicRef.current?.pause()
-      gameOverAudioRef.current?.pause()
-      jumpAudioRef.current?.pause()
     }
   }, [])
 
   useEffect(() => {
     const effective = soundMuted || isMuted ? 0 : volume / 100
-    ;[bgMusicRef, gameOverAudioRef, jumpAudioRef].forEach((ref) => {
-      if (ref.current) ref.current.volume = effective
-    })
+    if (bgMusicRef.current) bgMusicRef.current.volume = effective
   }, [volume, isMuted, soundMuted])
 
   useEffect(() => {
@@ -66,18 +64,15 @@ export default function FlappyBirdGame({ onExit }) {
       if (phase !== 'playing' && bgMusicRef.current)
         bgMusicRef.current.currentTime = 0
     }
-    if (phase === 'game-over' && !soundMuted) {
-      gameOverAudioRef.current?.play().catch(() => {})
+    if (phase === 'game-over') {
+      playSound(gameOverSound, soundMuted || isMuted ? 0 : volume / 100)
     }
-  }, [phase, soundMuted])
+  }, [phase, soundMuted, isMuted, volume])
 
   const handleStart = useCallback(() => {
-    if (jumpAudioRef.current && !soundMuted) {
-      jumpAudioRef.current.currentTime = 0
-      jumpAudioRef.current.play().catch(() => {})
-    }
+    playSound(jumpSound, soundMuted || isMuted ? 0 : volume / 100)
     setPhase('playing')
-  }, [soundMuted])
+  }, [soundMuted, isMuted, volume])
 
   useEffect(() => {
     if (phase !== 'start') return
@@ -118,8 +113,8 @@ export default function FlappyBirdGame({ onExit }) {
       />
       {phase === 'start' && (
         <div
-          onClick={handleStart}
-          className="absolute inset-0 flex cursor-pointer items-center justify-center"
+          onPointerDown={handleStart}
+          className="absolute inset-0 flex cursor-pointer touch-none items-center justify-center"
         >
           <img
             src={startPrompt}

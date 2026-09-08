@@ -16,6 +16,10 @@ import correctSound from './assets/audio/correct.MP3'
 import wrongSound from './assets/audio/wrong.MP3'
 import backgroundMusic from './assets/audio/flip background music.mp3'
 import gameBackground from './assets/components/game background.jpg'
+import {
+  playSound,
+  preloadSound,
+} from '../../../utils/games/lowLatencySound.js'
 
 const GAME_ID = 'memory-flip'
 const MISMATCH_DELAY_MS = 800
@@ -35,12 +39,6 @@ function buildLevelDeck(level) {
   )
 }
 
-function playSound(ref, muted) {
-  if (!ref.current || muted) return
-  ref.current.currentTime = 0
-  ref.current.play().catch(() => {})
-}
-
 export default function MemoryFlipGame({ onExit }) {
   const { submitScore, soundMuted } = useGames()
   const { volume, isMuted } = useSystemSettings()
@@ -52,10 +50,8 @@ export default function MemoryFlipGame({ onExit }) {
   const timeoutRef = useRef(null)
   const toastTimeoutRef = useRef(null)
   const toastIdRef = useRef(0)
-  const flipSoundRef = useRef(null)
-  const correctSoundRef = useRef(null)
-  const wrongSoundRef = useRef(null)
   const musicRef = useRef(null)
+  const effectiveVolume = soundMuted || isMuted ? 0 : volume / 100
 
   function showToast(text) {
     toastIdRef.current += 1
@@ -75,15 +71,12 @@ export default function MemoryFlipGame({ onExit }) {
   const columns = Math.min(8, Math.max(2, Math.round(Math.sqrt(deck.length))))
 
   useEffect(() => {
-    flipSoundRef.current = new Audio(flipCardSound)
-    correctSoundRef.current = new Audio(correctSound)
-    wrongSoundRef.current = new Audio(wrongSound)
+    preloadSound(flipCardSound)
+    preloadSound(correctSound)
+    preloadSound(wrongSound)
     return () => {
       clearTimeout(timeoutRef.current)
       clearTimeout(toastTimeoutRef.current)
-      flipSoundRef.current?.pause()
-      correctSoundRef.current?.pause()
-      wrongSoundRef.current?.pause()
     }
   }, [])
 
@@ -103,11 +96,8 @@ export default function MemoryFlipGame({ onExit }) {
   }, [soundMuted])
 
   useEffect(() => {
-    const effective = soundMuted || isMuted ? 0 : volume / 100
-    ;[flipSoundRef, correctSoundRef, wrongSoundRef, musicRef].forEach((ref) => {
-      if (ref.current) ref.current.volume = effective
-    })
-  }, [volume, isMuted, soundMuted])
+    if (musicRef.current) musicRef.current.volume = effectiveVolume
+  }, [effectiveVolume])
 
   function handleFlip(id) {
     if (flippedIds.length === 2) return
@@ -116,7 +106,7 @@ export default function MemoryFlipGame({ onExit }) {
       card.id === id ? { ...card, isFlipped: true } : card,
     )
     setDeck(nextDeck)
-    playSound(flipSoundRef, soundMuted)
+    playSound(flipCardSound, effectiveVolume)
     const nextFlipped = [...flippedIds, id]
     setFlippedIds(nextFlipped)
 
@@ -127,7 +117,7 @@ export default function MemoryFlipGame({ onExit }) {
     const second = nextDeck.find((card) => card.id === secondId)
 
     if (first.icon === second.icon) {
-      playSound(correctSoundRef, soundMuted)
+      playSound(correctSound, effectiveVolume)
       const matchedDeck = nextDeck.map((card) =>
         card.id === firstId || card.id === secondId
           ? { ...card, isMatched: true }
@@ -149,7 +139,7 @@ export default function MemoryFlipGame({ onExit }) {
         showToast('+1 FLIP')
       }
     } else {
-      playSound(wrongSoundRef, soundMuted)
+      playSound(wrongSound, effectiveVolume)
       timeoutRef.current = setTimeout(() => {
         const nextLives = lives - 1
         setLives(nextLives)

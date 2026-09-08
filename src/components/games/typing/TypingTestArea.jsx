@@ -7,6 +7,10 @@ import { resolvePhysicalKey } from '../../../utils/games/keyboardLayout.js'
 import keyboardSound from './assets/sound/keyboard sound.MP3'
 import { useGames } from '../../../context/GamesContext.jsx'
 import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
+import {
+  playSound,
+  preloadSound,
+} from '../../../utils/games/lowLatencySound.js'
 
 const KEY_FLASH_MS = 150
 
@@ -25,20 +29,14 @@ export default function TypingTestArea({
   const [activeStatus, setActiveStatus] = useState(null)
   const startTimeRef = useRef(null)
   const flashTimeoutRef = useRef(null)
-  const keySoundRef = useRef(null)
+  const effectiveVolume = soundMuted || isMuted ? 0 : volume / 100
 
   useEffect(() => {
-    keySoundRef.current = new Audio(keyboardSound)
+    preloadSound(keyboardSound)
     return () => {
       if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
-      keySoundRef.current?.pause()
     }
   }, [])
-
-  useEffect(() => {
-    if (!keySoundRef.current) return
-    keySoundRef.current.volume = soundMuted || isMuted ? 0 : volume / 100
-  }, [volume, isMuted, soundMuted])
 
   useEffect(() => {
     startTimeRef.current = performance.now()
@@ -66,10 +64,7 @@ export default function TypingTestArea({
       const expectedChar = sentence[value.length - 1]
       setActiveKey(resolvePhysicalKey(typedChar))
       setActiveStatus(typedChar === expectedChar ? 'correct' : 'incorrect')
-      if (keySoundRef.current && !soundMuted) {
-        keySoundRef.current.currentTime = 0
-        keySoundRef.current.play().catch(() => {})
-      }
+      playSound(keyboardSound, effectiveVolume)
       if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
       flashTimeoutRef.current = setTimeout(() => {
         setActiveKey(null)

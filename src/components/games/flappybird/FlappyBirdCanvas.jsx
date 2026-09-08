@@ -13,6 +13,10 @@ import flappyPipeSprite from './assets/components/pipe.png'
 import jumpSound from './assets/audio/jump.MP3'
 import { useGames } from '../../../context/GamesContext.jsx'
 import { useSystemSettings } from '../../../context/SystemSettingsContext.jsx'
+import {
+  playSound,
+  preloadSound,
+} from '../../../utils/games/lowLatencySound.js'
 
 const PIPE_SPEED = 120
 const MAP_SCROLL_SPEED = PIPE_SPEED * 0.1
@@ -143,7 +147,6 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
   const isRunningRef = useRef(true)
   const onGameOverRef = useRef(onGameOver)
   const pausedRef = useRef(paused)
-  const jumpAudioRef = useRef(null)
 
   useEffect(() => {
     onGameOverRef.current = onGameOver
@@ -154,13 +157,8 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
   }, [paused])
 
   useEffect(() => {
-    jumpAudioRef.current = new Audio(jumpSound)
+    preloadSound(jumpSound)
   }, [])
-
-  useEffect(() => {
-    if (!jumpAudioRef.current) return
-    jumpAudioRef.current.volume = soundMuted || isMuted ? 0 : volume / 100
-  }, [volume, isMuted, soundMuted])
 
   useLayoutEffect(() => {
     const container = containerRef.current
@@ -290,11 +288,8 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
   const handleJump = useCallback(() => {
     if (!isRunningRef.current || pausedRef.current) return
     birdRef.current = jump(birdRef.current)
-    if (jumpAudioRef.current && !soundMuted) {
-      jumpAudioRef.current.currentTime = 0
-      jumpAudioRef.current.play().catch(() => {})
-    }
-  }, [soundMuted])
+    playSound(jumpSound, soundMuted || isMuted ? 0 : volume / 100)
+  }, [soundMuted, isMuted, volume])
 
   useEffect(() => {
     function handleKeydown(event) {
@@ -311,8 +306,8 @@ export default function FlappyBirdCanvas({ paused, onGameOver }) {
     <div ref={containerRef} className="h-full w-full">
       <canvas
         ref={canvasRef}
-        onClick={handleJump}
-        className="block h-full w-full cursor-pointer"
+        onPointerDown={handleJump}
+        className="block h-full w-full touch-none cursor-pointer"
       />
     </div>
   )
