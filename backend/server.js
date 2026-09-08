@@ -6,6 +6,8 @@ import { existsSync, mkdirSync } from 'node:fs'
 import authRouter from './routes/auth.js'
 import productsRouter from './routes/products.js'
 import resumeTemplatesRouter from './routes/resumeTemplates.js'
+import leaderboardRouter from './routes/leaderboard.js'
+import ratingsRouter from './routes/ratings.js'
 import requireAuth from './middleware/requireAuth.js'
 import { initSchema } from './db.js'
 
@@ -31,6 +33,8 @@ app.use('/uploads', express.static(uploadsDir))
 app.use('/api', authRouter)
 app.use('/api/products', productsRouter)
 app.use('/api/resume-templates', resumeTemplatesRouter)
+app.use('/api/leaderboard', leaderboardRouter)
+app.use('/api/ratings', ratingsRouter)
 
 app.post(
   '/api/uploads',

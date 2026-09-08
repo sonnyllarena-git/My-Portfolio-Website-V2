@@ -5,11 +5,7 @@ import {
   readPlayCount,
   incrementPlayCount,
 } from '../utils/gameScores.js'
-import {
-  readRatings,
-  addRating,
-  getAverageRating as computeAverageRating,
-} from '../utils/gameRatings.js'
+import { getAverageRating as computeAverageRating } from '../utils/gameRatings.js'
 import {
   readVisitorName,
   writeVisitorName,
@@ -19,6 +15,8 @@ import {
   readArcadeSettings,
   writeArcadeSettings,
 } from '../utils/arcadeSettings.js'
+import { submitLeaderboardScore } from '../utils/leaderboardApi.js'
+import { fetchRatings, submitRatingApi } from '../utils/ratingsApi.js'
 
 const GamesContext = createContext(null)
 
@@ -26,6 +24,7 @@ export function GamesProvider({ children }) {
   const [scoresByGame, setScoresByGame] = useState({})
   const [playsByGame, setPlaysByGame] = useState({})
   const [ratingsByGame, setRatingsByGame] = useState({})
+  const [ratingsLoaded, setRatingsLoaded] = useState({})
   const [visitorName, setVisitorNameState] = useState(() => readVisitorName())
   const [arcadeSettings, setArcadeSettings] = useState(() =>
     readArcadeSettings(),
@@ -40,15 +39,26 @@ export function GamesProvider({ children }) {
   }
 
   function getRatings(gameId) {
-    return ratingsByGame[gameId] ?? readRatings(gameId)
+    return ratingsByGame[gameId] ?? []
   }
 
   function getAverageRating(gameId) {
     return computeAverageRating(getRatings(gameId))
   }
 
-  function submitRating(gameId, { name, rating, comment }) {
-    const updated = addRating(gameId, { name, rating, comment })
+  async function loadRatings(gameId) {
+    if (ratingsLoaded[gameId]) return
+    setRatingsLoaded((prev) => ({ ...prev, [gameId]: true }))
+    try {
+      const rows = await fetchRatings(gameId)
+      setRatingsByGame((prev) => ({ ...prev, [gameId]: rows }))
+    } catch {
+      setRatingsLoaded((prev) => ({ ...prev, [gameId]: false }))
+    }
+  }
+
+  async function submitRating(gameId, { name, rating, comment }) {
+    const updated = await submitRatingApi(gameId, { name, rating, comment })
     setRatingsByGame((prev) => ({ ...prev, [gameId]: updated }))
     return updated
   }
@@ -80,6 +90,13 @@ export function GamesProvider({ children }) {
       ...prev,
       [gameId]: incrementPlayCount(gameId),
     }))
+    submitLeaderboardScore(gameId, {
+      name: visitorName ?? 'Guest',
+      score: value,
+      label,
+    }).catch(() => {
+      // Global leaderboard is best-effort — a network hiccup shouldn't break gameplay.
+    })
     return updated
   }
 
@@ -91,6 +108,7 @@ export function GamesProvider({ children }) {
         getTotalPlays,
         getRatings,
         getAverageRating,
+        loadRatings,
         submitRating,
         visitorName,
         setVisitorName,

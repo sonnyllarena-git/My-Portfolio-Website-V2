@@ -6362,6 +6362,72 @@ account to protect in a local-only sandbox._
       **Pass condition:** zero console/page errors; `npm run verify` passes; real DB row counts
       unchanged before/after.
 
+## PHASE 100 — GLOBAL ARCADE LEADERBOARD + CLOUD RATINGS (POSTGRES-BACKED)
+
+_Sonny asked (2026-09-08) to add real databases for arcade leaderboards and game ratings/comments
+so scores and reviews are shared across all visitors instead of per-browser localStorage. Both
+backlog items below ("shared/global arcade leaderboard" and "cloud database for arcade ratings/
+comments") are resolved by this phase, reusing the same Postgres instance already running the
+Store/Resume Generator (Phase 76/98) instead of adding a second DB layer — explicit approval given
+in that 2026-09-08 conversation. Decisions confirmed with Sonny: the leaderboard keeps only the top
+10 scores per game (not full play history); submission endpoints get basic sanity caps only (name
+length, score/rating bounds), no real anti-cheat; existing localStorage scores are left alone, not
+migrated — the new leaderboard is a separate global feature layered on top of the existing
+per-browser "BEST SCORE/TOTAL PLAYS" stats. Ratings, unlike scores, move fully to the database
+(read + write) since a shared review feed only makes sense as one shared source of truth — the
+existing seeded testimonial reviews (`gameRatingSeeds.js`) were migrated server-side and seeded
+into the DB once on first boot so no review content was lost._
+
+- [x] **P627** — Add `leaderboardScores` and `gameRatings` tables (plus indexes) to `initSchema()`
+      in `backend/db.js`, and a one-time seed step that inserts `backend/gameRatingSeeds.js`'s
+      existing testimonial reviews into `gameRatings` if the table is empty.
+      **Pass condition:** `npm run verify` passes; schema creation reviewed for idempotency
+      (`CREATE TABLE IF NOT EXISTS`, seed only runs when `COUNT(*) = 0`).
+- [x] **P628** — Add `backend/routes/leaderboard.js` (`GET`/`POST /api/leaderboard/:gameId`,
+      public, no auth) validating game id/name length/integer score bounds, inserting a score and
+      trimming the table back to the top 10 per game.
+      **Pass condition:** `npm run verify` passes; code reviewed for parameterized queries and
+      correct camelCase column aliasing (Postgres lowercases unquoted identifiers —
+      `createdAt AS "createdAt"` needed, caught and fixed during this phase).
+- [x] **P629** — Add `backend/routes/ratings.js` (`GET`/`POST /api/ratings/:gameId`, public, no
+      auth) validating game id/name length/integer rating 1–5/comment length, inserting a rating
+      and returning the full updated list. Mount both new routers in `backend/server.js`.
+      **Pass condition:** `npm run verify` passes; same camelCase-aliasing check applied.
+- [x] **P630** — Add `src/utils/leaderboardApi.js` and `src/utils/ratingsApi.js` (plain `fetch`
+      wrappers, no auth token). Wire `GamesContext.jsx`'s `submitScore` to also fire-and-forget
+      `submitLeaderboardScore` (local score behavior unchanged), and replace the ratings side of
+      `GamesContext.jsx` (`getRatings`/`getAverageRating`/`submitRating`) with DB-backed versions
+      plus a new `loadRatings(gameId)` fetch-once loader. Delete now-dead `src/utils/gameRatings.js`
+      localStorage functions (kept only the pure `getAverageRating` calculator) and moved
+      `src/data/gameRatingSeeds.js` to `backend/gameRatingSeeds.js` (backend-only seed source now
+      that the frontend reads ratings from the API).
+      **Pass condition:** `npm run verify` passes; `gameRatings.test.js` updated to drop the
+      removed localStorage tests.
+- [x] **P631** — Replace the unused `src/components/games/GameLeaderboard.jsx` with
+      `GameLeaderboardModal.jsx` (crown-styled modal, numbered rank rows, loading/empty/error
+      states) and wire a "🏆 Leaderboard" button into each `GameCard` in `GamesHub.jsx` alongside
+      the existing ratings button. Update `GameRatingModal.jsx` to call `loadRatings` on mount and
+      `await` the now-async `submitRating`.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P632** — Live-verify end-to-end against a real Postgres instance. Installed PostgreSQL 17
+      locally (`winget install PostgreSQL.PostgreSQL.17`, Windows service `postgresql-x64-17`,
+      auto-starts), created the `portfolio_dev` database, updated `backend/.env`'s `DATABASE_URL`
+      with real credentials. Verified via direct API calls: `GET`/`POST /api/leaderboard/:gameId`
+      and `GET`/`POST /api/ratings/:gameId` round-trip correctly with correctly-cased `createdAt`
+      (not `undefined`); submitting 11 scores for one game correctly trims to the top 10; invalid
+      POSTs (negative score, 6-star rating, empty name) all correctly rejected with 400. Verified
+      live through the actual browser UI too: opened Games, saw rating averages/counts loaded from
+      the DB on the arcade hub cards, opened the Leaderboard modal (correctly empty), and submitted
+      a real 5-star rating through `GameRatingModal` — the toast fired, the list re-sorted with the
+      new entry on top, the card badge updated 4.4→4.5 (9→10), and a fresh `GET` after a page
+      reload confirmed it was truly server-side, not just local state. Did not confirm the score
+      side through actual gameplay (the Flappy Bird canvas' `requestAnimationFrame` loop appears to
+      stall for an automated/backgrounded browser tab, unrelated to the app's own logic) — the
+      leaderboard's score-submission path was instead proven via direct `POST` calls, which
+      exercise the exact same backend code `submitScore` calls.
+      **Pass condition:** met via the checks above. All test rows (`TestPlayer`, `P1`-`P11`,
+      `ClaudeTester`) were deleted afterward — tables are back to their clean seeded state.
+
 ---
 
 ## Backlog — DO NOT START
@@ -6377,16 +6443,6 @@ Anything here is out of scope until Sonny moves it up.
   selection state (Phase 14, P85); accent color now drives the window frame border (Phase 17,
   P93), but re-skinning the taskbar/icons/everything else to respect accent color or theme mode is
   real follow-up work Sonny confirmed he wants done later, not now.
-- **Shared/global arcade leaderboard across all visitors** — Phase 36's leaderboards (P166–P200)
-  are localStorage-backed, per-browser only, per Sonny's explicit 2026-08-19 answer. A real
-  cross-visitor leaderboard needs a backend + database, which is a new architectural layer banned
-  by CLAUDE.md §2 without Sonny's explicit sign-off — he confirmed he wants this "built later," so
-  it stays here until he moves it up and approves the stack addition it requires.
-- **Cloud database for arcade ratings/comments** — Phase 49's ratings/comments (P237-P244) are
-  localStorage-backed, per-browser only, matching the existing scores/plays pattern. Sonny
-  explicitly said this is a placeholder and he wants a real cloud database later — that's a new
-  architectural layer banned by CLAUDE.md §2 without his explicit sign-off, so it stays here until
-  he moves it up and approves the stack addition it requires.
 
 ---
 

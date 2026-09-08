@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGames } from '../../context/GamesContext.jsx'
 
 function formatTimestamp(iso) {
@@ -46,7 +46,7 @@ function RatingCard({ entry }) {
         <StarDisplay rating={entry.rating} />
       </div>
       <div className="mt-0.5 text-xs text-white/40">
-        {formatTimestamp(entry.timestamp)}
+        {formatTimestamp(entry.createdAt)}
       </div>
       {entry.comment && (
         <p className="mt-2 text-sm text-white/80">{entry.comment}</p>
@@ -56,26 +56,40 @@ function RatingCard({ entry }) {
 }
 
 function GameRatingModal({ game, onClose }) {
-  const { getRatings, submitRating, visitorName } = useGames()
+  const { getRatings, loadRatings, submitRating, visitorName } = useGames()
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
   const [showAddedToast, setShowAddedToast] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    loadRatings(game.id)
+    // loadRatings guards against refetching once a game's ratings are loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.id])
 
   const ratings = [...getRatings(game.id)].sort(
-    (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
   )
 
-  function handleSubmit() {
-    if (rating === 0) return
-    submitRating(game.id, {
-      name: visitorName ?? 'Guest',
-      rating,
-      comment: comment.trim(),
-    })
-    setRating(0)
-    setComment('')
-    setShowAddedToast(true)
-    setTimeout(() => setShowAddedToast(false), 2000)
+  async function handleSubmit() {
+    if (rating === 0 || submitting) return
+    setSubmitting(true)
+    try {
+      await submitRating(game.id, {
+        name: visitorName ?? 'Guest',
+        rating,
+        comment: comment.trim(),
+      })
+      setRating(0)
+      setComment('')
+      setShowAddedToast(true)
+      setTimeout(() => setShowAddedToast(false), 2000)
+    } catch {
+      // Best-effort — a network hiccup just means the rating didn't save this time.
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -114,10 +128,10 @@ function GameRatingModal({ game, onClose }) {
           />
           <button
             onClick={handleSubmit}
-            disabled={rating === 0}
+            disabled={rating === 0 || submitting}
             className="mt-3 w-full rounded bg-cyan-500 px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Submit Rating
+            {submitting ? 'Submitting…' : 'Submit Rating'}
           </button>
         </div>
         {showAddedToast && (

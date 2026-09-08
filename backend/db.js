@@ -1,4 +1,5 @@
 import pg from 'pg'
+import { gameRatingSeeds } from './gameRatingSeeds.js'
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -59,6 +60,50 @@ async function initSchema() {
         updatedAt TEXT NOT NULL
       )
     `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS leaderboardScores (
+        id SERIAL PRIMARY KEY,
+        gameId TEXT NOT NULL,
+        name TEXT NOT NULL,
+        score INTEGER NOT NULL,
+        label TEXT,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_leaderboard_game_score
+      ON leaderboardScores (gameId, score)
+    `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS gameRatings (
+        id SERIAL PRIMARY KEY,
+        gameId TEXT NOT NULL,
+        name TEXT NOT NULL,
+        rating INTEGER NOT NULL,
+        comment TEXT,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_ratings_game
+      ON gameRatings (gameId)
+    `)
+
+    const ratingsCount = await client.query('SELECT COUNT(*) FROM gameRatings')
+    if (Number(ratingsCount.rows[0].count) === 0) {
+      for (const [gameId, seeds] of Object.entries(gameRatingSeeds)) {
+        for (const seed of seeds) {
+          await client.query(
+            'INSERT INTO gameRatings (gameId, name, rating, comment, createdAt) VALUES ($1, $2, $3, $4, $5)',
+            [gameId, seed.name, seed.rating, seed.comment, seed.timestamp],
+          )
+        }
+      }
+    }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS schema_version (

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { gamesCatalog } from '../../data/gamesCatalog.js'
 import { useGames } from '../../context/GamesContext.jsx'
 import GameRatingModal from './GameRatingModal.jsx'
+import GameLeaderboardModal from './GameLeaderboardModal.jsx'
 import playButtonImage from './assets/play button games screen.png'
 
 function RatingButton({ average, count, onClick }) {
@@ -38,6 +39,23 @@ function RatingButton({ average, count, onClick }) {
   )
 }
 
+function LeaderboardButton({ onClick }) {
+  function handleClick(e) {
+    e.stopPropagation()
+    onClick()
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-300 transition-colors hover:bg-amber-500/30 hover:text-amber-200"
+    >
+      🏆 Leaderboard
+    </button>
+  )
+}
+
 function GameCard({
   game,
   bestScore,
@@ -45,6 +63,7 @@ function GameCard({
   average,
   onSelectGame,
   onViewRatings,
+  onViewLeaderboard,
 }) {
   const isReady = game.status === 'ready'
   return (
@@ -82,20 +101,29 @@ function GameCard({
           TOTAL PLAYS: <span className="text-white">{totalPlays}</span>
         </p>
       </div>
-      <div className="px-4 pb-3">
+      <div className="flex items-center justify-between gap-2 px-4 pb-3">
         <RatingButton
           average={average.average}
           count={average.count}
           onClick={() => onViewRatings(game)}
         />
+        <LeaderboardButton onClick={() => onViewLeaderboard(game)} />
       </div>
     </div>
   )
 }
 
 export default function GamesHub({ onSelectGame }) {
-  const { getTopScores, getTotalPlays, getAverageRating } = useGames()
+  const { getTopScores, getTotalPlays, getAverageRating, loadRatings } =
+    useGames()
   const [ratingModalGame, setRatingModalGame] = useState(null)
+  const [leaderboardModalGame, setLeaderboardModalGame] = useState(null)
+
+  useEffect(() => {
+    gamesCatalog.forEach((game) => loadRatings(game.id))
+    // Only needs to run once per hub mount — loadRatings itself guards against refetching.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -110,6 +138,7 @@ export default function GamesHub({ onSelectGame }) {
             average={getAverageRating(game.id)}
             onSelectGame={onSelectGame}
             onViewRatings={setRatingModalGame}
+            onViewLeaderboard={setLeaderboardModalGame}
           />
         )
       })}
@@ -117,6 +146,12 @@ export default function GamesHub({ onSelectGame }) {
         <GameRatingModal
           game={ratingModalGame}
           onClose={() => setRatingModalGame(null)}
+        />
+      )}
+      {leaderboardModalGame && (
+        <GameLeaderboardModal
+          game={leaderboardModalGame}
+          onClose={() => setLeaderboardModalGame(null)}
         />
       )}
     </div>
