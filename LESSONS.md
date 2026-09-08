@@ -63,6 +63,16 @@ _Build tool, bundler, dev server, lint, format, test runner, env vars, scripts._
 
 ---
 
+## Deployment
+
+_Render/host build & start config, and framework-version quirks that only surface once actually
+deployed — `npm run verify` can't catch either class._
+
+- [2026-09-07] `backend/server.js`'s SPA-fallback route was written as `app.get('/*', ...)` (valid under Express 4/path-to-regexp v6) — deploying to Render crashed on boot with `PathError [TypeError]: Missing parameter name at index 2: /*`, because Express 5.2.1 (this project's locked version) bundles path-to-regexp v7, which rejects a bare `/*` wildcard → use a named wildcard (`app.get('/*splat', ...)`) for any catch-all route under Express 5.
+- [2026-09-07] Render's Build Command was set to just `npm install`, so `vite build` never ran and `dist/` (gitignored, meant to be built fresh per deploy) never existed on the server — every request, including `/`, 404'd because `backend/server.js`'s `express.static(distDir)` + SPA-fallback `sendFile` had nothing to serve, even though Render's own log reported "Build successful 🎉" → for a Render web service that serves a Vite-built frontend from this Express backend, the Build Command must be `npm install && npm run build`; a green Render build log only proves `npm install` succeeded, not that the frontend was actually built.
+
+---
+
 ## Language & Type Errors
 
 _Recurring compile, type, import, or module-resolution traps._
