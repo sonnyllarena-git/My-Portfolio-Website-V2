@@ -3,6 +3,7 @@ import logo from '../components/store/assets/components/sonny store logo.png'
 import AdminProductsPage from './AdminProductsPage.jsx'
 import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
 import AdminMemoryWallPage from './AdminMemoryWallPage.jsx'
+import AdminVisitorArtsPage from './AdminVisitorArtsPage.jsx'
 import AdminSettingsPage from './AdminSettingsPage.jsx'
 import {
   AdminSettingsProvider,
@@ -27,6 +28,7 @@ import {
 // just rendered inside a desktop Window instead of a full page (h-full, not min-h-screen).
 const NAV_ITEMS = [
   { id: 'memory-wall', label: 'Memory Wall' },
+  { id: 'visitor-arts', label: 'Visitor Arts' },
   { id: 'products', label: 'Products' },
   { id: 'resume-templates', label: 'Resume Templates' },
   { id: 'settings', label: 'Settings' },
@@ -92,6 +94,8 @@ function AdminPanelShell({ onClose }) {
             <AdminResumeTemplatesPage />
           ) : view === 'memory-wall' ? (
             <AdminMemoryWallPage />
+          ) : view === 'visitor-arts' ? (
+            <AdminVisitorArtsPage />
           ) : (
             <AdminSettingsPage />
           )}

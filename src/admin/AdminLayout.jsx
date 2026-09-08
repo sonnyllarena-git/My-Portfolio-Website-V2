@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { id: 'products', label: 'Products' },
   { id: 'resume-templates', label: 'Resume Templates' },
   { id: 'memory-wall', label: 'Memory Wall' },
+  { id: 'visitor-arts', label: 'Visitor Arts' },
   { id: 'settings', label: 'Settings' },
 ]
 

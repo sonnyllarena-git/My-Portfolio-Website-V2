@@ -12,7 +12,9 @@ function PaintApp({ onOpenGallery }) {
   const [opacity, setOpacity] = useState(1)
   const [history, setHistory] = useState({ canUndo: false, canRedo: false })
   const [title, setTitle] = useState('')
+  const [authorName, setAuthorName] = useState('')
   const [showSavedToast, setShowSavedToast] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   function handleDownload() {
     const link = document.createElement('a')
@@ -21,16 +23,22 @@ function PaintApp({ onOpenGallery }) {
     link.click()
   }
 
-  function handleSave() {
-    addArtwork({
-      id: `art-${Date.now()}`,
-      title: title.trim() || 'Untitled',
-      author: 'Guest',
-      timestamp: new Date().toISOString(),
-      imageData: canvasRef.current.getDataUrl(),
-    })
-    setShowSavedToast(true)
-    setTimeout(() => setShowSavedToast(false), 2000)
+  async function handleSave() {
+    if (saving) return
+    setSaving(true)
+    try {
+      await addArtwork({
+        title: title.trim() || 'Untitled',
+        author: authorName.trim() || 'Guest',
+        imageData: canvasRef.current.getDataUrl(),
+      })
+      setShowSavedToast(true)
+      setTimeout(() => setShowSavedToast(false), 2000)
+    } catch {
+      // Best-effort — a network hiccup just means the save didn't go through this time.
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -63,7 +71,10 @@ function PaintApp({ onOpenGallery }) {
         onDownload={handleDownload}
         title={title}
         onTitleChange={setTitle}
+        authorName={authorName}
+        onAuthorNameChange={setAuthorName}
         onSave={handleSave}
+        saving={saving}
       />
       <div className="relative flex-1 overflow-hidden bg-gray-200 p-4">
         <PaintCanvas

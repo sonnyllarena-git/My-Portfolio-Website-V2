@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGallery } from '../context/GalleryContext.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 
@@ -9,7 +9,7 @@ function downloadArtwork(artwork) {
   link.click()
 }
 
-function ArtCard({ artwork, onView, onDelete, isMobile = false }) {
+function ArtCard({ artwork, onView, isMobile = false }) {
   return (
     <div className="group relative overflow-hidden rounded-lg border border-white/10 bg-[#15171c]">
       <button
@@ -36,16 +36,6 @@ function ArtCard({ artwork, onView, onDelete, isMobile = false }) {
         >
           ⬇️
         </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(artwork)
-          }}
-          aria-label={`Delete ${artwork.title}`}
-          className="rounded bg-black/60 px-1.5 py-1 text-xs hover:bg-red-600"
-        >
-          🗑️
-        </button>
       </div>
       <div className="px-3 py-2">
         <div className="truncate text-xs font-medium">{artwork.title}</div>
@@ -56,20 +46,20 @@ function ArtCard({ artwork, onView, onDelete, isMobile = false }) {
 }
 
 function VisitorArtsApp({ onOpenPaint }) {
-  const { artworks, deleteArtwork } = useGallery()
+  const { artworks, loading, loadArtworks } = useGallery()
   const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [previewArtwork, setPreviewArtwork] = useState(null)
+
+  useEffect(() => {
+    loadArtworks()
+    // loadArtworks guards against refetching once artworks are loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const filtered = artworks.filter((artwork) =>
     artwork.title.toLowerCase().includes(search.toLowerCase()),
   )
-
-  function handleDelete(artwork) {
-    deleteArtwork(artwork.id)
-    setPreviewArtwork((current) =>
-      current?.id === artwork.id ? null : current,
-    )
-  }
 
   return (
     <div className="flex h-full flex-col text-sm text-white">
@@ -139,19 +129,24 @@ function VisitorArtsApp({ onOpenPaint }) {
             />
           </div>
           <div className="flex-1 overflow-auto p-4">
-            <div
-              className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}
-            >
-              {filtered.map((artwork) => (
-                <ArtCard
-                  key={artwork.id}
-                  artwork={artwork}
-                  onView={setPreviewArtwork}
-                  onDelete={handleDelete}
-                  isMobile={isMobile}
-                />
-              ))}
-            </div>
+            {loading && artworks.length === 0 ? (
+              <div className="flex h-40 items-center justify-center text-white/40">
+                Loading gallery…
+              </div>
+            ) : (
+              <div
+                className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}
+              >
+                {filtered.map((artwork) => (
+                  <ArtCard
+                    key={artwork.id}
+                    artwork={artwork}
+                    onView={setPreviewArtwork}
+                    isMobile={isMobile}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           <div className="border-t border-white/10 px-3 py-1.5 text-xs text-white/60">
             {filtered.length} items

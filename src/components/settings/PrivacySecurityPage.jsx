@@ -31,12 +31,11 @@ function PrivacySecurityPage() {
         distribution, or modification is prohibited.
       </InfoBlock>
       <InfoBlock title="Data Collection">
-        Memory Wall notes (name, message, and rating) are stored in a shared
-        database and visible to every visitor of the portfolio — please avoid
-        sharing anything personal or sensitive. Visitor Arts submissions still
-        only live in your current browser session and are not saved after you
-        close or reload the page. No account is required for either, and Memory
-        Wall notes may be removed at Sonny's discretion.
+        Memory Wall notes (name, message, and rating) and Visitor Arts drawings
+        (title, name, and the image itself) are stored in a shared database and
+        visible to every visitor of the portfolio — please avoid sharing
+        anything personal or sensitive. No account is required for either, and
+        any submission may be removed at Sonny's discretion.
       </InfoBlock>
     </div>
   )

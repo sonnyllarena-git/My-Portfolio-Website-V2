@@ -1,21 +1,35 @@
 import { createContext, useContext, useState } from 'react'
-import { galleryArtworks } from '../data/galleryArtworks.js'
+import { fetchArtworks, submitArtwork } from '../utils/visitorArtsApi.js'
 
 const GalleryContext = createContext(null)
 
 export function GalleryProvider({ children }) {
-  const [artworks, setArtworks] = useState(galleryArtworks)
+  const [artworks, setArtworks] = useState([])
+  const [loaded, setLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  function addArtwork(artwork) {
-    setArtworks((prev) => [artwork, ...prev])
+  async function loadArtworks() {
+    if (loaded) return
+    setLoading(true)
+    try {
+      const rows = await fetchArtworks()
+      setArtworks(rows)
+      setLoaded(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  function deleteArtwork(id) {
-    setArtworks((prev) => prev.filter((artwork) => artwork.id !== id))
+  async function addArtwork({ title, author, imageData }) {
+    const saved = await submitArtwork({ title, author, imageData })
+    setArtworks((prev) => [saved, ...prev])
+    return saved
   }
 
   return (
-    <GalleryContext.Provider value={{ artworks, addArtwork, deleteArtwork }}>
+    <GalleryContext.Provider
+      value={{ artworks, loading, loadArtworks, addArtwork }}
+    >
       {children}
     </GalleryContext.Provider>
   )

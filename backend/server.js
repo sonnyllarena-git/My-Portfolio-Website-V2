@@ -9,6 +9,7 @@ import resumeTemplatesRouter from './routes/resumeTemplates.js'
 import leaderboardRouter from './routes/leaderboard.js'
 import ratingsRouter from './routes/ratings.js'
 import memoryWallRouter from './routes/memoryWall.js'
+import visitorArtsRouter from './routes/visitorArts.js'
 import requireAuth from './middleware/requireAuth.js'
 import { initSchema } from './db.js'
 
@@ -29,7 +30,10 @@ const upload = multer({
 })
 
 const app = express()
-app.use(express.json())
+// Default body-parser limit (100kb) is too small for a base64 PNG canvas export
+// (Visitor Arts saves) — raised for every route rather than just one, since it's
+// still a modest, sanity-preserving cap, not a real DoS surface.
+app.use(express.json({ limit: '6mb' }))
 app.use('/uploads', express.static(uploadsDir))
 app.use('/api', authRouter)
 app.use('/api/products', productsRouter)
@@ -37,6 +41,7 @@ app.use('/api/resume-templates', resumeTemplatesRouter)
 app.use('/api/leaderboard', leaderboardRouter)
 app.use('/api/ratings', ratingsRouter)
 app.use('/api/memory-wall', memoryWallRouter)
+app.use('/api/visitor-arts', visitorArtsRouter)
 
 app.post(
   '/api/uploads',

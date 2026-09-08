@@ -7,6 +7,7 @@ import {
 } from './mockArcadeData.js'
 import { memoryWallSeeds } from './memoryWallSeeds.js'
 import { memoryWallMockPosts } from './memoryWallMockPosts.js'
+import { galleryArtworkSeeds } from './galleryArtworkSeeds.js'
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -125,6 +126,28 @@ async function initSchema() {
         await client.query(
           'INSERT INTO memoryWallNotes (name, message, rating, createdAt) VALUES ($1, $2, $3, $4)',
           [seed.name, seed.message, seed.rating, seed.timestamp],
+        )
+      }
+    }
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS visitorArtworks (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        author TEXT NOT NULL,
+        imageData TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    const visitorArtworksCount = await client.query(
+      'SELECT COUNT(*) FROM visitorArtworks',
+    )
+    if (Number(visitorArtworksCount.rows[0].count) === 0) {
+      for (const seed of galleryArtworkSeeds) {
+        await client.query(
+          'INSERT INTO visitorArtworks (title, author, imageData, createdAt) VALUES ($1, $2, $3, $4)',
+          [seed.title, seed.author, seed.imageData, seed.timestamp],
         )
       }
     }

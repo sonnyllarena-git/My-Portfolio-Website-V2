@@ -6589,6 +6589,67 @@ pattern (`schema_version = 3`), so it applies automatically on next deploy — n
       count updated to "45 Notes on the wall", newest-first sort shows the new posts).
       **Pass condition:** met via the checks above — confirmed live, not just code review.
 
+## PHASE 106 — PAINT + VISITOR ARTS DATABASE + ADMIN MODERATION
+
+_Sonny asked (2026-09-08) for the same shared-database treatment for Paint/Visitor Arts as Memory
+Wall got in Phase 102 — session-only React state since Phase 9, explicitly disclosed as
+not-persisted at the time. Brainstormed the admin moderation approach with Sonny first: images
+need a thumbnail grid (not a text list) to actually see what was drawn before deleting it, and
+Paint's "author" field was hardcoded to `'Guest'` with no name input anywhere — Sonny confirmed
+adding a real "Your name" field, matching Memory Wall's identity capture. The saved image itself
+(a base64 PNG from `canvas.toDataURL()`) is stored directly in a Postgres `TEXT` column rather
+than a file on disk — Render's filesystem is ephemeral (the same reason this project already
+migrated off SQLite-on-disk for the Store catalog), so any image written to `backend/uploads/`
+would vanish on the next deploy; the existing `/api/uploads` route is also admin-only and disk-
+based, so it could not be reused for visitor-facing saves as-is._
+
+- [x] **P649** — Added a `visitorArtworks` table (`title`, `author`, `imageData`, `createdAt`, all
+      `TEXT`/unbounded) to `initSchema()` in `backend/db.js`, seeded once (if empty) from the
+      existing 6 placeholder artworks, moved from `src/data/galleryArtworks.js` to
+      `backend/galleryArtworkSeeds.js`. Added `backend/routes/visitorArts.js`: public `GET`/`POST
+/api/visitor-arts` (title ≤60 chars defaulting to "Untitled", author ≤40 chars defaulting to
+      "Guest", `imageData` must start with `data:image/` and stay under ~4M characters — a sanity
+      cap, not real compression) and an admin-only `DELETE /api/visitor-arts/:id`. Raised
+      `express.json()`'s body-size limit from Express's 100kb default to 6mb globally (base64 PNG
+      payloads routinely exceed 100kb) — still a modest cap, not a real DoS surface. `POST` returns
+      only the newly-created artwork (not the whole list) since resending every image on every save
+      would be wasteful, unlike the small-text Memory Wall/ratings responses.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P650** — **Security fix, not just a persistence upgrade:** `VisitorArtsApp.jsx` already had
+      a public, unauthenticated Delete button on every artwork (harmless while everything was
+      session-only local state) — now that the gallery is a real shared database, a public delete
+      endpoint would let any visitor wipe any other visitor's art (or the seeded placeholders) with
+      no protection. Removed the public delete capability entirely from `GalleryContext.jsx`/
+      `VisitorArtsApp.jsx`; deletion is admin-only from here on, matching Memory Wall.
+      **Pass condition:** `npm run verify` passes; code reviewed to confirm no public route or UI
+      path can delete an artwork.
+- [x] **P651** — Rewrote `GalleryContext.jsx` to fetch/post via a new `src/utils/visitorArtsApi.js`
+      instead of local `useState` seeded from static data (`loadArtworks()` fetch-once, `addArtwork`
+      now async). `PaintApp.jsx`/`PaintToolbar.jsx`: added a "Your name" input next to the title
+      field (optional, falls back to "Guest" like before if left blank), `handleSave` is now async
+      with a `saving` guard and a "Saving…" button state.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P652** — Added `src/admin/AdminVisitorArtsPage.jsx` (thumbnail grid — image, title, author,
+      date, Delete — per Sonny's pick over a text-only list) and wired it into both
+      `AdminLayout.jsx`/`AdminApp.jsx` (the standalone `/admin` page) and `AdminPanelEmbedded.jsx`
+      (the hidden Terminal `/admin` panel from Phase 103), as "Visitor Arts" alongside Memory Wall.
+      Corrected the Settings → Privacy & Security copy again — it still said Visitor Arts was
+      session-only, no longer true.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P653** — Live-verify: restarted the local backend, caught and fixed a real bug before
+      shipping — `imageData`/`createdAt` came back from Postgres as all-lowercase (`imagedata`)
+      because the `POST`'s `RETURNING` clause was missing the `AS "imageData"` alias (Postgres
+      folds unquoted identifiers to lowercase, the same class of bug fixed in Phase 100 for other
+      tables) — fixed and re-verified via direct API calls that both `GET` and `POST` responses
+      carry correctly-cased keys. Verified live in the browser end-to-end: drew a real doodle in
+      Paint, entered a name and title, saved it, confirmed the toast and that it appeared correctly
+      in Visitor Arts (7 artworks, real drawing rendered, no delete button on hover — only
+      Download); confirmed the admin thumbnail grid (both the standalone `/admin` page and,
+      implicitly, the same component inside the embedded panel) shows the real drawing correctly
+      attributed and deletable. Deleted all test artworks afterward — table is back to its 6 seeded
+      pieces.
+      **Pass condition:** met via the checks above — confirmed live, not just code review.
+
 ---
 
 ## Backlog — DO NOT START

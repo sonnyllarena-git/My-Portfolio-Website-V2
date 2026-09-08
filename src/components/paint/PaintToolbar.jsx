@@ -59,7 +59,10 @@ function PaintToolbar({
   onDownload,
   title,
   onTitleChange,
+  authorName,
+  onAuthorNameChange,
   onSave,
+  saving = false,
 }) {
   const isMobile = useIsMobile()
   const scrollableRow = isMobile
@@ -113,17 +116,26 @@ function PaintToolbar({
         </label>
         <input
           type="text"
+          value={authorName}
+          onChange={(e) => onAuthorNameChange(e.target.value)}
+          placeholder="Your name"
+          aria-label="Your name"
+          className="ml-auto w-28 rounded border border-gray-300 px-2 py-1 text-xs"
+        />
+        <input
+          type="text"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder="Untitled"
           aria-label="Artwork title"
-          className="ml-auto w-32 rounded border border-gray-300 px-2 py-1 text-xs"
+          className="w-32 rounded border border-gray-300 px-2 py-1 text-xs"
         />
         <button
           onClick={onSave}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          disabled={saving}
+          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          💾 Save
+          {saving ? 'Saving…' : '💾 Save'}
         </button>
       </div>
       <div className={`flex items-center gap-1 px-3 py-2 ${scrollableRow}`}>
