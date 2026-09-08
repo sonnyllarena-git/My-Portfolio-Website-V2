@@ -6570,6 +6570,25 @@ fresh username/password, every visit, never silently resuming a session from a l
       despite the valid token, no shortcut taken.
       **Pass condition:** met via the checks above — confirmed live, not just code review.
 
+## PHASE 105 — 39 MOCK MEMORY WALL POSTS
+
+_Sonny asked (2026-09-08) for 39 positive mock Memory Wall posts, saved to the database (on top
+of the 6 original seeded notes from Phase 102). Seeded via the same versioned one-time-migration
+pattern (`schema_version = 3`), so it applies automatically on next deploy — no manual DB step._
+
+- [x] **P647** — Added `backend/memoryWallMockPosts.js` (39 entries: distinct names, positive
+      messages referencing a range of real apps — Terminal, Paint, Games, Store, Resume Generator,
+      Tech Stack, Music Lab, Contact Info, Blog, Zoom Chat — ratings all 4 or 5 stars only,
+      timestamps spread 2026-08-28 through 2026-09-07). Wired a `schema_version = 3` migration
+      block in `backend/db.js` that inserts all 39 into `memoryWallNotes`, guarded so it only ever
+      runs once.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P648** — Live-verify: restarted the local backend to apply the migration, confirmed via
+      the API that the wall now has 45 notes total (6 original + 39 new), all 39 new ones rated 4
+      or 5, and confirmed in the browser that the Memory Wall app renders them correctly (header
+      count updated to "45 Notes on the wall", newest-first sort shows the new posts).
+      **Pass condition:** met via the checks above — confirmed live, not just code review.
+
 ---
 
 ## Backlog — DO NOT START

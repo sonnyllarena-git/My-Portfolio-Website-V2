@@ -1,0 +1,242 @@
+export const memoryWallMockPosts = [
+  {
+    name: 'Maya',
+    message:
+      'This whole desktop concept is genius — I forgot I was looking at a portfolio.',
+    rating: 5,
+    timestamp: '2026-08-28T09:15:00.000Z',
+  },
+  {
+    name: 'Derek',
+    message:
+      'The Terminal app with real commands is such a nice touch for a dev portfolio.',
+    rating: 5,
+    timestamp: '2026-08-28T13:40:00.000Z',
+  },
+  {
+    name: 'Priya',
+    message: 'Really polished. The boot animation sold it for me.',
+    rating: 4,
+    timestamp: '2026-08-28T19:05:00.000Z',
+  },
+  {
+    name: 'Xavier',
+    message:
+      'Spent way longer here than I meant to, the games are surprisingly good.',
+    rating: 5,
+    timestamp: '2026-08-29T08:50:00.000Z',
+  },
+  {
+    name: 'Ines',
+    message:
+      "As a recruiter, this is one of the more memorable portfolios I've reviewed.",
+    rating: 5,
+    timestamp: '2026-08-29T12:22:00.000Z',
+  },
+  {
+    name: 'Marcus',
+    message: 'The attention to detail on every single icon is wild.',
+    rating: 5,
+    timestamp: '2026-08-29T17:38:00.000Z',
+  },
+  {
+    name: 'Talia',
+    message: 'Love that Paint app, took me right back to childhood.',
+    rating: 4,
+    timestamp: '2026-08-30T09:44:00.000Z',
+  },
+  {
+    name: 'Oscar',
+    message: 'This is exactly the kind of creativity I look for when hiring.',
+    rating: 5,
+    timestamp: '2026-08-30T14:10:00.000Z',
+  },
+  {
+    name: 'Renee',
+    message:
+      'The whole thing feels like an actual operating system, incredible work.',
+    rating: 5,
+    timestamp: '2026-08-30T20:03:00.000Z',
+  },
+  {
+    name: 'Felix',
+    message: "Music Lab is such a fun addition, wasn't expecting that.",
+    rating: 4,
+    timestamp: '2026-08-31T10:27:00.000Z',
+  },
+  {
+    name: 'Aisha',
+    message: "Tech Stack's falling keycaps scene is a great little easter egg.",
+    rating: 5,
+    timestamp: '2026-08-31T15:59:00.000Z',
+  },
+  {
+    name: 'Julian',
+    message: 'Genuinely impressed — this shows real range beyond just code.',
+    rating: 5,
+    timestamp: '2026-08-31T21:12:00.000Z',
+  },
+  {
+    name: 'Nadia',
+    message: 'The Store app feels like a real e-commerce site, nice execution.',
+    rating: 4,
+    timestamp: '2026-09-01T09:08:00.000Z',
+  },
+  {
+    name: 'Cole',
+    message: "Best developer portfolio I've seen this year, hands down.",
+    rating: 5,
+    timestamp: '2026-09-01T13:35:00.000Z',
+  },
+  {
+    name: 'Vivian',
+    message: 'The Resume Generator is such a clever, useful idea.',
+    rating: 5,
+    timestamp: '2026-09-01T18:47:00.000Z',
+  },
+  {
+    name: 'Theo',
+    message: 'Everything is smooth and snappy, great performance too.',
+    rating: 4,
+    timestamp: '2026-09-02T08:33:00.000Z',
+  },
+  {
+    name: 'Simone',
+    message: 'This deserves way more attention, seriously well built.',
+    rating: 5,
+    timestamp: '2026-09-02T12:56:00.000Z',
+  },
+  {
+    name: 'Grant',
+    message: 'The little robot mascot on the taskbar made me smile.',
+    rating: 5,
+    timestamp: '2026-09-02T17:20:00.000Z',
+  },
+  {
+    name: 'Layla',
+    message: 'Loved discovering the hidden details as I clicked around.',
+    rating: 4,
+    timestamp: '2026-09-03T09:41:00.000Z',
+  },
+  {
+    name: 'Rowan',
+    message: 'This is portfolio design done right — memorable and functional.',
+    rating: 5,
+    timestamp: '2026-09-03T14:04:00.000Z',
+  },
+  {
+    name: 'Bianca',
+    message: 'The whole desktop metaphor is executed better than I expected.',
+    rating: 5,
+    timestamp: '2026-09-03T19:58:00.000Z',
+  },
+  {
+    name: 'Miles',
+    message: "Contact Info's card design is really clean.",
+    rating: 4,
+    timestamp: '2026-09-04T10:12:00.000Z',
+  },
+  {
+    name: 'Selena',
+    message: 'I showed this to my whole team, everyone was impressed.',
+    rating: 5,
+    timestamp: '2026-09-04T15:29:00.000Z',
+  },
+  {
+    name: 'Dashiell',
+    message: 'The typing game kept me here for twenty minutes, no regrets.',
+    rating: 5,
+    timestamp: '2026-09-04T20:36:00.000Z',
+  },
+  {
+    name: 'Harper',
+    message: 'This is the kind of work that gets you hired on the spot.',
+    rating: 5,
+    timestamp: '2026-09-05T09:03:00.000Z',
+  },
+  {
+    name: 'Kian',
+    message: 'Blog section is a nice personal touch.',
+    rating: 4,
+    timestamp: '2026-09-05T13:47:00.000Z',
+  },
+  {
+    name: 'Nora',
+    message: 'Every app feels thought-through, not just thrown together.',
+    rating: 5,
+    timestamp: '2026-09-05T18:15:00.000Z',
+  },
+  {
+    name: 'Tobias',
+    message:
+      "This is genuinely one of the coolest personal sites I've ever visited.",
+    rating: 5,
+    timestamp: '2026-09-06T08:59:00.000Z',
+  },
+  {
+    name: 'Amara',
+    message: 'The wallpaper choices are a nice personal touch.',
+    rating: 4,
+    timestamp: '2026-09-06T12:31:00.000Z',
+  },
+  {
+    name: 'Silas',
+    message: 'Incredible attention to UX detail throughout.',
+    rating: 5,
+    timestamp: '2026-09-06T16:44:00.000Z',
+  },
+  {
+    name: 'Delphine',
+    message: "This portfolio alone tells me you'd be great to work with.",
+    rating: 5,
+    timestamp: '2026-09-06T21:07:00.000Z',
+  },
+  {
+    name: 'Ezra',
+    message: 'The whole experience feels intentional and polished.',
+    rating: 5,
+    timestamp: '2026-09-07T09:22:00.000Z',
+  },
+  {
+    name: 'Winona',
+    message: 'Memory Wall is such a fun way to leave feedback.',
+    rating: 4,
+    timestamp: '2026-09-07T11:16:00.000Z',
+  },
+  {
+    name: 'Corbin',
+    message: 'This is next-level creativity for a portfolio site.',
+    rating: 5,
+    timestamp: '2026-09-07T13:58:00.000Z',
+  },
+  {
+    name: 'Maren',
+    message: 'Found myself exploring every single icon out of curiosity.',
+    rating: 5,
+    timestamp: '2026-09-07T15:04:00.000Z',
+  },
+  {
+    name: 'Atticus',
+    message: 'The Zoom Chat AI assistant is a really clever addition.',
+    rating: 5,
+    timestamp: '2026-09-07T17:33:00.000Z',
+  },
+  {
+    name: 'Sienna',
+    message: 'Clean, fun, and clearly a lot of care went into this.',
+    rating: 4,
+    timestamp: '2026-09-07T19:38:00.000Z',
+  },
+  {
+    name: 'Beckett',
+    message: 'This is the kind of portfolio that actually gets remembered.',
+    rating: 5,
+    timestamp: '2026-09-07T20:49:00.000Z',
+  },
+  {
+    name: 'Zara',
+    message: 'Absolutely loved exploring this, one of a kind.',
+    rating: 5,
+    timestamp: '2026-09-07T22:12:00.000Z',
+  },
+]

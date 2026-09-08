@@ -6,6 +6,7 @@ import {
   mockRatingSeedsV2,
 } from './mockArcadeData.js'
 import { memoryWallSeeds } from './memoryWallSeeds.js'
+import { memoryWallMockPosts } from './memoryWallMockPosts.js'
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -197,6 +198,21 @@ async function initSchema() {
       }
 
       await client.query('INSERT INTO schema_version (version) VALUES (2)')
+    }
+
+    const versionCheck3 = await client.query(
+      'SELECT version FROM schema_version WHERE version = 3',
+    )
+
+    if (versionCheck3.rows.length === 0) {
+      for (const post of memoryWallMockPosts) {
+        await client.query(
+          'INSERT INTO memoryWallNotes (name, message, rating, createdAt) VALUES ($1, $2, $3, $4)',
+          [post.name, post.message, post.rating, post.timestamp],
+        )
+      }
+
+      await client.query('INSERT INTO schema_version (version) VALUES (3)')
     }
 
     console.log('Database schema initialized')
