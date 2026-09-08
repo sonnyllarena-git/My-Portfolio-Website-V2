@@ -7,7 +7,7 @@ import {
 } from 'react'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { contactInfo } from '../data/contactInfo.js'
-import { apiFetch, getToken, setToken } from '../admin/api.js'
+import { apiFetch, setToken } from '../admin/api.js'
 
 const SOCIAL_URLS = Object.fromEntries(
   contactInfo.profiles.map((p) => [p.kind, p.url]),
@@ -303,15 +303,7 @@ const TerminalApp = forwardRef(function TerminalApp(
     }
     const echoLine = `${PROMPT}${typedLine}`
     if (raw === '/admin') {
-      if (getToken()) {
-        setHistory((prev) => [
-          ...prev,
-          echoLine,
-          'Already signed in — opening Admin Panel...',
-        ])
-        onOpenApp('admin-panel')
-        return
-      }
+      // Always prompts fresh — never skips login even if a token already exists.
       setHistory((prev) => [...prev, echoLine, 'Username:'])
       setAuthStep('username')
       return

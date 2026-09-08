@@ -6551,6 +6551,25 @@ as-is, untouched, as an alternate access path Sonny still wants to keep._
       Confirmed a wrong password shows the generic failure message and opens nothing.
       **Pass condition:** met via the checks above — confirmed live, not just code review.
 
+## PHASE 104 — ADMIN ALWAYS REQUIRES FRESH LOGIN (NO SESSION RESUME)
+
+_Sonny asked (2026-09-08) to remove the "stay signed in" shortcuts added in Phase 103 — both the
+standalone `yoursite.com/admin` page and the Terminal's `/admin` command should always demand a
+fresh username/password, every visit, never silently resuming a session from a leftover token._
+
+- [x] **P645** — `AdminApp.jsx`: `loggedIn` now always starts `false` (was
+      `Boolean(getToken())`), and a mount-time `useEffect` calls `clearToken()` so a leftover
+      token from an earlier visit can't be used at all. `TerminalApp.jsx`: removed the
+      "already signed in — skip straight to reopening" branch from the `/admin` handler (and the
+      now-unused `getToken` import) — `/admin` always prompts `Username:`/`Password:` fresh.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P646** — Live-verify: manually planted a fake token in `sessionStorage`, confirmed
+      navigating to `/admin` still shows the login form (and clears the fake token on mount);
+      logged in for real, confirmed a genuinely valid token now exists; navigated back to the
+      desktop and ran `/admin` in the Terminal — confirmed it still prompts `Username:` fresh
+      despite the valid token, no shortcut taken.
+      **Pass condition:** met via the checks above — confirmed live, not just code review.
+
 ---
 
 ## Backlog — DO NOT START

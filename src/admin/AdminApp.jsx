@@ -6,12 +6,18 @@ import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
 import AdminMemoryWallPage from './AdminMemoryWallPage.jsx'
 import AdminSettingsPage from './AdminSettingsPage.jsx'
 import { AdminSettingsProvider } from './AdminSettingsContext.jsx'
-import { getToken, clearToken } from './api.js'
+import { clearToken } from './api.js'
 
 export default function AdminApp() {
-  const [loggedIn, setLoggedIn] = useState(() => Boolean(getToken()))
+  // Always start logged out on every visit/reload — never resume a session from a
+  // leftover token, even if one is still technically valid server-side.
+  const [loggedIn, setLoggedIn] = useState(false)
   const [sessionExpired, setSessionExpired] = useState(false)
   const [view, setView] = useState('products')
+
+  useEffect(() => {
+    clearToken()
+  }, [])
 
   useEffect(() => {
     function handleUnauthorized() {
