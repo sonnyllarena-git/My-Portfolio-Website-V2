@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useIsMobile } from '../hooks/useIsMobile.js'
+import { useBlog } from '../context/BlogContext.jsx'
 import BlogTopNav from './blog/BlogTopNav.jsx'
 import BlogProfileCard from './blog/BlogProfileCard.jsx'
 import BlogNewsWidget from './blog/BlogNewsWidget.jsx'
@@ -18,9 +19,16 @@ function BlogApp({
   onLogout,
 }) {
   const isMobile = useIsMobile()
+  const { loadBlogData } = useBlog()
   const [searchQuery, setSearchQuery] = useState('')
   const scrollRef = useRef(null)
   const [scrollbarWidth, setScrollbarWidth] = useState(0)
+
+  useEffect(() => {
+    loadBlogData()
+    // loadBlogData guards against refetching once data is loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const el = scrollRef.current

@@ -10,6 +10,7 @@ import leaderboardRouter from './routes/leaderboard.js'
 import ratingsRouter from './routes/ratings.js'
 import memoryWallRouter from './routes/memoryWall.js'
 import visitorArtsRouter from './routes/visitorArts.js'
+import blogRouter from './routes/blog.js'
 import requireAuth from './middleware/requireAuth.js'
 import { initSchema } from './db.js'
 
@@ -42,6 +43,7 @@ app.use('/api/leaderboard', leaderboardRouter)
 app.use('/api/ratings', ratingsRouter)
 app.use('/api/memory-wall', memoryWallRouter)
 app.use('/api/visitor-arts', visitorArtsRouter)
+app.use('/api/blog', blogRouter)
 
 app.post(
   '/api/uploads',

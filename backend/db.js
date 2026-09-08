@@ -8,6 +8,7 @@ import {
 import { memoryWallSeeds } from './memoryWallSeeds.js'
 import { memoryWallMockPosts } from './memoryWallMockPosts.js'
 import { galleryArtworkSeeds } from './galleryArtworkSeeds.js'
+import { buildBlogMockData } from './blogMockData.js'
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -152,6 +153,54 @@ async function initSchema() {
       }
     }
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS blogLikes (
+        id SERIAL PRIMARY KEY,
+        postId TEXT NOT NULL,
+        name TEXT NOT NULL,
+        avatarColor TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        UNIQUE(postId, name)
+      )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_bloglikes_post
+      ON blogLikes (postId)
+    `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS blogComments (
+        id SERIAL PRIMARY KEY,
+        postId TEXT NOT NULL,
+        name TEXT NOT NULL,
+        avatarColor TEXT NOT NULL,
+        text TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_blogcomments_post
+      ON blogComments (postId)
+    `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS blogActivity (
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL,
+        name TEXT NOT NULL,
+        avatarColor TEXT NOT NULL,
+        postId TEXT,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_blogactivity_created
+      ON blogActivity (createdAt DESC)
+    `)
+
     const ratingsCount = await client.query('SELECT COUNT(*) FROM gameRatings')
     if (Number(ratingsCount.rows[0].count) === 0) {
       for (const [gameId, seeds] of Object.entries(gameRatingSeeds)) {
@@ -236,6 +285,53 @@ async function initSchema() {
       }
 
       await client.query('INSERT INTO schema_version (version) VALUES (3)')
+    }
+
+    const versionCheck4 = await client.query(
+      'SELECT version FROM schema_version WHERE version = 4',
+    )
+
+    if (versionCheck4.rows.length === 0) {
+      const { interactionsByPost, activity } = buildBlogMockData()
+      const seedTimestamp = new Date().toISOString()
+
+      for (const [postId, data] of Object.entries(interactionsByPost)) {
+        for (const like of data.likes) {
+          await client.query(
+            `INSERT INTO blogLikes (postId, name, avatarColor, createdAt)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (postId, name) DO NOTHING`,
+            [postId, like.name, like.avatarColor, seedTimestamp],
+          )
+        }
+        for (const comment of data.comments) {
+          await client.query(
+            'INSERT INTO blogComments (postId, name, avatarColor, text, createdAt) VALUES ($1, $2, $3, $4, $5)',
+            [
+              postId,
+              comment.name,
+              comment.avatarColor,
+              comment.text,
+              comment.timestamp,
+            ],
+          )
+        }
+      }
+
+      for (const entry of activity) {
+        await client.query(
+          'INSERT INTO blogActivity (type, name, avatarColor, postId, createdAt) VALUES ($1, $2, $3, $4, $5)',
+          [
+            entry.type,
+            entry.name,
+            entry.avatarColor,
+            entry.postId,
+            entry.timestamp,
+          ],
+        )
+      }
+
+      await client.query('INSERT INTO schema_version (version) VALUES (4)')
     }
 
     console.log('Database schema initialized')

@@ -6,45 +6,53 @@ import {
   clearVisitorIdentity,
 } from '../utils/blogVisitor.js'
 import {
-  readInteractions,
-  toggleLike as toggleLikeStorage,
-  addComment as addCommentStorage,
-} from '../utils/blogInteractions.js'
-import { readActivityLog, logActivity } from '../utils/blogActivity.js'
-import { ensureBlogSeedVersion } from '../utils/blogSeedVersion.js'
-import {
-  buildMockInteractionsAndActivity,
-  SEED_VERSION,
-} from '../components/blog/data/mockBlogActivity.js'
+  fetchInteractions,
+  fetchActivity,
+  submitLike,
+  submitComment,
+  submitActivity,
+} from '../utils/blogApi.js'
 
 const BlogContext = createContext(null)
-ensureBlogSeedVersion(SEED_VERSION)
-const mockData = buildMockInteractionsAndActivity()
+const EMPTY_INTERACTIONS = { likes: [], comments: [] }
 
 export function BlogProvider({ children }) {
   const [identity, setIdentity] = useState(() => readVisitorIdentity())
   const [interactionsByPost, setInteractionsByPost] = useState({})
-  const [activity, setActivity] = useState(() =>
-    readActivityLog(mockData.activity),
-  )
+  const [activity, setActivity] = useState([])
+  const [loaded, setLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  function getInteractions(postId) {
-    return (
-      interactionsByPost[postId] ??
-      readInteractions(postId, mockData.interactionsByPost[postId])
-    )
+  async function loadBlogData() {
+    if (loaded) return
+    setLoading(true)
+    try {
+      const [interactions, activityLog] = await Promise.all([
+        fetchInteractions(),
+        fetchActivity(),
+      ])
+      setInteractionsByPost(interactions)
+      setActivity(activityLog)
+      setLoaded(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const posts = blogPostSeeds.map((post) => ({
     ...post,
-    ...getInteractions(post.id),
+    ...(interactionsByPost[post.id] ?? EMPTY_INTERACTIONS),
   }))
 
   function setVisitor(name, avatarColor) {
     const next = { name, avatarColor }
     writeVisitorIdentity(next)
     setIdentity(next)
-    setActivity(logActivity({ type: 'join', name, avatarColor }))
+    submitActivity({ type: 'join', name, avatarColor })
+      .then((entry) => setActivity((prev) => [entry, ...prev]))
+      .catch(() => {
+        // Best-effort — a network hiccup just means this join won't show in the feed.
+      })
   }
 
   function logout() {
@@ -52,46 +60,38 @@ export function BlogProvider({ children }) {
     setIdentity(null)
   }
 
-  function toggleLike(postId) {
+  async function toggleLike(postId) {
     if (!identity) return
-    const wasLiked = getInteractions(postId).likes.some(
-      (like) => like.name === identity.name,
-    )
-    const likes = toggleLikeStorage(postId, identity)
-    setInteractionsByPost((prev) => ({
-      ...prev,
-      [postId]: { ...getInteractions(postId), likes },
-    }))
-    if (!wasLiked) {
-      setActivity(
-        logActivity({
-          type: 'like',
-          name: identity.name,
-          avatarColor: identity.avatarColor,
-          postId,
-        }),
+    try {
+      const { likes, activity: activityEntry } = await submitLike(
+        postId,
+        identity,
       )
+      setInteractionsByPost((prev) => ({
+        ...prev,
+        [postId]: { ...(prev[postId] ?? EMPTY_INTERACTIONS), likes },
+      }))
+      if (activityEntry) setActivity((prev) => [activityEntry, ...prev])
+    } catch {
+      // Best-effort — a network hiccup just means the like didn't register this time.
     }
   }
 
-  function addComment(postId, text) {
+  async function addComment(postId, text) {
     if (!identity || !text.trim()) return
-    const comments = addCommentStorage(postId, {
-      ...identity,
-      text: text.trim(),
-    })
-    setInteractionsByPost((prev) => ({
-      ...prev,
-      [postId]: { ...getInteractions(postId), comments },
-    }))
-    setActivity(
-      logActivity({
-        type: 'comment',
-        name: identity.name,
-        avatarColor: identity.avatarColor,
+    try {
+      const { comments, activity: activityEntry } = await submitComment(
         postId,
-      }),
-    )
+        { ...identity, text: text.trim() },
+      )
+      setInteractionsByPost((prev) => ({
+        ...prev,
+        [postId]: { ...(prev[postId] ?? EMPTY_INTERACTIONS), comments },
+      }))
+      if (activityEntry) setActivity((prev) => [activityEntry, ...prev])
+    } catch {
+      // Best-effort — a network hiccup just means the comment didn't post this time.
+    }
   }
 
   function getAllVisitors() {
@@ -116,6 +116,8 @@ export function BlogProvider({ children }) {
         setVisitor,
         logout,
         posts,
+        loading,
+        loadBlogData,
         toggleLike,
         addComment,
         getAllVisitors,

@@ -6692,6 +6692,70 @@ problem (not touch-driven, not rapidly retriggered)._
       Smoke-tested Memory Flip's flip sound the same way (dispatched a card click, zero errors).
       **Pass condition:** met via the checks above — confirmed live, not just code review.
 
+## PHASE 108 — BLOG DATABASE, CONTACT INFO HOVER SPOTLIGHT, BIOGRAPHY APP
+
+_Sonny asked (2026-09-08) for three things: give the Blog the same shared-database treatment as
+Memory Wall/Visitor Arts (explicitly keeping all existing mock content — Phase 56/57/61 built a
+deterministic 150-visitor mock dataset specifically disclosed as "persisted locally for testing",
+never claimed as session-only the way Memory Wall/Visitor Arts were, but still per-browser only
+until now); add a mouse-tracking hover effect to Contact Info; and fill in the "Biography" desktop
+icon, which has existed since the very first icon list but never had any actual content behind it
+— it fell through to an empty placeholder window like any unbuilt app._
+
+- [x] **P657** — Added `backend/blogMockData.js`: the exact same deterministic mock-data generator
+      ported from `src/components/blog/data/mockBlogActivity.js` (same seeded RNG, same 25 first
+      names × 20 last names, same 24 comment texts, same 150-visitor count, same per-visitor
+      join/like/second-like/comment probabilities) so the one-time DB seed produces the identical
+      dataset a fresh browser would have generated locally. Added `blogLikes` (unique per
+      post+name, so a repeat POST toggles instead of duplicating), `blogComments`, and
+      `blogActivity` tables to `initSchema()`, seeded via a new `schema_version = 4` migration.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P658** — Added `backend/routes/blog.js`: public `GET /api/blog/interactions` (all 4 posts'
+      likes/comments in one call — small dataset, unlike Visitor Arts' images), `GET
+/api/blog/activity` (most recent 500), `POST /api/blog/likes/:postId` (toggles — deletes if
+      already liked by that name, else inserts, and logs a `like` activity entry), `POST
+/api/blog/comments/:postId` (inserts + logs a `comment` activity entry), and `POST
+/api/blog/activity` (used only for the `join` event, the one case not tied to a like/comment
+      action). Every camelCase column aliased (`AS "exactCamelCase"`) from the start this time —
+      no repeat of the Phase 100/106 lowercase-column bug.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P659** — Added `src/utils/blogApi.js`. Rewrote `BlogContext.jsx` to fetch/post through it
+      instead of `blogInteractions.js`/`blogActivity.js`'s localStorage read-writes (`loadBlogData()`
+      fetch-once, called from a new `BlogApp.jsx` mount effect; `toggleLike`/`addComment` now async,
+      feeding the server's response — including its bundled activity entry — straight into local
+      state). Deleted the now-dead `src/utils/blogInteractions.js`, `blogActivity.js`,
+      `blogSeedVersion.js`, `src/components/blog/data/mockBlogActivity.js`, and their two test
+      files — nothing else imported them. Visitor identity (`blogVisitor.js`) is untouched and
+      stays local-only, matching every other visitor-name gate in this app; only the shared content
+      (likes/comments/activity) moved server-side.
+      **Pass condition:** `npm run verify` passes (49 test files / 89 tests — down from 51/95, the
+      2 deleted localStorage-utility test files).
+- [x] **P660** — Added a cursor-tracking spotlight glow to `ContactInfoApp.jsx`'s card: a
+      `radial-gradient` positioned via CSS custom properties (`--spotlight-x`/`--spotlight-y`) set
+      directly on the DOM node from an `onMouseMove` handler — not React state, so it doesn't
+      re-render on every mouse move — fading in on hover via a `group-hover:opacity-100` overlay
+      layered behind the existing content.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P661** — Added `src/components/BiographyApp.jsx` (photo, name/role, a bio grounded in what
+      was actually built and observed this session — not fabricated personal history — plus a
+      Highlights list and a "Built With" tech tag row) and wired it into `Desktop.jsx` as the
+      `biography` window (icon, size, preview, open-window branch) — the icon has existed since
+      Phase 0/1 with zero content behind it until now.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P662** — Live-verify: restarted the local backend to apply the `schema_version = 4`
+      migration, confirmed via direct API calls that the seed reproduced ~194 likes / ~76 comments
+      across the 4 posts and 420 activity entries (matching the expected math for 150 visitors),
+      with every field correctly cased. Tested the toggle-like (like → unlike → like again),
+      add-comment, and validation (bad postId → 404) paths directly. Verified live in the browser:
+      opened Blog, saw real seeded counts on a post card (69 likes / 17 comments, matching the API
+      exactly) and 150 real visitor names in the sidebar; liked a post and watched the count and
+      visitor total both update (150 → 151, confirming the `join` activity fired on login too);
+      confirmed the like persisted via a fresh API call. Verified the Contact Info spotlight
+      updates its CSS custom properties precisely on a dispatched `mousemove`. Verified Biography
+      renders correctly with the photo and all copy. Deleted all test rows afterward — tables back
+      to their clean seeded state.
+      **Pass condition:** met via the checks above — confirmed live, not just code review.
+
 ---
 
 ## Backlog — DO NOT START

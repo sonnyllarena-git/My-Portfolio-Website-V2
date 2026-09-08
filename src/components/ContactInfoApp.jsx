@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { contactInfo } from '../data/contactInfo.js'
 import SocialIcon from './contactCard/SocialIcon.jsx'
 import neonCardPhoto from './contactCard/assets/Black.png'
@@ -6,6 +7,17 @@ import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function ContactInfoApp() {
   const isMobile = useIsMobile()
+  const cardRef = useRef(null)
+
+  // Cursor-tracking spotlight — updates CSS custom properties directly on the
+  // node instead of React state, so it doesn't re-render on every mousemove.
+  function handleMouseMove(e) {
+    const card = cardRef.current
+    if (!card) return
+    const rect = card.getBoundingClientRect()
+    card.style.setProperty('--spotlight-x', `${e.clientX - rect.left}px`)
+    card.style.setProperty('--spotlight-y', `${e.clientY - rect.top}px`)
+  }
 
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-auto p-6 text-white">
@@ -19,12 +31,22 @@ function ContactInfoApp() {
       />
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className={`relative w-full max-w-4xl overflow-hidden rounded-2xl border border-blue-400/40 bg-black/60 ${
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        className={`group relative w-full max-w-4xl overflow-hidden rounded-2xl border border-blue-400/40 bg-black/60 ${
           isMobile
             ? 'flex flex-col gap-6 p-6'
             : 'flex gap-6 px-6 py-8 md:gap-10 md:px-10'
         }`}
       >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{
+            background:
+              'radial-gradient(500px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(34, 211, 238, 0.16), transparent 60%)',
+          }}
+        />
         <div
           className={
             isMobile

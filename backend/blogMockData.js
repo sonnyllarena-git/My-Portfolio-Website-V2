@@ -1,6 +1,17 @@
-import { AVATAR_COLORS } from '../avatarColors.js'
-
-export const SEED_VERSION = 3
+// Deterministic mock activity generator for the Blog — ported from the frontend's
+// src/components/blog/data/mockBlogActivity.js (which used to generate this same
+// dataset fresh in every browser via localStorage) so the exact same 150 mock
+// visitors/likes/comments become the one-time seed for the shared database instead.
+const AVATAR_COLOR_IDS = [
+  'rose',
+  'amber',
+  'emerald',
+  'sky',
+  'violet',
+  'fuchsia',
+  'orange',
+  'teal',
+]
 
 const FIRST_NAMES = [
   'Ava',
@@ -54,39 +65,6 @@ const LAST_NAMES = [
 ]
 
 const VISITOR_COUNT = 150
-
-function createRng(seed) {
-  let state = seed
-  return function rng() {
-    state |= 0
-    state = (state + 0x6d2b79f5) | 0
-    let t = Math.imul(state ^ (state >>> 15), 1 | state)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-function shuffledIndices(count, total, rng) {
-  const pool = Array.from({ length: total }, (_, i) => i)
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1))
-    ;[pool[i], pool[j]] = [pool[j], pool[i]]
-  }
-  return pool.slice(0, count)
-}
-
-const nameRng = createRng(13)
-const nameIndices = shuffledIndices(
-  VISITOR_COUNT,
-  FIRST_NAMES.length * LAST_NAMES.length,
-  nameRng,
-)
-
-export const MOCK_VISITORS = nameIndices.map((combinedIndex, i) => ({
-  name: `${FIRST_NAMES[combinedIndex % FIRST_NAMES.length]} ${LAST_NAMES[Math.floor(combinedIndex / FIRST_NAMES.length)]}`,
-  avatarColor: AVATAR_COLORS[i % AVATAR_COLORS.length].id,
-}))
-
 const POST_IDS = ['blog-4', 'blog-1', 'blog-2', 'blog-3']
 
 const COMMENT_TEXTS = [
@@ -117,36 +95,59 @@ const COMMENT_TEXTS = [
 ]
 
 const MS_PER_HOUR = 3600000
-
 const SEED_START = Date.parse('2025-12-01T00:00:00')
-const SEED_END = Date.now()
 
-function clampToWindow(time) {
-  return Math.min(Math.max(time, SEED_START), SEED_END)
+function createRng(seed) {
+  let state = seed
+  return function rng() {
+    state |= 0
+    state = (state + 0x6d2b79f5) | 0
+    let t = Math.imul(state ^ (state >>> 15), 1 | state)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
 }
 
-export function buildMockInteractionsAndActivity() {
+function shuffledIndices(count, total, rng) {
+  const pool = Array.from({ length: total }, (_, i) => i)
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[pool[i], pool[j]] = [pool[j], pool[i]]
+  }
+  return pool.slice(0, count)
+}
+
+export function buildBlogMockData() {
+  const seedEnd = Date.now()
+  function clampToWindow(time) {
+    return Math.min(Math.max(time, SEED_START), seedEnd)
+  }
+
+  const nameRng = createRng(13)
+  const nameIndices = shuffledIndices(
+    VISITOR_COUNT,
+    FIRST_NAMES.length * LAST_NAMES.length,
+    nameRng,
+  )
+  const mockVisitors = nameIndices.map((combinedIndex, i) => ({
+    name: `${FIRST_NAMES[combinedIndex % FIRST_NAMES.length]} ${LAST_NAMES[Math.floor(combinedIndex / FIRST_NAMES.length)]}`,
+    avatarColor: AVATAR_COLOR_IDS[i % AVATAR_COLOR_IDS.length],
+  }))
+
   const rng = createRng(20251201)
   const interactionsByPost = {}
   POST_IDS.forEach((postId) => {
     interactionsByPost[postId] = { likes: [], comments: [] }
   })
-
   const activity = []
-  let entryCounter = 0
-
-  function pushActivity(entry) {
-    entryCounter += 1
-    activity.push({ id: `mock-${entryCounter}`, ...entry })
-  }
 
   function randomPostId() {
     return POST_IDS[Math.floor(rng() * POST_IDS.length)]
   }
 
-  MOCK_VISITORS.forEach((visitor) => {
-    const joinTime = clampToWindow(SEED_START + rng() * (SEED_END - SEED_START))
-    pushActivity({
+  mockVisitors.forEach((visitor) => {
+    const joinTime = clampToWindow(SEED_START + rng() * (seedEnd - SEED_START))
+    activity.push({
       type: 'join',
       name: visitor.name,
       avatarColor: visitor.avatarColor,
@@ -160,7 +161,7 @@ export function buildMockInteractionsAndActivity() {
       name: visitor.name,
       avatarColor: visitor.avatarColor,
     })
-    pushActivity({
+    activity.push({
       type: 'like',
       name: visitor.name,
       avatarColor: visitor.avatarColor,
@@ -175,7 +176,7 @@ export function buildMockInteractionsAndActivity() {
         name: visitor.name,
         avatarColor: visitor.avatarColor,
       })
-      pushActivity({
+      activity.push({
         type: 'like',
         name: visitor.name,
         avatarColor: visitor.avatarColor,
@@ -189,13 +190,12 @@ export function buildMockInteractionsAndActivity() {
       const commentTime = clampToWindow(likeTime + rng() * MS_PER_HOUR * 4)
       const commentIso = new Date(commentTime).toISOString()
       interactionsByPost[commentPostId].comments.push({
-        id: `mock-comment-${entryCounter}`,
         name: visitor.name,
         avatarColor: visitor.avatarColor,
         text: COMMENT_TEXTS[Math.floor(rng() * COMMENT_TEXTS.length)],
         timestamp: commentIso,
       })
-      pushActivity({
+      activity.push({
         type: 'comment',
         name: visitor.name,
         avatarColor: visitor.avatarColor,
