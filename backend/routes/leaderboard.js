@@ -7,16 +7,27 @@ const VALID_GAME_IDS = ['flappy-bird', 'typing-speed', 'memory-flip']
 const MAX_SCORE = 1_000_000
 const MAX_NAME_LENGTH = 24
 
+async function getLeaderboardPayload(gameId) {
+  const scoresResult = await pool.query(
+    'SELECT name, score, label, createdAt AS "createdAt" FROM leaderboardScores WHERE gameId = $1 ORDER BY score DESC LIMIT 10',
+    [gameId],
+  )
+  const statsResult = await pool.query(
+    'SELECT totalPlays AS "totalPlays" FROM gameStats WHERE gameId = $1',
+    [gameId],
+  )
+  return {
+    scores: scoresResult.rows,
+    totalPlays: statsResult.rows[0]?.totalPlays ?? 0,
+  }
+}
+
 router.get('/:gameId', async (req, res) => {
   if (!VALID_GAME_IDS.includes(req.params.gameId)) {
     return res.status(404).json({ error: 'Unknown game' })
   }
   try {
-    const result = await pool.query(
-      'SELECT name, score, label, createdAt AS "createdAt" FROM leaderboardScores WHERE gameId = $1 ORDER BY score DESC LIMIT 10',
-      [req.params.gameId],
-    )
-    res.json(result.rows)
+    res.json(await getLeaderboardPayload(req.params.gameId))
   } catch (err) {
     console.error('Error fetching leaderboard:', err)
     res.status(500).json({ error: 'Failed to fetch leaderboard' })
@@ -55,11 +66,13 @@ router.post('/:gameId', async (req, res) => {
       [gameId],
     )
 
-    const result = await pool.query(
-      'SELECT name, score, label, createdAt AS "createdAt" FROM leaderboardScores WHERE gameId = $1 ORDER BY score DESC LIMIT 10',
+    await pool.query(
+      `INSERT INTO gameStats (gameId, totalPlays) VALUES ($1, 1)
+       ON CONFLICT (gameId) DO UPDATE SET totalPlays = gameStats.totalPlays + 1`,
       [gameId],
     )
-    res.status(201).json(result.rows)
+
+    res.status(201).json(await getLeaderboardPayload(gameId))
   } catch (err) {
     console.error('Error submitting leaderboard score:', err)
     res.status(500).json({ error: 'Failed to submit score' })

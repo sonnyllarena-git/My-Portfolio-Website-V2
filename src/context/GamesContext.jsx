@@ -15,7 +15,10 @@ import {
   readArcadeSettings,
   writeArcadeSettings,
 } from '../utils/arcadeSettings.js'
-import { submitLeaderboardScore } from '../utils/leaderboardApi.js'
+import {
+  fetchLeaderboard,
+  submitLeaderboardScore,
+} from '../utils/leaderboardApi.js'
 import { fetchRatings, submitRatingApi } from '../utils/ratingsApi.js'
 
 const GamesContext = createContext(null)
@@ -25,6 +28,8 @@ export function GamesProvider({ children }) {
   const [playsByGame, setPlaysByGame] = useState({})
   const [ratingsByGame, setRatingsByGame] = useState({})
   const [ratingsLoaded, setRatingsLoaded] = useState({})
+  const [leaderboardByGame, setLeaderboardByGame] = useState({})
+  const [leaderboardLoaded, setLeaderboardLoaded] = useState({})
   const [visitorName, setVisitorNameState] = useState(() => readVisitorName())
   const [arcadeSettings, setArcadeSettings] = useState(() =>
     readArcadeSettings(),
@@ -36,6 +41,25 @@ export function GamesProvider({ children }) {
 
   function getTotalPlays(gameId) {
     return playsByGame[gameId] ?? readPlayCount(gameId)
+  }
+
+  function getGlobalTopScore(gameId) {
+    return leaderboardByGame[gameId]?.scores?.[0]?.score ?? null
+  }
+
+  function getGlobalTotalPlays(gameId) {
+    return leaderboardByGame[gameId]?.totalPlays ?? 0
+  }
+
+  async function loadLeaderboard(gameId) {
+    if (leaderboardLoaded[gameId]) return
+    setLeaderboardLoaded((prev) => ({ ...prev, [gameId]: true }))
+    try {
+      const data = await fetchLeaderboard(gameId)
+      setLeaderboardByGame((prev) => ({ ...prev, [gameId]: data }))
+    } catch {
+      setLeaderboardLoaded((prev) => ({ ...prev, [gameId]: false }))
+    }
   }
 
   function getRatings(gameId) {
@@ -94,9 +118,13 @@ export function GamesProvider({ children }) {
       name: visitorName ?? 'Guest',
       score: value,
       label,
-    }).catch(() => {
-      // Global leaderboard is best-effort — a network hiccup shouldn't break gameplay.
     })
+      .then((data) => {
+        setLeaderboardByGame((prev) => ({ ...prev, [gameId]: data }))
+      })
+      .catch(() => {
+        // Global leaderboard is best-effort — a network hiccup shouldn't break gameplay.
+      })
     return updated
   }
 
@@ -106,6 +134,9 @@ export function GamesProvider({ children }) {
         getTopScores,
         submitScore,
         getTotalPlays,
+        getGlobalTopScore,
+        getGlobalTotalPlays,
+        loadLeaderboard,
         getRatings,
         getAverageRating,
         loadRatings,

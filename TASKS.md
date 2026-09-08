@@ -6428,9 +6428,49 @@ into the DB once on first boot so no review content was lost._
       **Pass condition:** met via the checks above. All test rows (`TestPlayer`, `P1`-`P11`,
       `ClaudeTester`) were deleted afterward — tables are back to their clean seeded state.
 
----
+## PHASE 101 — ARCADE MOCK DATA + GLOBAL BEST SCORE/TOTAL PLAYS
 
-## Backlog — DO NOT START
+_Sonny asked (2026-09-08) for the freshly-launched leaderboard/ratings to not look empty: 10 mock
+leaderboard rows per game (deliberately low/beatable scores, not real high scores, so new visitors
+have something to beat), 15-20 mock ratings per game (9 already existed from Phase 100 — added 9
+more per game to reach 18-19), and a shared "Total Plays" counter seeded 100-300 per game. He also
+flagged that "Best Score" and "Total Plays" showed different numbers on his PC vs his phone —
+correct behavior for the old per-browser `localStorage` design, but confusing now that the rest of
+the arcade is shared. Confirmed with Sonny: both become fully global (same number for every
+visitor on every device), resolving the cross-device mismatch entirely. The mock data is seeded via
+the same versioned one-time-migration pattern Phase 100 already established (`schema_version`),
+so it applies automatically on next deploy with no manual DB step needed._
+
+- [x] **P633** — Add a `gameStats` table (`gameId` PK, `totalPlays`) to `initSchema()` in
+      `backend/db.js`. Add `backend/mockArcadeData.js` (mock play counts, 10 low/beatable
+      leaderboard rows per game, 9 additional ratings per game) and a `schema_version = 2`
+      migration block that seeds all three, guarded so it only ever runs once.
+      **Pass condition:** `npm run verify` passes; migration is idempotent (re-running `initSchema`
+      does not duplicate rows).
+- [x] **P634** — Update `backend/routes/leaderboard.js`: `GET`/`POST /api/leaderboard/:gameId` now
+      return `{ scores, totalPlays }` (joined from `gameStats`) instead of a bare score array; every
+      successful `POST` upserts `gameStats.totalPlays += 1` for that game.
+      **Pass condition:** `npm run verify` passes; response shape reviewed for the new `scores`/
+      `totalPlays` keys.
+- [x] **P635** — `GamesContext.jsx`: add `getGlobalTopScore`/`getGlobalTotalPlays`/
+      `loadLeaderboard(gameId)` (fetch-once, mirrors `loadRatings`), and update `submitScore`'s
+      leaderboard POST to feed its response straight into that global state. `GamesHub.jsx`'s
+      `GameCard` now sources `BEST SCORE`/`TOTAL PLAYS` from these global values instead of the
+      local per-browser ones (which stay intact and are still used by `FlappyBirdGame.jsx`'s
+      in-game "current run vs. personal best" overlay — a different, unrelated concept left
+      untouched). `GameLeaderboardModal.jsx` updated for the new `{scores, totalPlays}` shape, adds
+      a "N total plays" caption and a "PLAYER / <game's scoreLabel>" header row above the ranked
+      list so the score column reads unambiguously (previously just a bare number next to the
+      name).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P636** — Live-verify locally: restarted the local backend to apply the `schema_version = 2`
+      migration, confirmed via direct API calls that each game has 10 leaderboard rows + the mock
+      `totalPlays` value, and 18-19 ratings (18 mock + Sonny's own real local rating, correctly
+      preserved, not wiped). Verified in the browser: arcade hub cards show the new global Best
+      Score/Total Plays (e.g. Flappy Spider-Man: 12 / 245), and the Leaderboard modal shows the
+      "N total plays" caption, the new column header, and Sonny's real score correctly ranked
+      alongside the mock rows.
+      **Pass condition:** met via the checks above — confirmed live, not just code review.
 
 Anything here is out of scope until Sonny moves it up.
 

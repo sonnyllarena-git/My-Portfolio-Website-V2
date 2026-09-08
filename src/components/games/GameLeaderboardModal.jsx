@@ -23,15 +23,17 @@ function LeaderboardRow({ rank, entry }) {
 }
 
 export default function GameLeaderboardModal({ game, onClose }) {
-  const [entries, setEntries] = useState([])
+  const [scores, setScores] = useState([])
+  const [totalPlays, setTotalPlays] = useState(null)
   const [status, setStatus] = useState('loading')
 
   useEffect(() => {
     let cancelled = false
     fetchLeaderboard(game.id)
-      .then((rows) => {
+      .then((data) => {
         if (cancelled) return
-        setEntries(rows)
+        setScores(data.scores)
+        setTotalPlays(data.totalPlays)
         setStatus('ready')
       })
       .catch(() => {
@@ -50,10 +52,17 @@ export default function GameLeaderboardModal({ game, onClose }) {
     >
       <div className="flex max-h-[80vh] w-[26rem] flex-col rounded-lg border border-amber-500/30 bg-[#1a1a1a] text-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 p-4">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <span aria-hidden="true">👑</span>
-            {game.title} — Leaderboard
-          </h2>
+          <div>
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <span aria-hidden="true">👑</span>
+              {game.title} — Leaderboard
+            </h2>
+            {totalPlays !== null && (
+              <p className="mt-0.5 text-xs text-white/40">
+                {totalPlays.toLocaleString()} total plays
+              </p>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="rounded px-2 py-1 text-xs text-white/60 hover:bg-white/10 hover:text-white"
@@ -70,21 +79,28 @@ export default function GameLeaderboardModal({ game, onClose }) {
               Couldn't load the leaderboard right now.
             </p>
           )}
-          {status === 'ready' && entries.length === 0 && (
+          {status === 'ready' && scores.length === 0 && (
             <p className="text-sm text-white/40">
               No scores yet — be the first!
             </p>
           )}
-          {status === 'ready' && entries.length > 0 && (
-            <ol className="flex flex-col gap-2">
-              {entries.map((entry, index) => (
-                <LeaderboardRow
-                  key={`${entry.name}-${entry.createdAt}`}
-                  rank={index + 1}
-                  entry={entry}
-                />
-              ))}
-            </ol>
+          {status === 'ready' && scores.length > 0 && (
+            <>
+              <div className="mb-1.5 flex items-center gap-3 px-1 text-[11px] font-semibold tracking-wide text-white/40 uppercase">
+                <span className="w-7 shrink-0" />
+                <span className="flex-1">Player</span>
+                <span className="shrink-0">{game.scoreLabel}</span>
+              </div>
+              <ol className="flex flex-col gap-2">
+                {scores.map((entry, index) => (
+                  <LeaderboardRow
+                    key={`${entry.name}-${entry.createdAt}`}
+                    rank={index + 1}
+                    entry={entry}
+                  />
+                ))}
+              </ol>
+            </>
           )}
         </div>
       </div>

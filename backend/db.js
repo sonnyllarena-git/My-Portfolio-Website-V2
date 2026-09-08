@@ -1,5 +1,10 @@
 import pg from 'pg'
 import { gameRatingSeeds } from './gameRatingSeeds.js'
+import {
+  mockPlayCounts,
+  mockLeaderboardSeeds,
+  mockRatingSeedsV2,
+} from './mockArcadeData.js'
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -93,6 +98,13 @@ async function initSchema() {
       ON gameRatings (gameId)
     `)
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS gameStats (
+        gameId TEXT PRIMARY KEY,
+        totalPlays INTEGER NOT NULL DEFAULT 0
+      )
+    `)
+
     const ratingsCount = await client.query('SELECT COUNT(*) FROM gameRatings')
     if (Number(ratingsCount.rows[0].count) === 0) {
       for (const [gameId, seeds] of Object.entries(gameRatingSeeds)) {
@@ -122,6 +134,46 @@ async function initSchema() {
         'ALTER TABLE products ADD COLUMN IF NOT EXISTS published INTEGER NOT NULL DEFAULT 0',
       )
       await client.query('INSERT INTO schema_version (version) VALUES (1)')
+    }
+
+    const versionCheck2 = await client.query(
+      'SELECT version FROM schema_version WHERE version = 2',
+    )
+
+    if (versionCheck2.rows.length === 0) {
+      for (const [gameId, totalPlays] of Object.entries(mockPlayCounts)) {
+        await client.query(
+          `INSERT INTO gameStats (gameId, totalPlays) VALUES ($1, $2)
+           ON CONFLICT (gameId) DO NOTHING`,
+          [gameId, totalPlays],
+        )
+      }
+
+      for (const [gameId, rows] of Object.entries(mockLeaderboardSeeds)) {
+        for (const row of rows) {
+          await client.query(
+            'INSERT INTO leaderboardScores (gameId, name, score, label, createdAt) VALUES ($1, $2, $3, $4, $5)',
+            [gameId, row.name, row.score, null, row.createdAt],
+          )
+        }
+      }
+
+      for (const [gameId, ratings] of Object.entries(mockRatingSeedsV2)) {
+        for (const rating of ratings) {
+          await client.query(
+            'INSERT INTO gameRatings (gameId, name, rating, comment, createdAt) VALUES ($1, $2, $3, $4, $5)',
+            [
+              gameId,
+              rating.name,
+              rating.rating,
+              rating.comment,
+              rating.timestamp,
+            ],
+          )
+        }
+      }
+
+      await client.query('INSERT INTO schema_version (version) VALUES (2)')
     }
 
     console.log('Database schema initialized')

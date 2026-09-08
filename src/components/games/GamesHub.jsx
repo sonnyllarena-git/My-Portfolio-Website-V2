@@ -114,27 +114,34 @@ function GameCard({
 }
 
 export default function GamesHub({ onSelectGame }) {
-  const { getTopScores, getTotalPlays, getAverageRating, loadRatings } =
-    useGames()
+  const {
+    getGlobalTopScore,
+    getGlobalTotalPlays,
+    loadLeaderboard,
+    getAverageRating,
+    loadRatings,
+  } = useGames()
   const [ratingModalGame, setRatingModalGame] = useState(null)
   const [leaderboardModalGame, setLeaderboardModalGame] = useState(null)
 
   useEffect(() => {
-    gamesCatalog.forEach((game) => loadRatings(game.id))
-    // Only needs to run once per hub mount — loadRatings itself guards against refetching.
+    gamesCatalog.forEach((game) => {
+      loadRatings(game.id)
+      loadLeaderboard(game.id)
+    })
+    // Only needs to run once per hub mount — both loaders guard against refetching.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {gamesCatalog.map((game) => {
-        const [top] = getTopScores(game.id)
         return (
           <GameCard
             key={game.id}
             game={game}
-            bestScore={top?.value}
-            totalPlays={getTotalPlays(game.id)}
+            bestScore={getGlobalTopScore(game.id)}
+            totalPlays={getGlobalTotalPlays(game.id)}
             average={getAverageRating(game.id)}
             onSelectGame={onSelectGame}
             onViewRatings={setRatingModalGame}
