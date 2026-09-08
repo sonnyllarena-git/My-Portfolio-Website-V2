@@ -36,14 +36,13 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    await pool.query(
-      'INSERT INTO memoryWallNotes (name, message, rating, createdAt) VALUES ($1, $2, $3, $4)',
+    const result = await pool.query(
+      `INSERT INTO memoryWallNotes (name, message, rating, createdAt)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, message, rating, createdAt AS "createdAt"`,
       [name, message, rating, new Date().toISOString()],
     )
-    const result = await pool.query(
-      'SELECT id, name, message, rating, createdAt AS "createdAt" FROM memoryWallNotes ORDER BY createdAt DESC',
-    )
-    res.status(201).json(result.rows)
+    res.status(201).json(result.rows[0])
   } catch (err) {
     console.error('Error posting memory wall note:', err)
     res.status(500).json({ error: 'Failed to post note' })

@@ -24,17 +24,23 @@ function formatTimestamp(iso) {
 export default function AdminMemoryWallPage() {
   const [notes, setNotes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     apiFetch('/memory-wall')
       .then(setNotes)
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }, [])
 
   async function handleDelete(note) {
     if (!window.confirm(`Delete this note from ${note.name}?`)) return
-    await apiFetch(`/memory-wall/${note.id}`, { method: 'DELETE' })
-    setNotes((prev) => prev.filter((n) => n.id !== note.id))
+    try {
+      await apiFetch(`/memory-wall/${note.id}`, { method: 'DELETE' })
+      setNotes((prev) => prev.filter((n) => n.id !== note.id))
+    } catch (err) {
+      window.alert(err.message || 'Failed to delete note')
+    }
   }
 
   return (
@@ -61,7 +67,14 @@ export default function AdminMemoryWallPage() {
             </tr>
           </thead>
           <tbody>
-            {!loading && notes.length === 0 && (
+            {loadError && (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-red-600">
+                  Failed to load notes.
+                </td>
+              </tr>
+            )}
+            {!loading && !loadError && notes.length === 0 && (
               <tr>
                 <td
                   colSpan={5}

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import multer from 'multer'
 import { randomUUID } from 'node:crypto'
+import { extname } from 'node:path'
 import { pool } from '../db.js'
 import requireAuth from '../middleware/requireAuth.js'
 import {
@@ -63,6 +64,9 @@ router.post(
       return res.status(400).json({ error: 'Invalid type' })
     }
     if (!title) return res.status(400).json({ error: 'Invalid title' })
+    if (!Number.isFinite(duration) || duration < 0) {
+      return res.status(400).json({ error: 'Invalid duration' })
+    }
     if (!mediaFile) {
       return res.status(400).json({ error: 'Media file is required' })
     }
@@ -83,19 +87,19 @@ router.post(
 
     try {
       const id = randomUUID()
-      const mediaExt = mediaFile.originalname.split('.').pop()
+      const mediaExt = extname(mediaFile.originalname)
       const mediaUrl = await uploadToStorage(
         mediaFile.buffer,
-        `music-lab/${id}/media.${mediaExt}`,
+        `music-lab/${id}/media${mediaExt}`,
         mediaFile.mimetype,
       )
 
       let thumbnailUrl = null
       if (thumbnailFile) {
-        const thumbExt = thumbnailFile.originalname.split('.').pop()
+        const thumbExt = extname(thumbnailFile.originalname)
         thumbnailUrl = await uploadToStorage(
           thumbnailFile.buffer,
-          `music-lab/${id}/thumbnail.${thumbExt}`,
+          `music-lab/${id}/thumbnail${thumbExt}`,
           thumbnailFile.mimetype,
         )
       }
@@ -110,7 +114,7 @@ router.post(
           title,
           artist,
           album,
-          Number.isFinite(duration) ? duration : 0,
+          duration,
           mediaUrl,
           thumbnailUrl,
           createdAt,
@@ -176,9 +180,21 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
     const { mediaUrl, thumbnailUrl } = existing.rows[0]
     const mediaKey = keyFromUrl(mediaUrl)
-    if (mediaKey) await deleteFromStorage(mediaKey).catch(() => {})
+    if (mediaKey) {
+      await deleteFromStorage(mediaKey).catch((err) =>
+        console.error('Failed to delete media from storage:', mediaKey, err),
+      )
+    }
     const thumbnailKey = thumbnailUrl ? keyFromUrl(thumbnailUrl) : null
-    if (thumbnailKey) await deleteFromStorage(thumbnailKey).catch(() => {})
+    if (thumbnailKey) {
+      await deleteFromStorage(thumbnailKey).catch((err) =>
+        console.error(
+          'Failed to delete thumbnail from storage:',
+          thumbnailKey,
+          err,
+        ),
+      )
+    }
 
     await pool.query('DELETE FROM musicLabItems WHERE id = $1', [id])
     res.status(204).end()

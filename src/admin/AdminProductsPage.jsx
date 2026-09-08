@@ -17,10 +17,12 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null)
   const [previewingProduct, setPreviewingProduct] = useState(null)
   const [publishing, setPublishing] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     apiFetch('/products')
       .then(setProducts)
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }, [])
 
@@ -51,8 +53,12 @@ export default function AdminProductsPage() {
 
   async function handleDelete(product) {
     if (!window.confirm(`Delete ${product.name}?`)) return
-    await apiFetch(`/products/${product.code}`, { method: 'DELETE' })
-    setProducts((prev) => prev.filter((p) => p.code !== product.code))
+    try {
+      await apiFetch(`/products/${product.code}`, { method: 'DELETE' })
+      setProducts((prev) => prev.filter((p) => p.code !== product.code))
+    } catch (err) {
+      window.alert(err.message || 'Failed to delete product')
+    }
   }
 
   async function handlePublish(product) {
@@ -112,7 +118,14 @@ export default function AdminProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {!loading && products.length === 0 && (
+            {loadError && (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-red-600">
+                  Failed to load products.
+                </td>
+              </tr>
+            )}
+            {!loading && !loadError && products.length === 0 && (
               <tr>
                 <td
                   colSpan={5}

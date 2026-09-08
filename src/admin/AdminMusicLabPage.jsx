@@ -42,6 +42,7 @@ export default function AdminMusicLabPage() {
   useEffect(() => {
     apiFetch('/music-lab')
       .then(setItems)
+      .catch(() => setError('Failed to load items'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -122,8 +123,12 @@ export default function AdminMusicLabPage() {
 
   async function handleDelete(item) {
     if (!window.confirm(`Delete "${item.title}"?`)) return
-    await apiFetch(`/music-lab/${item.id}`, { method: 'DELETE' })
-    setItems((prev) => prev.filter((i) => i.id !== item.id))
+    try {
+      await apiFetch(`/music-lab/${item.id}`, { method: 'DELETE' })
+      setItems((prev) => prev.filter((i) => i.id !== item.id))
+    } catch (err) {
+      setError(err.message || 'Failed to delete item')
+    }
   }
 
   return (

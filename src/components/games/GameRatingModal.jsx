@@ -61,6 +61,7 @@ function GameRatingModal({ game, onClose }) {
   const [comment, setComment] = useState('')
   const [showAddedToast, setShowAddedToast] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
     loadRatings(game.id)
@@ -75,6 +76,7 @@ function GameRatingModal({ game, onClose }) {
   async function handleSubmit() {
     if (rating === 0 || submitting) return
     setSubmitting(true)
+    setSubmitError('')
     try {
       await submitRating(game.id, {
         name: visitorName ?? 'Guest',
@@ -86,7 +88,7 @@ function GameRatingModal({ game, onClose }) {
       setShowAddedToast(true)
       setTimeout(() => setShowAddedToast(false), 2000)
     } catch {
-      // Best-effort — a network hiccup just means the rating didn't save this time.
+      setSubmitError('Failed to submit — please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -98,7 +100,7 @@ function GameRatingModal({ game, onClose }) {
       onContextMenu={(e) => e.stopPropagation()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
     >
-      <div className="relative flex max-h-[80vh] w-[26rem] flex-col rounded-lg border border-white/10 bg-[#1a1a1a] text-white shadow-2xl">
+      <div className="relative flex max-h-[80vh] w-[26rem] max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-white/10 bg-[#1a1a1a] text-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 p-4">
           <h2 className="text-sm font-semibold">{game.title} — Ratings</h2>
           <button
@@ -133,6 +135,9 @@ function GameRatingModal({ game, onClose }) {
           >
             {submitting ? 'Submitting…' : 'Submit Rating'}
           </button>
+          {submitError && (
+            <p className="mt-2 text-xs text-red-400">{submitError}</p>
+          )}
         </div>
         {showAddedToast && (
           <div className="absolute top-16 left-1/2 z-10 -translate-x-1/2 rounded bg-black/90 px-3 py-1.5 text-xs text-white shadow-lg">

@@ -22,6 +22,7 @@ export function BlogProvider({ children }) {
   const [activity, setActivity] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [actionErrorByPost, setActionErrorByPost] = useState({})
 
   async function loadBlogData() {
     if (loaded) return
@@ -60,6 +61,14 @@ export function BlogProvider({ children }) {
     setIdentity(null)
   }
 
+  function setActionError(postId, message) {
+    setActionErrorByPost((prev) => ({ ...prev, [postId]: message }))
+  }
+
+  function getActionError(postId) {
+    return actionErrorByPost[postId] ?? ''
+  }
+
   async function toggleLike(postId) {
     if (!identity) return
     try {
@@ -72,8 +81,9 @@ export function BlogProvider({ children }) {
         [postId]: { ...(prev[postId] ?? EMPTY_INTERACTIONS), likes },
       }))
       if (activityEntry) setActivity((prev) => [activityEntry, ...prev])
+      setActionError(postId, '')
     } catch {
-      // Best-effort — a network hiccup just means the like didn't register this time.
+      setActionError(postId, 'Failed to update like — please try again.')
     }
   }
 
@@ -89,8 +99,9 @@ export function BlogProvider({ children }) {
         [postId]: { ...(prev[postId] ?? EMPTY_INTERACTIONS), comments },
       }))
       if (activityEntry) setActivity((prev) => [activityEntry, ...prev])
+      setActionError(postId, '')
     } catch {
-      // Best-effort — a network hiccup just means the comment didn't post this time.
+      setActionError(postId, 'Failed to post comment — please try again.')
     }
   }
 
@@ -120,6 +131,7 @@ export function BlogProvider({ children }) {
         loadBlogData,
         toggleLike,
         addComment,
+        getActionError,
         getAllVisitors,
         activity,
       }}

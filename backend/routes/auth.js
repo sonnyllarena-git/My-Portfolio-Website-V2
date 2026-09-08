@@ -1,6 +1,12 @@
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
-import { validTokens } from '../middleware/requireAuth.js'
+import { addToken, removeToken } from '../middleware/requireAuth.js'
+
+if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+  throw new Error(
+    'ADMIN_USERNAME and ADMIN_PASSWORD must both be set — refusing to start with admin auth unconfigured',
+  )
+}
 
 const router = Router()
 
@@ -15,8 +21,15 @@ router.post('/login', (req, res) => {
   }
 
   const token = randomUUID()
-  validTokens.add(token)
+  addToken(token)
   res.json({ token })
+})
+
+router.post('/logout', (req, res) => {
+  const authHeader = req.headers.authorization || ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
+  if (token) removeToken(token)
+  res.status(204).end()
 })
 
 export default router

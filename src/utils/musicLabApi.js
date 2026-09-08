@@ -1,5 +1,7 @@
+import { fetchWithTimeout } from './fetchWithTimeout.js'
+
 export async function fetchMusicLabItems() {
-  const response = await fetch('/api/music-lab')
+  const response = await fetchWithTimeout('/api/music-lab')
   if (!response.ok) throw new Error('Failed to fetch music lab items')
   const rows = await response.json()
   return rows.map((row) => ({

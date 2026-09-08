@@ -19,6 +19,8 @@ const uploadsDir = join(dirname(fileURLToPath(import.meta.url)), 'uploads')
 const distDir = join(dirname(fileURLToPath(import.meta.url)), '../dist')
 if (!existsSync(uploadsDir)) mkdirSync(uploadsDir)
 
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024 // 10MB — a product photo, not video/audio media
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: uploadsDir,
@@ -29,6 +31,10 @@ const upload = multer({
       )
     },
   }),
+  limits: { fileSize: MAX_PHOTO_BYTES },
+  fileFilter: (req, file, cb) => {
+    cb(null, file.mimetype.startsWith('image/'))
+  },
 })
 
 const app = express()
@@ -63,7 +69,8 @@ app.post(
 // too-large upload would surface as an unhandled 500 instead of a clean 400.
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    return res.status(400).json({ error: err.message })
+    console.error('Multer upload error:', err)
+    return res.status(400).json({ error: 'Upload failed' })
   }
   next(err)
 })

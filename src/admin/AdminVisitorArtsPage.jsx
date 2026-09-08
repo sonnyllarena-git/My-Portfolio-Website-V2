@@ -15,18 +15,24 @@ function formatTimestamp(iso) {
 export default function AdminVisitorArtsPage() {
   const [artworks, setArtworks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     apiFetch('/visitor-arts')
       .then(setArtworks)
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }, [])
 
   async function handleDelete(artwork) {
     if (!window.confirm(`Delete "${artwork.title}" by ${artwork.author}?`))
       return
-    await apiFetch(`/visitor-arts/${artwork.id}`, { method: 'DELETE' })
-    setArtworks((prev) => prev.filter((a) => a.id !== artwork.id))
+    try {
+      await apiFetch(`/visitor-arts/${artwork.id}`, { method: 'DELETE' })
+      setArtworks((prev) => prev.filter((a) => a.id !== artwork.id))
+    } catch (err) {
+      window.alert(err.message || 'Failed to delete artwork')
+    }
   }
 
   return (
@@ -37,7 +43,10 @@ export default function AdminVisitorArtsPage() {
           {artworks.length} artwork{artworks.length === 1 ? '' : 's'}
         </span>
       </div>
-      {!loading && artworks.length === 0 && (
+      {loadError && (
+        <p className="text-sm text-red-600">Failed to load artworks.</p>
+      )}
+      {!loading && !loadError && artworks.length === 0 && (
         <p className={`text-sm ${ADMIN_SECONDARY_TEXT}`}>No artworks yet.</p>
       )}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">

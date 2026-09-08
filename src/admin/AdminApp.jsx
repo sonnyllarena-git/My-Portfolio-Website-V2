@@ -8,7 +8,7 @@ import AdminVisitorArtsPage from './AdminVisitorArtsPage.jsx'
 import AdminMusicLabPage from './AdminMusicLabPage.jsx'
 import AdminSettingsPage from './AdminSettingsPage.jsx'
 import { AdminSettingsProvider } from './AdminSettingsContext.jsx'
-import { clearToken } from './api.js'
+import { clearToken, logout } from './api.js'
 
 export default function AdminApp() {
   // Always start logged out on every visit/reload — never resume a session from a
@@ -44,7 +44,7 @@ export default function AdminApp() {
   }
 
   function handleLogout() {
-    clearToken()
+    logout()
     setLoggedIn(false)
   }
 

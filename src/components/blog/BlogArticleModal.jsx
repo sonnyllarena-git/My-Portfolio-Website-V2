@@ -79,7 +79,7 @@ function renderInlineText(text) {
 }
 
 function BlogArticleModal({ post, article, onClose }) {
-  const { visitorName, toggleLike } = useBlog()
+  const { visitorName, toggleLike, getActionError } = useBlog()
   const hasLiked = post.likes.some((like) => like.name === visitorName)
 
   return (
@@ -146,6 +146,11 @@ function BlogArticleModal({ post, article, onClose }) {
               </span>
             </button>
           </div>
+          {getActionError(post.id) && (
+            <p className="mb-4 -mt-3 text-xs text-red-600">
+              {getActionError(post.id)}
+            </p>
+          )}
           <hr className="mb-4 border-slate-200" />
           <div className="space-y-4 text-sm leading-relaxed text-slate-700">
             {article.content.map((block, index) => {

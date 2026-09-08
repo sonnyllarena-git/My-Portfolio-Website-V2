@@ -10,7 +10,7 @@ import {
   AdminSettingsProvider,
   useAdminSettings,
 } from './AdminSettingsContext.jsx'
-import { clearToken } from './api.js'
+import { logout } from './api.js'
 import {
   ADMIN_SIDEBAR_BG,
   ADMIN_SIDEBAR_BORDER,
@@ -46,7 +46,7 @@ function AdminPanelShell({ onClose }) {
   }, [onClose])
 
   function handleLogout() {
-    clearToken()
+    logout()
     onClose()
   }
 

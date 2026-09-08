@@ -1,15 +1,15 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
+import { VALID_GAME_IDS } from '../gameIds.js'
 
 const router = Router()
 
-const VALID_GAME_IDS = ['flappy-bird', 'typing-speed', 'memory-flip']
 const MAX_SCORE = 1_000_000
 const MAX_NAME_LENGTH = 24
 
 async function getLeaderboardPayload(gameId) {
   const scoresResult = await pool.query(
-    'SELECT name, score, label, createdAt AS "createdAt" FROM leaderboardScores WHERE gameId = $1 ORDER BY score DESC LIMIT 10',
+    'SELECT name, score, label, createdAt AS "createdAt" FROM leaderboardScores WHERE gameId = $1 ORDER BY score DESC, createdAt ASC, id ASC LIMIT 10',
     [gameId],
   )
   const statsResult = await pool.query(
@@ -61,7 +61,7 @@ router.post('/:gameId', async (req, res) => {
     await pool.query(
       `DELETE FROM leaderboardScores
        WHERE gameId = $1 AND id NOT IN (
-         SELECT id FROM leaderboardScores WHERE gameId = $1 ORDER BY score DESC LIMIT 10
+         SELECT id FROM leaderboardScores WHERE gameId = $1 ORDER BY score DESC, createdAt ASC, id ASC LIMIT 10
        )`,
       [gameId],
     )

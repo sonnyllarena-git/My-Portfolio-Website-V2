@@ -17,10 +17,12 @@ export default function AdminResumeTemplatesPage() {
   const [editingTemplate, setEditingTemplate] = useState(null)
   const [previewingTemplate, setPreviewingTemplate] = useState(null)
   const [publishing, setPublishing] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     apiFetch('/resume-templates')
       .then(setTemplates)
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }, [])
 
@@ -51,8 +53,14 @@ export default function AdminResumeTemplatesPage() {
 
   async function handleDelete(template) {
     if (!window.confirm(`Delete ${template.name}?`)) return
-    await apiFetch(`/resume-templates/${template.code}`, { method: 'DELETE' })
-    setTemplates((prev) => prev.filter((t) => t.code !== template.code))
+    try {
+      await apiFetch(`/resume-templates/${template.code}`, {
+        method: 'DELETE',
+      })
+      setTemplates((prev) => prev.filter((t) => t.code !== template.code))
+    } catch (err) {
+      window.alert(err.message || 'Failed to delete template')
+    }
   }
 
   async function handlePublish(template) {
@@ -113,7 +121,14 @@ export default function AdminResumeTemplatesPage() {
             </tr>
           </thead>
           <tbody>
-            {!loading && templates.length === 0 && (
+            {loadError && (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-red-600">
+                  Failed to load templates.
+                </td>
+              </tr>
+            )}
+            {!loading && !loadError && templates.length === 0 && (
               <tr>
                 <td
                   colSpan={5}

@@ -30,6 +30,8 @@ export function GamesProvider({ children }) {
   const [ratingsLoaded, setRatingsLoaded] = useState({})
   const [leaderboardByGame, setLeaderboardByGame] = useState({})
   const [leaderboardLoaded, setLeaderboardLoaded] = useState({})
+  const [leaderboardSyncFailedByGame, setLeaderboardSyncFailedByGame] =
+    useState({})
   const [visitorName, setVisitorNameState] = useState(() => readVisitorName())
   const [arcadeSettings, setArcadeSettings] = useState(() =>
     readArcadeSettings(),
@@ -121,11 +123,18 @@ export function GamesProvider({ children }) {
     })
       .then((data) => {
         setLeaderboardByGame((prev) => ({ ...prev, [gameId]: data }))
+        setLeaderboardSyncFailedByGame((prev) => ({ ...prev, [gameId]: false }))
       })
       .catch(() => {
-        // Global leaderboard is best-effort — a network hiccup shouldn't break gameplay.
+        // A network hiccup shouldn't break gameplay, but the player should still be able
+        // to tell their score never reached the global leaderboard — see getLeaderboardSyncFailed.
+        setLeaderboardSyncFailedByGame((prev) => ({ ...prev, [gameId]: true }))
       })
     return updated
+  }
+
+  function getLeaderboardSyncFailed(gameId) {
+    return leaderboardSyncFailedByGame[gameId] ?? false
   }
 
   return (
@@ -137,6 +146,7 @@ export function GamesProvider({ children }) {
         getGlobalTopScore,
         getGlobalTotalPlays,
         loadLeaderboard,
+        getLeaderboardSyncFailed,
         getRatings,
         getAverageRating,
         loadRatings,

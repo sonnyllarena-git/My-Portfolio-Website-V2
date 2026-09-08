@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
+import { VALID_GAME_IDS } from '../gameIds.js'
 
 const router = Router()
 
-const VALID_GAME_IDS = ['flappy-bird', 'typing-speed', 'memory-flip']
 const MAX_NAME_LENGTH = 24
 const MAX_COMMENT_LENGTH = 300
 

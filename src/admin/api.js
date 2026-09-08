@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js'
+
 const TOKEN_KEY = 'adminToken'
 
 export function getToken() {
@@ -12,6 +14,16 @@ export function clearToken() {
   sessionStorage.removeItem(TOKEN_KEY)
 }
 
+export async function logout() {
+  try {
+    await apiFetch('/logout', { method: 'POST' })
+  } catch {
+    // best-effort — the local token is cleared below regardless
+  } finally {
+    clearToken()
+  }
+}
+
 export async function apiFetch(path, options = {}) {
   const token = getToken()
   const headers = { ...options.headers }
@@ -20,7 +32,10 @@ export async function apiFetch(path, options = {}) {
     headers['Content-Type'] = 'application/json'
   }
 
-  const response = await fetch(`/api${path}`, { ...options, headers })
+  const response = await fetchWithTimeout(`/api${path}`, {
+    ...options,
+    headers,
+  })
   // A Bearer token can go stale without any client-side signal — the backend keeps valid
   // tokens in memory only, so restarting it (a routine part of local dev) silently logs
   // everyone out server-side while the token still looks valid in sessionStorage.

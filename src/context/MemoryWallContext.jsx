@@ -24,9 +24,9 @@ export function MemoryWallProvider({ children }) {
   }
 
   async function addNote({ name, message, rating }) {
-    const updated = await submitMemoryWallNote({ name, message, rating })
-    setNotes(updated)
-    return updated
+    const created = await submitMemoryWallNote({ name, message, rating })
+    setNotes((prev) => [created, ...prev])
+    return created
   }
 
   return (

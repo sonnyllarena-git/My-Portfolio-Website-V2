@@ -119,6 +119,11 @@ async function initSchema() {
       )
     `)
 
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_memorywallnotes_created
+      ON memoryWallNotes (createdAt DESC)
+    `)
+
     const memoryWallCount = await client.query(
       'SELECT COUNT(*) FROM memoryWallNotes',
     )
@@ -139,6 +144,11 @@ async function initSchema() {
         imageData TEXT NOT NULL,
         createdAt TEXT NOT NULL
       )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_visitorartworks_created
+      ON visitorArtworks (createdAt DESC)
     `)
 
     const visitorArtworksCount = await client.query(
@@ -213,6 +223,11 @@ async function initSchema() {
         thumbnailUrl TEXT,
         createdAt TEXT NOT NULL
       )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_musiclabitems_created
+      ON musicLabItems (createdAt DESC)
     `)
 
     const ratingsCount = await client.query('SELECT COUNT(*) FROM gameRatings')

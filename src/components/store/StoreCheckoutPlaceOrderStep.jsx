@@ -4,7 +4,7 @@ import { useStoreCatalog } from '../../context/StoreCatalogContext.jsx'
 import { STORE_BUYNOW_BG, STORE_BUYNOW_HOVER_BG } from './theme.js'
 
 function StoreCheckoutPlaceOrderStep() {
-  const { items } = useStoreCart()
+  const { items, clearCart } = useStoreCart()
   const { products: storeProducts } = useStoreCatalog()
   const [orderPlaced, setOrderPlaced] = useState(false)
 
@@ -64,7 +64,10 @@ function StoreCheckoutPlaceOrderStep() {
 
       <button
         type="button"
-        onClick={() => setOrderPlaced(true)}
+        onClick={() => {
+          clearCart()
+          setOrderPlaced(true)
+        }}
         className={`mt-4 w-full max-w-xs cursor-pointer rounded-full py-2 font-medium text-white transition-colors duration-150 ${STORE_BUYNOW_BG} ${STORE_BUYNOW_HOVER_BG}`}
       >
         Place your order

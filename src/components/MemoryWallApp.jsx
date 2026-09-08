@@ -79,6 +79,7 @@ function MemoryWallApp() {
   const [sortOrder, setSortOrder] = useState('newest')
   const [ratingFilter, setRatingFilter] = useState('all')
   const [posting, setPosting] = useState(false)
+  const [postError, setPostError] = useState('')
 
   useEffect(() => {
     loadNotes()
@@ -106,13 +107,14 @@ function MemoryWallApp() {
   async function handlePost() {
     if (!name.trim() || !message.trim() || posting) return
     setPosting(true)
+    setPostError('')
     try {
       await addNote({ name: name.trim(), message: message.trim(), rating })
       setName('')
       setMessage('')
       setRating(0)
     } catch {
-      // Best-effort — a network hiccup just means the note didn't post this time.
+      setPostError('Failed to post — please try again.')
     } finally {
       setPosting(false)
     }
@@ -200,6 +202,9 @@ function MemoryWallApp() {
           >
             {posting ? 'Posting…' : '➤ Post to the wall'}
           </button>
+          {postError && (
+            <p className="mt-2 text-xs text-red-400">{postError}</p>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <div className="mb-3 flex gap-2">

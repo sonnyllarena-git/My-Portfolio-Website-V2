@@ -11,7 +11,7 @@ import BlogArticleModal from './BlogArticleModal.jsx'
 import { blogArticles } from './data/blogArticles.js'
 
 function BlogPostCard({ post }) {
-  const { visitorName, toggleLike, addComment } = useBlog()
+  const { visitorName, toggleLike, addComment, getActionError } = useBlog()
   const [commentText, setCommentText] = useState('')
   const [showAllComments, setShowAllComments] = useState(false)
   const [showArticle, setShowArticle] = useState(false)
@@ -135,6 +135,9 @@ function BlogPostCard({ post }) {
           <img src={sendIcon} alt="" className="h-5 w-5" />
         </button>
       </form>
+      {getActionError(post.id) && (
+        <p className="mt-1 text-xs text-red-600">{getActionError(post.id)}</p>
+      )}
     </div>
   )
 }

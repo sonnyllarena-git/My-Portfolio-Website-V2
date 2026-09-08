@@ -346,6 +346,7 @@ export default function AdminProductForm({
   const [details, setDetails] = useState(() => initialDetails(product))
   const [photoSlots, setPhotoSlots] = useState(() => initPhotoSlots(product))
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   function handleDetailChange(key, value) {
     setDetails((prev) => ({ ...prev, [key]: value }))
@@ -383,7 +384,9 @@ export default function AdminProductForm({
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (submitting) return
     setError('')
+    setSubmitting(true)
     try {
       const images = await buildImages()
 
@@ -404,6 +407,8 @@ export default function AdminProductForm({
       onSaved(saved)
     } catch (err) {
       setError(err.message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -547,9 +552,10 @@ export default function AdminProductForm({
       <div className="flex gap-2">
         <button
           type="submit"
-          className={`rounded ${ADMIN_ACCENT_BG} ${ADMIN_ACCENT_HOVER_BG} px-3 py-2 text-sm font-medium text-white`}
+          disabled={submitting}
+          className={`rounded ${ADMIN_ACCENT_BG} ${ADMIN_ACCENT_HOVER_BG} px-3 py-2 text-sm font-medium text-white disabled:opacity-50`}
         >
-          Save product
+          {submitting ? 'Saving…' : 'Save product'}
         </button>
         <button
           type="button"

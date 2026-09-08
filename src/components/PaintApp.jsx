@@ -15,6 +15,7 @@ function PaintApp({ onOpenGallery }) {
   const [authorName, setAuthorName] = useState('')
   const [showSavedToast, setShowSavedToast] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   function handleDownload() {
     const link = document.createElement('a')
@@ -26,6 +27,7 @@ function PaintApp({ onOpenGallery }) {
   async function handleSave() {
     if (saving) return
     setSaving(true)
+    setSaveError('')
     try {
       await addArtwork({
         title: title.trim() || 'Untitled',
@@ -35,7 +37,7 @@ function PaintApp({ onOpenGallery }) {
       setShowSavedToast(true)
       setTimeout(() => setShowSavedToast(false), 2000)
     } catch {
-      // Best-effort — a network hiccup just means the save didn't go through this time.
+      setSaveError('Failed to save — please try again.')
     } finally {
       setSaving(false)
     }
@@ -88,6 +90,11 @@ function PaintApp({ onOpenGallery }) {
         {showSavedToast && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded bg-black/80 px-3 py-1.5 text-xs text-white shadow-lg">
             Saved to Visitor Arts!
+          </div>
+        )}
+        {saveError && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded bg-red-900/90 px-3 py-1.5 text-xs text-white shadow-lg">
+            {saveError}
           </div>
         )}
       </div>

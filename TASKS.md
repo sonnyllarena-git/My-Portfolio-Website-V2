@@ -6869,6 +6869,42 @@ asked mid-build to make sure the admin form's fields match what Music Lab actual
       item shape stays consistent, even though no static item currently sets one.
       **Pass condition:** `npm run verify` passes; confirmed live — sidebar and main screen both
       show "The Beatles - Rubber Soul" under "In My Life".
+- [x] **P674** — Full-project code review (6 parallel agents: mobile audit, backend correctness,
+      reuse/efficiency, CLAUDE.md conventions, frontend cross-file tracer, performance/latency).
+      Fixed 12 issues same session (P675 covers the rest): admin login failing _open_ if
+      `ADMIN_USERNAME`/`ADMIN_PASSWORD` were ever unset (`backend/routes/auth.js`), mobile-misaligned
+      game-over overlays in Typing/Memory (now percentage-based like Flappy Bird),
+      viewport-overflowing rating/leaderboard modals, `memoryWall.js` re-fetching the whole table on
+      every post, a non-deterministic leaderboard trim tiebreak, unsafe upload filename parsing,
+      silently-swallowed storage-delete errors, an unvalidated `duration` field, missing indexes on
+      3 growing tables, admin double-submit, and a missing size/mimetype guard on `/api/uploads`.
+      Flagged 6 bigger items for Sonny's go-ahead rather than fixing blind.
+      **Pass condition:** `npm run verify` passes; confirmed live via curl/browser at each step.
+- [x] **P675** — Sonny said to tackle the 6 flagged items. Fixed 4 of them: added
+      `src/utils/fetchWithTimeout.js` (10s default, 20s for JSON, 5min for FormData uploads — Music
+      Lab allows up to 200MB) and wired it into every `fetch` call site across `src/utils/*Api.js`
+      and `src/admin/api.js`; added `clearCart` to `StoreCartContext.jsx`, called on order placement;
+      gave admin tokens a 24h TTL plus a real `POST /api/logout` route
+      (`backend/middleware/requireAuth.js`, `backend/routes/auth.js` — `validTokens` is now a
+      token→expiresAt `Map`, not an unbounded `Set`); surfaced previously-silent failures
+      (leaderboard sync, Memory Wall post, Paint save, blog like/comment, and load/delete failures
+      across all 5 admin list pages) as visible error text instead of a swallowed catch. Also
+      extracted the `VALID_GAME_IDS` duplicate (`ratings.js`/`leaderboard.js`) into
+      `backend/gameIds.js` while touching those files.
+      Deliberately did NOT attempt the other 2 (or the reuse dedup) blind: migrating product photos
+      off Render's ephemeral disk to Supabase Storage turned out to need updating
+      `scripts/seedStoreProducts.js` and deciding how to handle already-seeded `/uploads/...` rows —
+      a real data-migration question, not a quick code change. Code-splitting `Desktop.jsx`'s ~20
+      window components touches ~40 render call sites across two separate paths (main windows _and_
+      taskbar hover-previews) in a 1042-line core file — too high a blast radius to do blind without
+      being able to fully verify every window. Also hit ffmpeg not being available in this
+      environment, so the 97MB Contact Info background video itself can't be re-encoded here either.
+      Along the way, found (but did not fix, pre-existing and unrelated) a console error —
+      `useBlog must be used within a BlogProvider` — reproduced on a clean stash of the last commit
+      too, confirming it predates this session.
+      **Pass condition:** `npm run verify` passes; confirmed live (server restart + curl on
+      leaderboard/ratings/logout/music-lab endpoints, stash/pop round-trip to rule out a regression
+      on the pre-existing BlogProvider console error).
 
 ---
 

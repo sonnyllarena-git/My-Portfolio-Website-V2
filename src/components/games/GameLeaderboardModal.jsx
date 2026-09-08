@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchLeaderboard } from '../../utils/leaderboardApi.js'
+import { useGames } from '../../context/GamesContext.jsx'
 
 const RANK_MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
@@ -23,6 +24,7 @@ function LeaderboardRow({ rank, entry }) {
 }
 
 export default function GameLeaderboardModal({ game, onClose }) {
+  const { getLeaderboardSyncFailed } = useGames()
   const [scores, setScores] = useState([])
   const [totalPlays, setTotalPlays] = useState(null)
   const [status, setStatus] = useState('loading')
@@ -50,7 +52,7 @@ export default function GameLeaderboardModal({ game, onClose }) {
       onContextMenu={(e) => e.stopPropagation()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
     >
-      <div className="flex max-h-[80vh] w-[26rem] flex-col rounded-lg border border-amber-500/30 bg-[#1a1a1a] text-white shadow-2xl">
+      <div className="flex max-h-[80vh] w-[26rem] max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-amber-500/30 bg-[#1a1a1a] text-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 p-4">
           <div>
             <h2 className="flex items-center gap-2 text-sm font-semibold">
@@ -71,6 +73,11 @@ export default function GameLeaderboardModal({ game, onClose }) {
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
+          {getLeaderboardSyncFailed(game.id) && (
+            <p className="mb-3 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+              Your last score couldn't be saved to the global leaderboard.
+            </p>
+          )}
           {status === 'loading' && (
             <p className="text-sm text-white/40">Loading leaderboard…</p>
           )}

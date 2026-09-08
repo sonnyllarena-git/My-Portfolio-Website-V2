@@ -52,11 +52,22 @@ export function StoreCartProvider({ children }) {
     setItems((prev) => prev.filter((item) => lineKey(item) !== key))
   }
 
+  function clearCart() {
+    setItems([])
+  }
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
     <StoreCartContext.Provider
-      value={{ items, addItem, updateQuantity, removeItem, itemCount }}
+      value={{
+        items,
+        addItem,
+        updateQuantity,
+        removeItem,
+        clearCart,
+        itemCount,
+      }}
     >
       {children}
     </StoreCartContext.Provider>
