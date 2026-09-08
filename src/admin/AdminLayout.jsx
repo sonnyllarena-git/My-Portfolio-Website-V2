@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { id: 'resume-templates', label: 'Resume Templates' },
   { id: 'memory-wall', label: 'Memory Wall' },
   { id: 'visitor-arts', label: 'Visitor Arts' },
+  { id: 'music-lab', label: 'Music Lab' },
   { id: 'settings', label: 'Settings' },
 ]
 

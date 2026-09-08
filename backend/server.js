@@ -11,6 +11,7 @@ import ratingsRouter from './routes/ratings.js'
 import memoryWallRouter from './routes/memoryWall.js'
 import visitorArtsRouter from './routes/visitorArts.js'
 import blogRouter from './routes/blog.js'
+import musicLabRouter from './routes/musicLab.js'
 import requireAuth from './middleware/requireAuth.js'
 import { initSchema } from './db.js'
 
@@ -44,6 +45,7 @@ app.use('/api/ratings', ratingsRouter)
 app.use('/api/memory-wall', memoryWallRouter)
 app.use('/api/visitor-arts', visitorArtsRouter)
 app.use('/api/blog', blogRouter)
+app.use('/api/music-lab', musicLabRouter)
 
 app.post(
   '/api/uploads',
@@ -55,6 +57,16 @@ app.post(
     })
   },
 )
+
+// Multer throws (e.g. a file over its `limits.fileSize`) via `next(err)`, which
+// skips straight past every normal route handler to here — without this, a
+// too-large upload would surface as an unhandled 500 instead of a clean 400.
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ error: err.message })
+  }
+  next(err)
+})
 
 app.use(express.static(distDir))
 app.get('/*splat', (req, res) => {

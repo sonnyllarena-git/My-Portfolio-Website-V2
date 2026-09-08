@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { videos, tracks } from '../data/musicLabLibrary.js'
+import {
+  videos as staticVideos,
+  tracks as staticTracks,
+} from '../data/musicLabLibrary.js'
+import { fetchMusicLabItems } from '../utils/musicLabApi.js'
 import MusicLabSidebar from './musicLab/MusicLabSidebar.jsx'
 import MusicLabScreen from './musicLab/MusicLabScreen.jsx'
 import MusicLabAbout from './musicLab/MusicLabAbout.jsx'
@@ -41,7 +45,20 @@ function MusicLabApp({ isMinimized = false, onRestore }) {
   const [isRepeatOn, setIsRepeatOn] = useState(false)
   const videoRef = useRef(null)
   const audioRef = useRef(null)
+  const [uploadedVideos, setUploadedVideos] = useState([])
+  const [uploadedTracks, setUploadedTracks] = useState([])
 
+  useEffect(() => {
+    fetchMusicLabItems()
+      .then((rows) => {
+        setUploadedVideos(rows.filter((row) => row.type === 'video'))
+        setUploadedTracks(rows.filter((row) => row.type === 'track'))
+      })
+      .catch(() => {})
+  }, [])
+
+  const videos = [...staticVideos, ...uploadedVideos]
+  const tracks = [...staticTracks, ...uploadedTracks]
   const items = activeType === 'video' ? videos : tracks
 
   useEffect(() => {

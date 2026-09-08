@@ -5,6 +5,7 @@ import AdminProductsPage from './AdminProductsPage.jsx'
 import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
 import AdminMemoryWallPage from './AdminMemoryWallPage.jsx'
 import AdminVisitorArtsPage from './AdminVisitorArtsPage.jsx'
+import AdminMusicLabPage from './AdminMusicLabPage.jsx'
 import AdminSettingsPage from './AdminSettingsPage.jsx'
 import { AdminSettingsProvider } from './AdminSettingsContext.jsx'
 import { clearToken } from './api.js'
@@ -62,6 +63,8 @@ export default function AdminApp() {
           <AdminMemoryWallPage />
         ) : view === 'visitor-arts' ? (
           <AdminVisitorArtsPage />
+        ) : view === 'music-lab' ? (
+          <AdminMusicLabPage />
         ) : (
           <AdminSettingsPage />
         )}

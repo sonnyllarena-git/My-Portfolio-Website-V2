@@ -4,6 +4,7 @@ import AdminProductsPage from './AdminProductsPage.jsx'
 import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
 import AdminMemoryWallPage from './AdminMemoryWallPage.jsx'
 import AdminVisitorArtsPage from './AdminVisitorArtsPage.jsx'
+import AdminMusicLabPage from './AdminMusicLabPage.jsx'
 import AdminSettingsPage from './AdminSettingsPage.jsx'
 import {
   AdminSettingsProvider,
@@ -29,6 +30,7 @@ import {
 const NAV_ITEMS = [
   { id: 'memory-wall', label: 'Memory Wall' },
   { id: 'visitor-arts', label: 'Visitor Arts' },
+  { id: 'music-lab', label: 'Music Lab' },
   { id: 'products', label: 'Products' },
   { id: 'resume-templates', label: 'Resume Templates' },
   { id: 'settings', label: 'Settings' },
@@ -96,6 +98,8 @@ function AdminPanelShell({ onClose }) {
             <AdminMemoryWallPage />
           ) : view === 'visitor-arts' ? (
             <AdminVisitorArtsPage />
+          ) : view === 'music-lab' ? (
+            <AdminMusicLabPage />
           ) : (
             <AdminSettingsPage />
           )}

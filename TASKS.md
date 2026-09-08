@@ -6756,6 +6756,54 @@ icon, which has existed since the very first icon list but never had any actual 
       to their clean seeded state.
       **Pass condition:** met via the checks above — confirmed live, not just code review.
 
+## PHASE 109 — MUSIC LAB ADMIN UPLOADS (CLOUDFLARE R2)
+
+_Sonny asked (2026-09-08) to brainstorm and add an admin tab for uploading video/music that
+appears inside the existing Music Lab desktop app. Answered "I only want free tier, I will only
+upload few files" when asked where uploads should live, which pointed at Cloudflare R2 (free 10GB,
+zero egress) over Render's paid-only Persistent Disk or bloating Postgres with base64 video — the
+pattern used for small Paint/Visitor Arts images doesn't scale to video-file sizes. Sonny then
+asked mid-build to make sure the admin form's fields match what Music Lab actually needs
+(type/title/album) and to add a delete option — both already part of the plan, confirmed here._
+
+- [x] **P663** — Added Cloudflare R2 (S3-compatible object storage, explicit approval 2026-09-08 —
+      free tier, few files) as the backing store for Music Lab admin uploads: installed
+      `@aws-sdk/client-s3` (3.1127.0, `npm audit fix` cleared a transitive `qs` vuln), added
+      `backend/r2Client.js` (`uploadToR2`/`deleteFromR2`/`keyFromUrl`), a `musicLabItems` table in
+      `backend/db.js` (`CREATE TABLE IF NOT EXISTS`, no seed — starts empty), and
+      `backend/routes/musicLab.js` (`GET /` public, `POST /` + `DELETE /:id` behind `requireAuth`,
+      multer `memoryStorage` so files never touch local disk before forwarding to R2). Every
+      camelCase column aliased from the start. Mounted at `/api/music-lab` in `server.js`, plus a
+      Multer error-handling middleware so an oversized file returns a clean 400 instead of a crash.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P664** — Added `src/utils/musicLabApi.js` (maps DB rows to the exact
+      `{id, title, album, duration, mediaSrc, thumbnailSrc}` shape `loadMusicLabLibrary.js` already
+      produces) and wired `MusicLabApp.jsx` to merge `[...staticVideos, ...uploadedVideos]` /
+      `[...staticTracks, ...uploadedTracks]` from a mount-time fetch — the static bundled library
+      (`src/assets/music-lab/`) is untouched; uploads are purely additive.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P665** — Added `src/admin/AdminMusicLabPage.jsx`: upload form (Type select video/track,
+      Title, Album, media file input with client-side duration auto-detection via a hidden
+      `<audio>` probe's `loadedmetadata` event, optional thumbnail) plus a table of existing items
+      with a Delete button (`window.confirm`, matching the Memory Wall/Visitor Arts precedent).
+      Wired into both admin surfaces — `AdminLayout.jsx`/`AdminApp.jsx` (standalone `/admin`) and
+      `AdminPanelEmbedded.jsx` (hidden Terminal panel) — nav item + view branch in each. Documented
+      the 5 new `R2_*` env vars in `.env.example` (placeholders only) and added the CLAUDE.md §2
+      stack table row for the R2 approval.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P666** — Live-verify: started the local backend (`npm run server`), confirmed
+      `musicLabItems` initializes with no errors, hit `/api/music-lab` directly — empty `GET`,
+      `401` on an unauthenticated `POST`, `400` on invalid type/missing media, and a real
+      multipart upload with placeholder R2 credentials failed cleanly (`500`, generic message,
+      detail server-side only — `No value provided for input HTTP label: Bucket`, expected until
+      Sonny fills in his real Cloudflare bucket). Verified live in the browser: admin Music Lab tab
+      renders with all matching fields (type/title/album/media/thumbnail) and a working Delete
+      column; the Music Lab desktop app still opens with its existing static content intact and
+      fetches `/api/music-lab` cleanly (200, empty list) via the Vite proxy. Real end-to-end
+      file-upload-to-R2 testing is blocked on Sonny completing his own Cloudflare account/bucket
+      setup and filling in `backend/.env`'s placeholder `R2_*` values.
+      **Pass condition:** met via the checks above — confirmed live, not just code review.
+
 ---
 
 ## Backlog — DO NOT START
