@@ -6835,6 +6835,22 @@ asked mid-build to make sure the admin form's fields match what Music Lab actual
       only asked for the admin side.
       **Pass condition:** met — `npm run verify` passes, confirmed live in the browser/curl, not
       just code review.
+- [x] **P670** — Added an **Edit** action to the Music Lab admin table (`src/admin/AdminMusicLabPage.jsx`):
+      clicking it loads the item's title/artist/album back into the existing form (Type locked,
+      media/thumbnail inputs hidden — editing details only, re-upload via delete+re-add to replace
+      the file), with a Cancel button to back out. Backed by a new
+      `PATCH /api/music-lab/:id` route (`backend/routes/musicLab.js`) that updates just those three
+      columns. Pushed this together with P667–P669 (commit `11f389c`).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P671** — Deployed P667–P670 to Render and fixed the first production-only failure: upload
+      500'd with `Error: Region is missing` because `backend/.env`'s 6 `SUPABASE_*` vars only ever
+      existed locally — Render never reads `.env` (gitignored) and had none of them set. Sonny
+      added all 6 to Render's Environment tab; confirmed working live afterward (Sonny uploaded a
+      real file, saw it land in the Supabase bucket). Logged the underlying lesson in
+      `LESSONS.md` (Deployment section) and added a "Deploying to Render" part to
+      `MUSIC_LAB_DATABASE_SETUP.md` so this doesn't get rediscovered next time a feature adds a
+      new env var.
+      **Pass condition:** met — confirmed working on the live Render site, not just locally.
 
 ---
 

@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS musicLabItems (
   id SERIAL PRIMARY KEY,
   type TEXT NOT NULL,           -- 'video' or 'track'
   title TEXT NOT NULL,
+  artist TEXT,
   album TEXT,
   duration REAL NOT NULL DEFAULT 0,
   mediaUrl TEXT NOT NULL,        -- Supabase Storage public URL for the video/audio file
@@ -98,6 +99,24 @@ SUPABASE_S3_SECRET_ACCESS_KEY=your-supabase-s3-secret-access-key
 SUPABASE_BUCKET_NAME=music-lab
 ```
 
+## Part 3 — Deploying to Render (or any other host)
+
+`backend/.env` is gitignored and **never reaches the deployed server** — Render (or wherever this
+is hosted) only sees environment variables you enter directly in its own dashboard. This bit
+Sonny in production once already (`Error: Region is missing` from `@aws-sdk/client-s3`, because
+none of the 6 `SUPABASE_*` vars existed on Render yet — see `LESSONS.md`).
+
+1. Render dashboard → the backend web service → **Environment** tab.
+2. Add all 6 vars from `backend/.env` as key/value pairs, copied exactly:
+   `SUPABASE_URL`, `SUPABASE_S3_ENDPOINT`, `SUPABASE_S3_REGION`, `SUPABASE_S3_ACCESS_KEY_ID`,
+   `SUPABASE_S3_SECRET_ACCESS_KEY`, `SUPABASE_BUCKET_NAME` — plus `DATABASE_URL` if Render isn't
+   already supplying its own.
+3. Save. Render redeploys automatically; check its deploy logs for `Database schema initialized`
+   to confirm the migration ran there too.
+4. Any _future_ env var a feature needs works the same way: add it locally to `backend/.env` AND
+   to Render's Environment tab. A feature working locally but 500ing only in production is the
+   signature of a missing platform env var, not a code bug — check there first.
+
 ## Verify
 
 1. Go to `localhost:5173/admin` (or the hidden `/admin` Terminal command on the desktop) and log
@@ -106,6 +125,8 @@ SUPABASE_BUCKET_NAME=music-lab
 3. Upload a test video or track. A successful upload confirms both the `musicLabItems` table and
    the Supabase credentials are wired up correctly — the row lands in Postgres, the file lands in
    the Supabase bucket.
+4. Repeat on the live Render site once its env vars are set — local and production use separate
+   Postgres databases, so a successful local upload doesn't prove production works too.
 
 Rows are served back at `GET /api/music-lab` ([backend/routes/musicLab.js](backend/routes/musicLab.js))
 and consumed by the public [MusicLabApp](src/components/MusicLabApp.jsx).
