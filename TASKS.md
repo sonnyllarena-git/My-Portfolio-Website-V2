@@ -6851,6 +6851,24 @@ asked mid-build to make sure the admin form's fields match what Music Lab actual
       `MUSIC_LAB_DATABASE_SETUP.md` so this doesn't get rediscovered next time a feature adds a
       new env var.
       **Pass condition:** met — confirmed working on the live Render site, not just locally.
+- [x] **P672** — Deleted the 3 placeholder static tracks Sonny pointed at in the Music Lab sidebar
+      screenshot ("Coffee and Commits", "Focus Mode", "Late Night Code") — these were
+      metadata-only stubs under `src/assets/music-lab/tracks/*/notes.txt` with no real media file
+      (`mediaSrc` was always `null`), auto-discovered by `loadMusicLabLibrary.js`'s
+      `import.meta.glob`. Removed all 3 folders and updated `loadMusicLabLibrary.test.js`'s
+      now-stale hardcoded-slugs assertion to expect an empty track list. Sonny's own uploaded
+      track (DB-backed, via Supabase) is unaffected and still shows.
+      **Pass condition:** `npm run verify` passes; confirmed live in the browser — sidebar Music
+      tab now shows only the real uploaded track, no console errors.
+- [x] **P673** — Wired the new `artist` field through to the public Music Lab display, in the
+      format Sonny asked for (`'Title'` / `'Artist' - 'Album'`): added
+      `src/utils/formatMusicLabSubtitle.js` (falls back to just album or just artist if only one
+      is present) and used it in `MusicLabSidebar.jsx`, `MusicLabPlayerBar.jsx`, and
+      `MusicLabScreen.jsx` in place of the raw `.album` read. `musicLabApi.js` (DB-backed items)
+      and `loadMusicLabLibrary.js` (static bundled items) both now map an `artist` field so every
+      item shape stays consistent, even though no static item currently sets one.
+      **Pass condition:** `npm run verify` passes; confirmed live — sidebar and main screen both
+      show "The Beatles - Rubber Soul" under "In My Life".
 
 ---
 

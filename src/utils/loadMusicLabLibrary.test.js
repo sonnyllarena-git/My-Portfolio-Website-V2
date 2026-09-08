@@ -9,15 +9,7 @@ describe('loadMusicLabLibrary', () => {
     expect(videos[0].title).toBeTruthy()
   })
 
-  it('builds the track library sorted by folder slug', () => {
-    expect(tracks.map((t) => t.id)).toEqual([
-      'coffee-and-commits',
-      'focus-mode',
-      'late-night-code',
-    ])
-    expect(tracks[1].title).toBe('Focus Mode')
-    expect(tracks[1].album).toBe("Sonny's Playlist")
-    expect(tracks[1].duration).toBe(214)
-    expect(tracks[1].mediaSrc).toBeNull()
+  it('builds an empty track library once no track folders remain', () => {
+    expect(tracks).toEqual([])
   })
 })

@@ -5,6 +5,7 @@ export async function fetchMusicLabItems() {
   return rows.map((row) => ({
     id: `db-${row.id}`,
     title: row.title,
+    artist: row.artist ?? '',
     album: row.album ?? '',
     duration: row.duration ?? 0,
     mediaSrc: row.mediaUrl,

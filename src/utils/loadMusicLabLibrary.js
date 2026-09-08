@@ -67,6 +67,7 @@ function buildLibrary(folder, mediaFiles, thumbFiles, notesFiles) {
       return {
         id: slug,
         title: notes.title ?? slug,
+        artist: notes.artist ?? '',
         album: notes.album ?? '',
         duration: parseDuration(notes.duration),
         mediaSrc: findBySlug(mediaFiles, folder, slug),

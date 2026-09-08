@@ -1,6 +1,7 @@
 import MusicWave from './MusicWave.jsx'
 import PlayIcon from '../icons/PlayIcon.jsx'
 import PauseIcon from '../icons/PauseIcon.jsx'
+import { formatMusicLabSubtitle } from '../../utils/formatMusicLabSubtitle.js'
 
 function MusicLabScreen({
   activeType,
@@ -68,7 +69,7 @@ function MusicLabScreen({
           </h2>
           <div className="truncate text-sm text-white/50">
             {activeItem
-              ? activeItem.album
+              ? formatMusicLabSubtitle(activeItem)
               : 'Select something from Your Library to get started'}
           </div>
         </div>

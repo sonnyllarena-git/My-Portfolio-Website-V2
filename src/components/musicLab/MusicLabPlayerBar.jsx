@@ -8,6 +8,7 @@ import CastIcon from '../icons/CastIcon.jsx'
 import SpeakerIcon from '../icons/SpeakerIcon.jsx'
 import CloseIcon from '../icons/CloseIcon.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
+import { formatMusicLabSubtitle } from '../../utils/formatMusicLabSubtitle.js'
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
@@ -109,7 +110,7 @@ function MusicLabPlayerBar({
             {activeItem?.title ?? 'Nothing playing'}
           </div>
           <div className="truncate text-xs text-white/50">
-            {activeItem ? activeItem.album : '—'}
+            {activeItem ? formatMusicLabSubtitle(activeItem) : '—'}
           </div>
         </div>
       </div>

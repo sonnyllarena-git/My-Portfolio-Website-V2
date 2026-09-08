@@ -1,5 +1,6 @@
 import HomeIcon from '../icons/HomeIcon.jsx'
 import LibraryIcon from '../icons/LibraryIcon.jsx'
+import { formatMusicLabSubtitle } from '../../utils/formatMusicLabSubtitle.js'
 
 function MusicLabSidebar({
   activeType,
@@ -84,7 +85,7 @@ function MusicLabSidebar({
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium">{item.title}</div>
                 <div className="truncate text-xs text-white/50">
-                  {item.album}
+                  {formatMusicLabSubtitle(item)}
                 </div>
               </div>
             </button>
