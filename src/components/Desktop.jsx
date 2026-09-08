@@ -31,6 +31,7 @@ import StoreApp from './StoreApp.jsx'
 import TerminalApp from './TerminalApp.jsx'
 import ResumeGeneratorApp from './resumeGenerator/ResumeGeneratorApp.jsx'
 import GuestAdminApp from '../guestAdmin/GuestAdminApp.jsx'
+import AdminPanelEmbedded from '../admin/AdminPanelEmbedded.jsx'
 import AppGlyph from './icons/AppGlyph.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
@@ -78,6 +79,7 @@ const WINDOW_PREVIEW_SIZES = {
   terminal: [700, 450],
   'resume-generator': [1200, 800],
   'admin-demo': [1200, 800],
+  'admin-panel': [1100, 700],
 }
 
 function renderPreviewBody(w, gmailGuest) {
@@ -126,6 +128,7 @@ function renderPreviewBody(w, gmailGuest) {
   if (w.id === 'terminal') return <TerminalApp onOpenApp={() => {}} />
   if (w.id === 'resume-generator') return <ResumeGeneratorApp />
   if (w.id === 'admin-demo') return <GuestAdminApp />
+  if (w.id === 'admin-panel') return <AdminPanelEmbedded onClose={() => {}} />
   return null
 }
 
@@ -675,6 +678,20 @@ function Desktop({ onExitToBoot }) {
                 defaultHeight={800}
               >
                 <GuestAdminApp />
+              </Window>
+            )
+          }
+          if (w.id === 'admin-panel') {
+            return (
+              <Window
+                key={w.instanceId}
+                {...shared}
+                icon="🔐"
+                title="Admin Panel"
+                defaultWidth={1100}
+                defaultHeight={700}
+              >
+                <AdminPanelEmbedded onClose={shared.onClose} />
               </Window>
             )
           }

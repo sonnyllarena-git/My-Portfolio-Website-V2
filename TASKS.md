@@ -6515,6 +6515,42 @@ password prompt inside the Memory Wall window itself._
       curl call). Cleaned up all test rows afterward — table is back to its 6 seeded notes.
       **Pass condition:** met via the checks above.
 
+## PHASE 103 — HIDDEN TERMINAL `/admin` LOGIN + IN-DESKTOP ADMIN PANEL WINDOW
+
+_Sonny asked (2026-09-08) for a way to reach the admin login from the Terminal app — type `/admin`,
+get password-prompted, then be able to see (and moderate) Memory Wall without leaving the desktop
+simulation. Confirmed with Sonny: `/admin` must stay a secret command (not listed in `/help`,
+which already auto-generates its list from the `COMMANDS` registry — so `/admin` simply isn't
+added to it), and the result should render as a Window inside the desktop itself (a new "Admin
+Panel" window), not a redirect to the standalone `yoursite.com/admin` page — which stays exactly
+as-is, untouched, as an alternate access path Sonny still wants to keep._
+
+- [x] **P642** — `TerminalApp.jsx`: added a hidden multi-step `/admin` flow, handled by intercepting
+      the raw typed line before `findCommand()` (so it's never in the `COMMANDS` array `/help`
+      iterates) — prompts `Username:` then `Password:` (masked with `*` while typing, mirroring the
+      existing blinking-cursor span), calls the same `POST /api/login` the real admin login form
+      uses (via `apiFetch`/`setToken` from `src/admin/api.js`), then opens the new `admin-panel`
+      window via the existing `onOpenApp` prop on success, or prints a generic "Login failed"
+      message on failure. If a valid token already exists (already signed in this session), typing
+      `/admin` again skips straight to reopening the panel instead of re-prompting.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P643** — Added `src/admin/AdminPanelEmbedded.jsx`: the same real admin pages (Memory Wall,
+      Products, Resume Templates, Settings — unchanged, unmodified) inside a new sidebar+header
+      shell using `h-full` instead of `AdminLayout.jsx`'s `min-h-screen` (same adaptation Phase 99's
+      `GuestAdminLayout.jsx` used to fit a desktop `Window`), defaulting to the Memory Wall view.
+      "Log out" clears the token and closes the window; losing auth mid-session (a stale/expired
+      token, same `admin:unauthorized` event the standalone `/admin` page already listens for) also
+      closes it automatically. Wired a new `admin-panel` window branch into `Desktop.jsx` (no
+      desktop icon, Start Menu, or Search entry — only reachable via the hidden Terminal command).
+      **Pass condition:** `npm run verify` passes.
+- [x] **P644** — Live-verify in the browser: opened Terminal, ran `/admin`, confirmed `Username:`/
+      `Password:` prompts, password masking while typing, and that a correct login opens the "Admin
+      Panel" window already showing real Memory Wall data. Confirmed `/help` lists every other
+      command but never `/admin`. Confirmed the "already signed in" shortcut (re-running `/admin`
+      skips straight to reopening). Confirmed "Log out" clears the session and closes the window.
+      Confirmed a wrong password shows the generic failure message and opens nothing.
+      **Pass condition:** met via the checks above — confirmed live, not just code review.
+
 ---
 
 ## Backlog — DO NOT START

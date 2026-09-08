@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { useSystemSettings } from '../context/SystemSettingsContext.jsx'
 import { contactInfo } from '../data/contactInfo.js'
+import { apiFetch, getToken, setToken } from '../admin/api.js'
 
 const SOCIAL_URLS = Object.fromEntries(
   contactInfo.profiles.map((p) => [p.kind, p.url]),
@@ -186,6 +187,9 @@ const TerminalApp = forwardRef(function TerminalApp(
   const [history, setHistory] = useState([])
   const [input, setInput] = useState('')
   const [loadingLine, setLoadingLine] = useState(null)
+  // Hidden `/admin` login flow — deliberately not in COMMANDS, so it never appears in /help.
+  const [authStep, setAuthStep] = useState(null) // null | 'username' | 'password' | 'authenticating'
+  const [pendingUsername, setPendingUsername] = useState('')
   const inputRef = useRef(null)
   const bottomRef = useRef(null)
   const intervalRef = useRef(null)
@@ -247,17 +251,72 @@ const TerminalApp = forwardRef(function TerminalApp(
     }, LOADING_DURATION_MS)
   }
 
+  function handleAdminLogin(username, password) {
+    setAuthStep('authenticating')
+    apiFetch('/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    })
+      .then(({ token }) => {
+        setToken(token)
+        if (!isMountedRef.current) return
+        setHistory((prev) => [...prev, 'Login successful.'])
+        setAuthStep(null)
+        setPendingUsername('')
+        onOpenApp('admin-panel')
+      })
+      .catch(() => {
+        if (!isMountedRef.current) return
+        setHistory((prev) => [
+          ...prev,
+          'Login failed: incorrect username or password.',
+        ])
+        setAuthStep(null)
+        setPendingUsername('')
+      })
+  }
+
   function handleKeyDown(e) {
     if (e.key !== 'Enter' || loadingLine !== null) return
     const typedLine = input
     const raw = input.trim()
     setInput('')
+
+    if (authStep === 'username') {
+      setPendingUsername(raw)
+      setHistory((prev) => [...prev, `${PROMPT}${typedLine}`, 'Password:'])
+      setAuthStep('password')
+      return
+    }
+    if (authStep === 'password') {
+      setHistory((prev) => [
+        ...prev,
+        `${PROMPT}${'*'.repeat(typedLine.length)}`,
+      ])
+      handleAdminLogin(pendingUsername, raw)
+      return
+    }
+
     if (!raw) {
       setHistory((prev) => [...prev, `${PROMPT}${typedLine}`])
       return
     }
-    const entry = findCommand(raw)
     const echoLine = `${PROMPT}${typedLine}`
+    if (raw === '/admin') {
+      if (getToken()) {
+        setHistory((prev) => [
+          ...prev,
+          echoLine,
+          'Already signed in — opening Admin Panel...',
+        ])
+        onOpenApp('admin-panel')
+        return
+      }
+      setHistory((prev) => [...prev, echoLine, 'Username:'])
+      setAuthStep('username')
+      return
+    }
+    const entry = findCommand(raw)
     if (!entry) {
       setHistory((prev) => [
         ...prev,
@@ -297,15 +356,17 @@ const TerminalApp = forwardRef(function TerminalApp(
         <span>{PROMPT}</span>
         <div className="relative flex-1">
           <span aria-hidden="true" className="pl-1">
-            {input}
-            {loadingLine === null && <span className="terminal-cursor">_</span>}
+            {authStep === 'password' ? '*'.repeat(input.length) : input}
+            {loadingLine === null && authStep !== 'authenticating' && (
+              <span className="terminal-cursor">_</span>
+            )}
           </span>
           <input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={loadingLine !== null}
+            disabled={loadingLine !== null || authStep === 'authenticating'}
             autoFocus
             spellCheck={false}
             className="absolute inset-0 w-full bg-transparent pl-1 text-transparent caret-transparent outline-none"
