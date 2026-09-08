@@ -6803,6 +6803,38 @@ asked mid-build to make sure the admin form's fields match what Music Lab actual
       file-upload-to-R2 testing is blocked on Sonny completing his own Cloudflare account/bucket
       setup and filling in `backend/.env`'s placeholder `R2_*` values.
       **Pass condition:** met via the checks above — confirmed live, not just code review.
+- [x] **P667** — Swapped Music Lab's object storage from Cloudflare R2 to Supabase Storage
+      (explicit approval 2026-09-08 — Sonny didn't want to add a card on file, which R2 requires
+      even for free-tier usage; Supabase Storage's free tier does not). Renamed
+      `backend/r2Client.js` to `backend/supabaseStorageClient.js`
+      (`uploadToStorage`/`deleteFromStorage`/`keyFromUrl`), still on the S3-compatible API via
+      the already-installed `@aws-sdk/client-s3` (just a different endpoint + `forcePathStyle`),
+      so `backend/routes/musicLab.js` only needed its import/call sites updated. Replaced the 5
+      `R2_*` env vars in `.env.example` with 5 `SUPABASE_*` equivalents, updated the CLAUDE.md §2
+      stack table row, and rewrote `MUSIC_LAB_DATABASE_SETUP.md`'s storage section for the
+      Supabase dashboard flow (bucket + S3 connection) instead of R2's.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P668** — Fixed the S3 endpoint in `backend/supabaseStorageClient.js`: P667 assumed the S3
+      endpoint could be derived from `SUPABASE_URL` (`*.supabase.co`), but Sonny's actual Storage > S3 Configuration page shows the endpoint on a different subdomain
+      (`*.storage.supabase.co/storage/v1/s3`). Added a dedicated `SUPABASE_S3_ENDPOINT` env var
+      instead of deriving it, updated `.env.example` and `MUSIC_LAB_DATABASE_SETUP.md` to have
+      Sonny copy the endpoint verbatim from that page rather than construct it.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P669** — Live-verified P667/P668 end-to-end: fixed `scripts/dev-all.js` (it inherited this
+      sandbox's own `PORT=5173` into the backend child process, shadowing `backend/.env`'s
+      correct `PORT=4000` since Node's `--env-file` never overrides an already-set var — now
+      explicitly pins the backend child to `PORT: '4000'`), then confirmed via the browser and
+      curl: `GET /api/music-lab` 200, unauthenticated `POST` 401, and — after Sonny logged in and
+      uploaded a real track through the admin Music Lab tab — both the returned `mediaUrl` and
+      `thumbnailUrl` resolved 200 directly from the Supabase bucket. Sonny then asked for an
+      **Artist** field: added an `artist TEXT` column (`backend/db.js`, schema_version 5 for the
+      already-live table), wired it through `GET`/`POST /api/music-lab`
+      (`backend/routes/musicLab.js`), and added the form input + table column in
+      `src/admin/AdminMusicLabPage.jsx`. Public-facing Music Lab consumers
+      (`src/utils/musicLabApi.js`, the player components) intentionally left untouched — Sonny
+      only asked for the admin side.
+      **Pass condition:** met — `npm run verify` passes, confirmed live in the browser/curl, not
+      just code review.
 
 ---
 

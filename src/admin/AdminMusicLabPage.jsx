@@ -5,6 +5,7 @@ import {
   ADMIN_SECONDARY_TEXT,
   ADMIN_ACCENT_BG,
   ADMIN_ACCENT_HOVER_BG,
+  ADMIN_ACCENT_TEXT,
 } from './adminTheme.js'
 
 function formatTimestamp(iso) {
@@ -24,12 +25,13 @@ function formatDuration(seconds) {
   return `${mins}:${String(secs).padStart(2, '0')}`
 }
 
-const EMPTY_FORM = { type: 'video', title: '', album: '' }
+const EMPTY_FORM = { type: 'video', title: '', artist: '', album: '' }
 
 export default function AdminMusicLabPage() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [editingId, setEditingId] = useState(null)
   const [mediaFile, setMediaFile] = useState(null)
   const [thumbnailFile, setThumbnailFile] = useState(null)
   const [duration, setDuration] = useState(0)
@@ -63,30 +65,59 @@ export default function AdminMusicLabPage() {
     e.preventDefault()
     setError('')
     if (!form.title.trim()) return setError('Title is required')
-    if (!mediaFile) return setError('A media file is required')
+    if (!editingId && !mediaFile) return setError('A media file is required')
 
     setSubmitting(true)
     try {
-      const body = new FormData()
-      body.append('type', form.type)
-      body.append('title', form.title.trim())
-      body.append('album', form.album.trim())
-      body.append('duration', String(Math.round(duration)))
-      body.append('media', mediaFile)
-      if (thumbnailFile) body.append('thumbnail', thumbnailFile)
+      if (editingId) {
+        const updated = await apiFetch(`/music-lab/${editingId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            title: form.title.trim(),
+            artist: form.artist.trim(),
+            album: form.album.trim(),
+          }),
+        })
+        setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)))
+      } else {
+        const body = new FormData()
+        body.append('type', form.type)
+        body.append('title', form.title.trim())
+        body.append('artist', form.artist.trim())
+        body.append('album', form.album.trim())
+        body.append('duration', String(Math.round(duration)))
+        body.append('media', mediaFile)
+        if (thumbnailFile) body.append('thumbnail', thumbnailFile)
 
-      const created = await apiFetch('/music-lab', { method: 'POST', body })
-      setItems((prev) => [created, ...prev])
-      setForm(EMPTY_FORM)
-      setMediaFile(null)
-      setThumbnailFile(null)
-      setDuration(0)
+        const created = await apiFetch('/music-lab', { method: 'POST', body })
+        setItems((prev) => [created, ...prev])
+      }
+      handleCancelEdit()
       e.target.reset()
     } catch (err) {
-      setError(err.message || 'Upload failed')
+      setError(err.message || 'Save failed')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  function handleEditClick(item) {
+    setEditingId(item.id)
+    setForm({
+      type: item.type,
+      title: item.title,
+      artist: item.artist ?? '',
+      album: item.album ?? '',
+    })
+    setError('')
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+    setMediaFile(null)
+    setThumbnailFile(null)
+    setDuration(0)
   }
 
   async function handleDelete(item) {
@@ -114,8 +145,9 @@ export default function AdminMusicLabPage() {
             Type
             <select
               value={form.type}
+              disabled={!!editingId}
               onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5`}
+              className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5 disabled:opacity-50`}
             >
               <option value="video">Video</option>
               <option value="track">Music</option>
@@ -133,6 +165,16 @@ export default function AdminMusicLabPage() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
+            Artist
+            <input
+              type="text"
+              value={form.artist}
+              maxLength={80}
+              onChange={(e) => setForm({ ...form, artist: e.target.value })}
+              className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5`}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
             Album
             <input
               type="text"
@@ -142,39 +184,67 @@ export default function AdminMusicLabPage() {
               className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5`}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Media file ({form.type === 'video' ? 'video' : 'audio'})
-            <input
-              type="file"
-              accept={form.type === 'video' ? 'video/*' : 'audio/*'}
-              onChange={handleMediaChange}
-              className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5 text-xs file:mr-2 file:rounded ${ADMIN_ACCENT_BG} file:border-0 file:px-2 file:py-1 file:text-white ${ADMIN_ACCENT_HOVER_BG}`}
-              required
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            Thumbnail (optional)
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setThumbnailFile(e.target.files?.[0] ?? null)}
-              className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5 text-xs file:mr-2 file:rounded ${ADMIN_ACCENT_BG} file:border-0 file:px-2 file:py-1 file:text-white ${ADMIN_ACCENT_HOVER_BG}`}
-            />
-          </label>
+          {!editingId && (
+            <>
+              <label className="flex flex-col gap-1 text-sm">
+                Media file ({form.type === 'video' ? 'video' : 'audio'})
+                <input
+                  type="file"
+                  accept={form.type === 'video' ? 'video/*' : 'audio/*'}
+                  onChange={handleMediaChange}
+                  className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5 text-xs file:mr-2 file:rounded ${ADMIN_ACCENT_BG} file:border-0 file:px-2 file:py-1 file:text-white ${ADMIN_ACCENT_HOVER_BG}`}
+                  required
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+                Thumbnail (optional)
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setThumbnailFile(e.target.files?.[0] ?? null)
+                  }
+                  className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5 text-xs file:mr-2 file:rounded ${ADMIN_ACCENT_BG} file:border-0 file:px-2 file:py-1 file:text-white ${ADMIN_ACCENT_HOVER_BG}`}
+                />
+              </label>
+            </>
+          )}
         </div>
+        {editingId && (
+          <p className={`mt-2 text-xs ${ADMIN_SECONDARY_TEXT}`}>
+            Editing details only — delete and re-upload to replace the file.
+          </p>
+        )}
         {duration > 0 && (
           <p className={`mt-2 text-xs ${ADMIN_SECONDARY_TEXT}`}>
             Detected duration: {formatDuration(duration)}
           </p>
         )}
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className={`mt-3 rounded px-4 py-2 text-sm font-medium text-white ${ADMIN_ACCENT_BG} ${ADMIN_ACCENT_HOVER_BG} disabled:opacity-50`}
-        >
-          {submitting ? 'Uploading…' : 'Upload'}
-        </button>
+        <div className="mt-3 flex gap-2">
+          <button
+            type="submit"
+            disabled={submitting}
+            className={`rounded px-4 py-2 text-sm font-medium text-white ${ADMIN_ACCENT_BG} ${ADMIN_ACCENT_HOVER_BG} disabled:opacity-50`}
+          >
+            {submitting
+              ? editingId
+                ? 'Saving…'
+                : 'Uploading…'
+              : editingId
+                ? 'Save changes'
+                : 'Upload'}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className={`rounded border px-4 py-2 text-sm font-medium ${ADMIN_CARD_BORDER}`}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
 
       <div
@@ -187,6 +257,7 @@ export default function AdminMusicLabPage() {
             >
               <th className="px-4 py-2 font-medium">Type</th>
               <th className="px-4 py-2 font-medium">Title</th>
+              <th className="px-4 py-2 font-medium">Artist</th>
               <th className="px-4 py-2 font-medium">Album</th>
               <th className="px-4 py-2 font-medium">Duration</th>
               <th className="px-4 py-2 font-medium">Uploaded</th>
@@ -197,7 +268,7 @@ export default function AdminMusicLabPage() {
             {!loading && items.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className={`px-4 py-6 text-center ${ADMIN_SECONDARY_TEXT}`}
                 >
                   No items yet.
@@ -211,10 +282,17 @@ export default function AdminMusicLabPage() {
               >
                 <td className="px-4 py-2 capitalize">{item.type}</td>
                 <td className="px-4 py-2">{item.title}</td>
+                <td className="px-4 py-2">{item.artist}</td>
                 <td className="px-4 py-2">{item.album}</td>
                 <td className="px-4 py-2">{formatDuration(item.duration)}</td>
                 <td className="px-4 py-2">{formatTimestamp(item.createdAt)}</td>
-                <td className="px-4 py-2">
+                <td className="flex gap-3 px-4 py-2">
+                  <button
+                    onClick={() => handleEditClick(item)}
+                    className={ADMIN_ACCENT_TEXT}
+                  >
+                    Edit
+                  </button>
                   <button
                     onClick={() => handleDelete(item)}
                     className="text-red-600"

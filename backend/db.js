@@ -206,6 +206,7 @@ async function initSchema() {
         id SERIAL PRIMARY KEY,
         type TEXT NOT NULL,
         title TEXT NOT NULL,
+        artist TEXT,
         album TEXT,
         duration REAL NOT NULL DEFAULT 0,
         mediaUrl TEXT NOT NULL,
@@ -345,6 +346,17 @@ async function initSchema() {
       }
 
       await client.query('INSERT INTO schema_version (version) VALUES (4)')
+    }
+
+    const versionCheck5 = await client.query(
+      'SELECT version FROM schema_version WHERE version = 5',
+    )
+
+    if (versionCheck5.rows.length === 0) {
+      await client.query(
+        'ALTER TABLE musicLabItems ADD COLUMN IF NOT EXISTS artist TEXT',
+      )
+      await client.query('INSERT INTO schema_version (version) VALUES (5)')
     }
 
     console.log('Database schema initialized')
