@@ -14,6 +14,7 @@ import {
 } from './adminTheme.js'
 
 const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard' },
   { id: 'inquiries', label: 'Inquiries' },
   { id: 'products', label: 'Products' },
   { id: 'projects', label: 'Projects' },

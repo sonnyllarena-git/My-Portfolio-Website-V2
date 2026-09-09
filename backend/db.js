@@ -287,6 +287,15 @@ async function initSchema() {
     `)
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS adminCredentials (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        passwordHash TEXT NOT NULL,
+        updatedAt TEXT NOT NULL,
+        CHECK (id = 1)
+      )
+    `)
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS schema_version (
         id SERIAL PRIMARY KEY,
         version INT NOT NULL UNIQUE,

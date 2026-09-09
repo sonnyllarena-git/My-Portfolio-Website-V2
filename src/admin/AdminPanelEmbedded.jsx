@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import logo from '../components/store/assets/components/sonny store logo.png'
+import AdminDashboardPage from './AdminDashboardPage.jsx'
 import AdminInquiriesPage from './AdminInquiriesPage.jsx'
 import AdminProductsPage from './AdminProductsPage.jsx'
 import AdminProjectsPage from './AdminProjectsPage.jsx'
@@ -30,6 +31,7 @@ import {
 // icon, Start Menu, or Search entry points here. Same real admin login/data as yoursite.com/admin,
 // just rendered inside a desktop Window instead of a full page (h-full, not min-h-screen).
 const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard' },
   { id: 'inquiries', label: 'Inquiries' },
   { id: 'memory-wall', label: 'Memory Wall' },
   { id: 'visitor-arts', label: 'Visitor Arts' },
@@ -41,7 +43,7 @@ const NAV_ITEMS = [
 ]
 
 function AdminPanelShell({ onClose }) {
-  const [view, setView] = useState('inquiries')
+  const [view, setView] = useState('dashboard')
   const { accentHex } = useAdminSettings()
 
   useEffect(() => {
@@ -94,7 +96,9 @@ function AdminPanelShell({ onClose }) {
           </button>
         </header>
         <main className={`flex-1 overflow-y-auto p-6 ${ADMIN_BODY_TEXT}`}>
-          {view === 'inquiries' ? (
+          {view === 'dashboard' ? (
+            <AdminDashboardPage />
+          ) : view === 'inquiries' ? (
             <AdminInquiriesPage />
           ) : view === 'products' ? (
             <AdminProductsPage />

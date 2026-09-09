@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import AdminLogin from './AdminLogin.jsx'
 import AdminLayout from './AdminLayout.jsx'
+import AdminDashboardPage from './AdminDashboardPage.jsx'
 import AdminInquiriesPage from './AdminInquiriesPage.jsx'
 import AdminProductsPage from './AdminProductsPage.jsx'
 import AdminProjectsPage from './AdminProjectsPage.jsx'
@@ -17,7 +18,7 @@ export default function AdminApp() {
   // leftover token, even if one is still technically valid server-side.
   const [loggedIn, setLoggedIn] = useState(false)
   const [sessionExpired, setSessionExpired] = useState(false)
-  const [view, setView] = useState('inquiries')
+  const [view, setView] = useState('dashboard')
 
   useEffect(() => {
     clearToken()
@@ -57,7 +58,9 @@ export default function AdminApp() {
         onNavigate={setView}
         onLogout={handleLogout}
       >
-        {view === 'inquiries' ? (
+        {view === 'dashboard' ? (
+          <AdminDashboardPage />
+        ) : view === 'inquiries' ? (
           <AdminInquiriesPage />
         ) : view === 'products' ? (
           <AdminProductsPage />
