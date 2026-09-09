@@ -69,8 +69,11 @@ function MusicLabApp({ isMinimized = false, onRestore }) {
           ? audioRef.current
           : null
     if (!el) return
-    if (isPlaying) el.play()
-    else el.pause()
+    if (isPlaying) {
+      el.play().catch(() => setIsPlaying(false))
+    } else {
+      el.pause()
+    }
   }, [isPlaying, activeType, activeItem])
 
   useEffect(() => {

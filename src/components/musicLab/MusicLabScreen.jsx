@@ -28,6 +28,7 @@ function MusicLabScreen({
             src={activeItem.mediaSrc}
             poster={activeItem.thumbnailSrc ?? undefined}
             controls
+            playsInline
             className="h-full w-full bg-black object-contain"
             onTimeUpdate={onVideoTimeUpdate}
             onLoadedMetadata={onVideoLoadedMetadata}

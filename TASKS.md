@@ -170,7 +170,19 @@ print dialog — this needed a real stack change (CLAUDE.md §2 updated with exp
   resolve) was fixed by adding `'enterprise'` to `services`' keywords — its response already
   mentions "enterprise systems"/"enterprise application," so it's a genuinely relevant answer, not
   a forced one; confirmed it doesn't regress "do you have experience with enterprise systems" (still
-  a reasonable answer even though it now ties toward `services` over `experience`).
+  a reasonable answer even though it now ties toward `services` over `experience`). Direct fix
+  (2026-09-09, no phase number): Sonny reported the Music Lab video won't play on mobile. Found two
+  real bugs in `MusicLabApp.jsx`/`MusicLabScreen.jsx`: (1) the `<video>` element had no `playsInline`
+  attribute, which on iOS Safari either forces native fullscreen on play or blocks inline playback in
+  some in-app-browser contexts; (2) the play/pause effect called `el.play()` with no `.catch()` — on
+  mobile, a rejected play promise (autoplay-policy block, or an `AbortError` from a fast track switch)
+  is a silently unhandled rejection, and `isPlaying` stayed `true` in React state even though nothing
+  was actually playing, so the UI showed a Pause icon while producing no audio/video with no visible
+  error. Fixed by adding `playsInline` to the `<video>` tag and wrapping `el.play()` in
+  `.catch(() => setIsPlaying(false))` so a blocked/interrupted play attempt honestly resets the UI
+  instead of lying about playback state. Live-verified via the Browser pane's mobile viewport
+  emulation (375×812): confirmed `playsInline` renders on the actual DOM node and, after tapping
+  Play, `video.paused === false` with `currentTime` genuinely advancing.
   **Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
   **Verify command:** `npm run verify`
 
