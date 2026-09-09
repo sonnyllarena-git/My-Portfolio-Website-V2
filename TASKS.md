@@ -244,6 +244,24 @@ mobile's stacked layout (unaffected by either header or sidebar change) still re
 **Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
 **Verify command:** `npm run verify`
 
+Direct fix (2026-09-09, no phase number): Sonny caught two real regressions from the header-sticky
+fix above, from actual screenshots. (1) The header's opaque `bg-[#0b0d12]/95` covered the hero
+background image that used to show through it in the default view — removed it, restoring the
+original transparent look while keeping the header sticky. (2) The sidebar visibly shifted
+position while scrolling — root cause was the `ResizeObserver` reading `entry.contentRect.height`,
+which is the CSS content box only (excludes the header's own `pt-8 pb-6` padding and border), so
+`headerHeight` was undercounting the header's true rendered height; switched to reading
+`el.offsetHeight` inside the observer instead (border-box, matching what's actually visible).
+Separately, even with the correct height, the sidebar's stuck gap (`headerHeight + 16`) didn't
+match the header's real `mb-8` (32px) margin in normal flow, so the sidebar's gap-to-header
+visibly shrank by 16px right as both engaged sticky mid-scroll — fixed by matching the constant to
+32 so the transition from normal flow into "stuck" is pixel-continuous. Live-verified via
+`getBoundingClientRect()` reads at multiple scroll positions (unscrolled, 1 scroll tick, 10 scroll
+ticks): the header-to-sidebar gap holds at exactly 32px throughout with zero jump, and the hero
+background image is visible through the header again.
+**Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
+**Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)

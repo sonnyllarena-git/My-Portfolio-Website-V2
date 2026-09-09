@@ -21,9 +21,7 @@ function ProjectsAppContent() {
   useEffect(() => {
     const el = headerRef.current
     if (!el) return
-    const observer = new ResizeObserver(([entry]) =>
-      setHeaderHeight(entry.contentRect.height),
-    )
+    const observer = new ResizeObserver(() => setHeaderHeight(el.offsetHeight))
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
@@ -50,7 +48,7 @@ function ProjectsAppContent() {
       <div className="mx-auto w-full max-w-6xl px-6">
         <div
           ref={headerRef}
-          className={`border-b border-white/10 bg-[#0b0d12]/95 pt-8 pb-6 backdrop-blur-sm ${
+          className={`border-b border-white/10 pt-8 pb-6 ${
             isMobile ? 'mb-8' : 'sticky top-0 z-20 mb-8'
           }`}
         >
@@ -83,7 +81,7 @@ function ProjectsAppContent() {
             onSelectCategory={setSelectedCategory}
             onSelectProject={setSelectedId}
             isMobile={isMobile}
-            stickyTop={headerHeight + 16}
+            stickyTop={headerHeight + 32}
           />
           <div className={isMobile ? 'flex-1' : 'flex-1 pl-6'}>
             <ProjectsHero project={selectedProject} isMobile={isMobile} />
