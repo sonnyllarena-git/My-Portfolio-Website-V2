@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import GuestAdminLayout from './GuestAdminLayout.jsx'
 import GuestAdminProductsPage from './GuestAdminProductsPage.jsx'
+import GuestAdminProjectsPage from './GuestAdminProjectsPage.jsx'
 import GuestAdminResumeTemplatesPage from './GuestAdminResumeTemplatesPage.jsx'
 
 export default function GuestAdminApp() {
@@ -15,6 +16,8 @@ export default function GuestAdminApp() {
     >
       {view === 'products' ? (
         <GuestAdminProductsPage key={`products-${resetKey}`} />
+      ) : view === 'projects' ? (
+        <GuestAdminProjectsPage key={`projects-${resetKey}`} />
       ) : (
         <GuestAdminResumeTemplatesPage key={`templates-${resetKey}`} />
       )}
