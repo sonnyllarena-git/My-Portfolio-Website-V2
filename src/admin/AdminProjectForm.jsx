@@ -5,6 +5,8 @@ import {
   ADMIN_CARD_BORDER,
   ADMIN_ACCENT_BG,
   ADMIN_ACCENT_HOVER_BG,
+  ADMIN_ACCENT_FILE_BUTTON_BG,
+  ADMIN_ACCENT_FILE_BUTTON_HOVER,
 } from './adminTheme.js'
 
 function splitList(value) {
@@ -179,7 +181,7 @@ export default function AdminProjectForm({
             type="file"
             accept="image/*"
             onChange={handlePhotoChange}
-            className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5 text-xs file:mr-2 file:rounded ${ADMIN_ACCENT_BG} file:border-0 file:px-2 file:py-1 file:text-white ${ADMIN_ACCENT_HOVER_BG}`}
+            className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5 text-xs file:mr-2 file:rounded file:border-0 file:px-2 file:py-1 file:text-white ${ADMIN_ACCENT_FILE_BUTTON_BG} ${ADMIN_ACCENT_FILE_BUTTON_HOVER}`}
           />
         )}
       </div>
