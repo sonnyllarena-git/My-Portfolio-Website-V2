@@ -147,7 +147,12 @@ export default function AdminResumeTemplateForm({
             className="h-20 w-20 rounded object-cover"
           />
         ) : null}
-        <input type="file" accept="image/*" onChange={handleThumbnailChange} />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleThumbnailChange}
+          className={`rounded border ${ADMIN_CARD_BORDER} px-2 py-1.5 text-xs file:mr-2 file:rounded ${ADMIN_ACCENT_BG} file:border-0 file:px-2 file:py-1 file:text-white ${ADMIN_ACCENT_HOVER_BG}`}
+        />
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
