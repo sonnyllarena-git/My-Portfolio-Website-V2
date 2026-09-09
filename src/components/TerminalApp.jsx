@@ -284,7 +284,11 @@ const TerminalApp = forwardRef(function TerminalApp(
 
     if (authStep === 'username') {
       setPendingUsername(raw)
-      setHistory((prev) => [...prev, `${PROMPT}${typedLine}`, 'Password:'])
+      setHistory((prev) => [
+        ...prev,
+        `${PROMPT}${'*'.repeat(typedLine.length)}`,
+        'Password:',
+      ])
       setAuthStep('password')
       return
     }
@@ -348,7 +352,9 @@ const TerminalApp = forwardRef(function TerminalApp(
         <span>{PROMPT}</span>
         <div className="relative flex-1">
           <span aria-hidden="true" className="pl-1">
-            {authStep === 'password' ? '*'.repeat(input.length) : input}
+            {authStep === 'password' || authStep === 'username'
+              ? '*'.repeat(input.length)
+              : input}
             {loadingLine === null && authStep !== 'authenticating' && (
               <span className="terminal-cursor">_</span>
             )}
