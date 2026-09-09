@@ -32,6 +32,7 @@ Click here to send me a detailed message about your project requirements, and I'
       'fast',
       'delivery',
       'deadline',
+      'turnaround',
     ],
     response: `Project timelines vary based on complexity: small websites take 2-4 weeks, mobile apps 4-8 weeks, and complex systems 8-12+ weeks.
 
@@ -47,6 +48,7 @@ For a precise timeline, click here to send me your project details.`,
       'technology',
       'tech',
       'language',
+      'languages',
       'framework',
       'stack',
       'react',
@@ -67,12 +69,13 @@ Want to discuss what fits your project? Click here to chat with me directly.`,
     keywords: [
       'service',
       'services',
-      'do you',
-      'can you',
-      'offer',
       'build',
       'develop',
       'create',
+      'design',
+      'mobile app',
+      'app',
+      'enterprise',
     ],
     response: `I specialize in full stack development, UI/UX design, database design, mobile apps (native and React Native), enterprise systems, and technical consulting.
 
@@ -91,6 +94,8 @@ Let me know what you need — click here to tell me more about your project.`,
       'methodology',
       'steps',
       'approach',
+      'agile',
+      'project management',
     ],
     response: `My process: discovery, planning, design, development, testing, deployment, then ongoing maintenance and support.
 
@@ -111,6 +116,7 @@ Ready to start? Click here to send me your project details.`,
       'available now',
       'urgent',
       'asap',
+      'open slots',
     ],
     response: `I'm actively taking new projects — typical response time is within 24 hours, and a project can usually start 1-2 weeks from agreement.
 
@@ -130,6 +136,8 @@ Click here to reach out about your project timeline.`,
       'hourly',
       'fixed',
       'payment',
+      'reach you',
+      'reach me',
     ],
     response: `I prefer project-based pricing over hourly rates — it's clearer for budgeting and keeps the focus on quality outcomes.
 
@@ -144,11 +152,13 @@ Let me know how I can help!`,
     keywords: [
       'portfolio',
       'projects',
-      'work',
+      'past work',
       'examples',
       'case study',
+      'case studies',
       'past',
       'clients',
+      'have you built',
     ],
     response: `I've built several production-grade applications, including a restaurant POS system, an offline-capable expense tracker mobile app, a dental clinic practice-management system, and an enterprise employee onboarding platform with real-time syncing.
 
@@ -156,6 +166,199 @@ Each project showcases different technologies and expertise — take a look arou
 
 Interested in seeing how I might help your project? Click here to contact me.`,
     cta: 'Contact me about a project',
+  },
+  {
+    id: 'about',
+    label: 'About Sonny',
+    keywords: [
+      'who are you',
+      'about you',
+      'about sonny',
+      'tell me about yourself',
+      'yourself',
+      'background',
+      'bio',
+      'who is sonny',
+      'introduce yourself',
+      'who made this',
+      'who built this',
+      'real developer',
+    ],
+    response: `I'm Sonny Llarena — a Fullstack Developer, IT Specialist, and Social Media Manager based in Batangas, Philippines. I designed and built this entire interactive desktop-style portfolio from scratch.
+
+By day I work as an IT Specialist administering Microsoft 365, Azure, Salesforce, and Jira/Confluence, and I'm also the founder of Faithline Digital Marketing.
+
+Want the full story? Check out the Biography app on this desktop, or click here to reach out directly.`,
+    cta: 'Get in touch',
+  },
+  {
+    id: 'experience',
+    label: 'Experience & Background',
+    keywords: [
+      'experience',
+      'career',
+      'work history',
+      'professional experience',
+      'years of experience',
+      'previous work',
+      'professional background',
+      'coding',
+      'years have you been',
+    ],
+    response: `My background spans full stack web development and IT systems administration. As an IT Specialist, I work hands-on with Microsoft 365, Azure, Salesforce, and Jira/Confluence, plus workflow automation using Power Automate, Zapier, and n8n.
+
+I'm also the founder of Faithline Digital Marketing, applying that same technical background to social media management and content strategy.
+
+Curious how that experience applies to your project? Click here to tell me more.`,
+    cta: 'Discuss my experience',
+  },
+  {
+    id: 'education',
+    label: 'Education & Certifications',
+    keywords: [
+      'education',
+      'degree',
+      'college',
+      'university',
+      'studied',
+      'certification',
+      'certifications',
+      'certified',
+      'qualifications',
+      'credentials',
+    ],
+    response: `I hold a Bachelor of Science in Information Technology from FAITH Colleges.
+
+I've also completed professional training including AWS Cloud Practitioner Fundamentals, Microsoft Azure Fundamentals (AZ-900), ITIL® 4 Foundation, Agile Scrum & Scrum Master Foundations, and Jira Advanced Administration.
+
+Want more detail? Check the Biography app on this desktop, or click here to ask me directly.`,
+    cta: 'Ask me directly',
+  },
+  {
+    id: 'location',
+    label: 'Location & Remote Work',
+    keywords: [
+      'location',
+      'based',
+      'where are you',
+      'timezone',
+      'time zone',
+      'country',
+      'remote work',
+      'work remotely',
+      'philippines',
+    ],
+    response: `I'm based in Batangas, Philippines, and I work remotely with clients around the world — flexible with async communication and scheduling calls across time zones.
+
+Whether you're local or on the other side of the globe, distance isn't a blocker for working together.
+
+Click here to tell me about your project and where you're located.`,
+    cta: 'Tell me about your project',
+  },
+  {
+    id: 'hire',
+    label: 'Hiring & Collaboration',
+    keywords: [
+      'hire you',
+      'hire me',
+      'freelance',
+      'freelancer',
+      'collaborate',
+      'collaboration',
+      'job opportunity',
+      'open to work',
+      'work opportunity',
+      'contract work',
+    ],
+    response: `Yes — I'm open to freelance projects, contract work, and collaborations, whether it's full stack development, UI/UX, mobile apps, or social media/content work through Faithline Digital Marketing.
+
+The best next step is telling me a bit about what you need so I can see if it's a good fit.
+
+Click here to start the conversation.`,
+    cta: 'Start the conversation',
+  },
+  {
+    id: 'support',
+    label: 'Post-Launch Support',
+    keywords: [
+      'support',
+      'maintenance',
+      'after launch',
+      'bug fix',
+      'bugs',
+      'warranty',
+      'revisions',
+      'ongoing support',
+      'post launch',
+      'after the project',
+    ],
+    response: `Every project I deliver includes support after launch — bug fixes, small adjustments, and answering questions as you get used to the new system.
+
+For anything beyond that (new features, larger revisions, ongoing maintenance), I offer that as a separate, clearly-scoped arrangement so it's never a surprise cost.
+
+Want specifics for your project? Click here to ask about a support plan.`,
+    cta: 'Ask about support plans',
+  },
+  {
+    id: 'socialMedia',
+    label: 'Social Media & Marketing',
+    keywords: [
+      'social media',
+      'marketing',
+      'content creation',
+      'digital marketing',
+      'faithline',
+      'content strategy',
+      'branding',
+      'social media management',
+    ],
+    response: `Beyond development, I'm the founder of Faithline Digital Marketing, offering social media management and content creation — strategy, content, and day-to-day management using tools like Canva, Adobe Photoshop, and Premiere Pro.
+
+It pairs well with a new website or app launch, giving you both the product and the audience to bring it to.
+
+Click here to ask about marketing services.`,
+    cta: 'Ask about marketing services',
+  },
+  {
+    id: 'meta',
+    label: 'About This Chat',
+    keywords: [
+      'are you a bot',
+      'are you real',
+      'are you human',
+      'are you ai',
+      'are you an ai',
+      'is this a real person',
+      'chatbot',
+      'virtual assistant',
+      'bot',
+      'real person',
+      'automated',
+      'chatgpt',
+    ],
+    response: `I'm an automated assistant here to answer common questions on Sonny's behalf — pricing, timelines, tech stack, and more — based on keywords in what you type.
+
+I can't hold an open-ended conversation like a full AI, but if I can't answer something, I'll connect you directly with Sonny.
+
+Want to skip straight to a real person? Click here to reach him directly.`,
+    cta: 'Talk to Sonny directly',
+  },
+  {
+    id: 'greeting',
+    label: 'Greeting',
+    keywords: [
+      'hi',
+      'hello',
+      'hey',
+      'hiya',
+      'good morning',
+      'good afternoon',
+      'good evening',
+    ],
+    response: `Hey there! I can help with questions about pricing, timelines, tech, services, hiring, or Sonny's background.
+
+What would you like to know?`,
+    cta: 'See what I can help with',
   },
 ]
 
@@ -165,7 +368,8 @@ export const FALLBACK_RESPONSE = `I didn't quite understand your question. Here 
 - Timelines & availability
 - Technologies & services
 - My development process
-- How to work with me
+- About me, my experience & education
+- Hiring, collaboration & support
 - My portfolio & projects
 
 Or, ask me anything else and I'll do my best to help! If I can't answer, I'll connect you directly with Sonny.`
@@ -174,6 +378,7 @@ export const SUGGESTED_QUESTIONS = [
   { text: 'How much does a project cost?' },
   { text: "What's your development process?" },
   { text: 'What technologies do you use?' },
+  { text: 'Tell me about yourself' },
 ]
 
 export const ANYTHING_ELSE_REPLY =
@@ -289,5 +494,20 @@ export const AUTO_REPLY_PATTERNS = [
     ],
     reply:
       'Thanks for chatting! Feel free to reach out anytime. Have a great day!',
+  },
+  {
+    id: 'uncertain',
+    keywords: [
+      'no',
+      'nah',
+      'not really',
+      'not sure',
+      "i don't know",
+      'idk',
+      'maybe',
+      'dunno',
+    ],
+    reply:
+      "No worries! Feel free to ask about pricing, timelines, tech, or anything else whenever you're ready.",
   },
 ]

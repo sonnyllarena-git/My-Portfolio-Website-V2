@@ -121,8 +121,57 @@ print dialog — this needed a real stack change (CLAUDE.md §2 updated with exp
   brought a one-page resume down to ~220KB. Live-verified via Playwright's `download` event: a real
   `%PDF-`-prefixed file lands with no dialog, named after the visitor (e.g. "Jamie Rivera
   Resume.pdf"), and manually inspected the PDF's rendered page to confirm layout/colors/text are all
-  correct.
-  **Last verified:** 2026-08-31 — `npm run verify` → PASS (51/51 test files, 98/98 tests)
+  correct. Direct fix (2026-09-09, no phase number): Sonny asked to test the Zoom Chat AI
+  assistant and expand its knowledge — live-testing in the browser found the bot only covered 8
+  topics (pricing, timeline, tech, services, process, availability, contact, portfolio) and fell
+  back to a generic "I didn't understand" reply for anything else, including basic questions like
+  "tell me about yourself." Also found a real bug while testing: once a matched answer's
+  multiple-choice follow-up was pending (`ZoomChatApp.jsx`'s `pendingFollowUpRef`), the _next_
+  message typed — even a real, on-topic question — was unconditionally swallowed as an answer to
+  that follow-up and got only "Great! Is there anything else I can help you with?" instead of a
+  real reply. Fixed by reordering `respondActive()` to run `getBotReply()` first and only treat the
+  pending follow-up as answered when the new message doesn't itself match a real category. Added 8
+  new categories to `zoomChatKnowledgeBase.js` (about, experience, education, location, hire,
+  support, socialMedia, meta) grounded in `BiographyApp.jsx`/`contactInfo.js`'s real facts (no
+  invented years-of-experience or pricing numbers), and expanded `FALLBACK_RESPONSE`/
+  `SUGGESTED_QUESTIONS` to surface the new topics — live-verified in the browser end-to-end
+  (pricing → follow-up → a genuine new question now gets answered instead of swallowed; "Tell me
+  about yourself," "Are you available for freelance work?" both now get real, accurate answers).
+  Direct fix (2026-09-09, no phase number): Sonny asked for a longer, more thorough chat session
+  to hunt for remaining repeat-answer/no-answer cases. Wrote a throwaway script importing the real
+  `zoomChatBot.js` matcher and ran ~90 realistic visitor phrasings through it (not just manual
+  browser clicks) — found the `services` category's keywords `'do you'`/`'can you'`/`'offer'` were
+  generic enough to out-score more specific categories on plain yes/no questions, silently stealing
+  matches from pricing/process/availability/portfolio/hire/support (e.g. "do you offer maintenance"
+  answered with the generic services blurb instead of the support one) — this is very likely the
+  root cause of the "same answer every time" feeling. Removed those 3 keywords from `services` and
+  added narrower replacements (`design`, `mobile app`, `app`) so it still catches real services
+  questions. Also upgraded `matchQuestion()` in `zoomChatBot.js` to use the same word-boundary-safe
+  matching `getAutoReply()` already used (`\bkeyword\b` for single-word keywords), fixing false
+  substring hits like `'hi'` inside "hire" and `'develop'` inside "developer"; this incidentally
+  broke `'language'` no longer matching inside "languages" (plural), caught by the same sweep script
+  and fixed by adding the plural forms as explicit keywords (`languages`, `certifications`) rather
+  than reverting the boundary fix. Reordered `respondActive()` in `ZoomChatApp.jsx` so a filler word
+  auto-reply (thanks/ok/bye/no/idk) never fires if the message also matches a real category — e.g.
+  "yes, but how much would that cost" now answers pricing instead of just "Great, anything else?".
+  Added a `greeting` category (hi/hello/hey) and an `uncertain` auto-reply pattern (no/maybe/idk/
+  dunno) for the standalone-filler cases. Live re-verification in the browser (a real multi-turn
+  visitor conversation, not just isolated messages) caught one more real collision the script didn't
+  surface on its own: "do you take contract work" got the exact same canned answer as an unrelated
+  prior question ("can you show me your projects") because `portfolio`'s bare `'work'` keyword was
+  too broad — narrowed to the phrase `'past work'`, confirmed the collision is gone and existing
+  portfolio matches ("can you work with clients overseas", "can i see your past work") still route
+  correctly. Added 3 regression tests to `zoomChatBot.test.js` locking in the about-category match,
+  the word-boundary fix, and the process-vs-services routing fix. Sonny then asked whether the
+  sweep's 5 remaining fallback cases could be fixed — 4 of them ("whats the weather today," a poem
+  request, "whats 2+2," pure gibberish) are genuinely off-topic and were left as fallback on
+  purpose: forcing a category match on those would make the bot dishonest, not smarter. The 5th
+  ("what about for a bigger enterprise system," a stateless follow-up the bot has no memory to
+  resolve) was fixed by adding `'enterprise'` to `services`' keywords — its response already
+  mentions "enterprise systems"/"enterprise application," so it's a genuinely relevant answer, not
+  a forced one; confirmed it doesn't regress "do you have experience with enterprise systems" (still
+  a reasonable answer even though it now ties toward `services` over `experience`).
+  **Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
   **Verify command:** `npm run verify`
 
 ---

@@ -148,14 +148,18 @@ function ZoomChatApp({
   }
 
   function respondActive(trimmed) {
-    const autoReply = getAutoReply(trimmed)
-    if (autoReply) {
-      consecutiveMissesRef.current = 0
-      replyAfterDelay(autoReply)
-      return
+    const reply = getBotReply(trimmed)
+
+    if (!reply.matched) {
+      const autoReply = getAutoReply(trimmed)
+      if (autoReply) {
+        consecutiveMissesRef.current = 0
+        replyAfterDelay(autoReply)
+        return
+      }
     }
 
-    if (pendingFollowUpRef.current) {
+    if (pendingFollowUpRef.current && !reply.matched) {
       const { messageId } = pendingFollowUpRef.current
       pendingFollowUpRef.current = null
       setPendingFollowUpMessageId(null)
@@ -168,7 +172,6 @@ function ZoomChatApp({
       return
     }
 
-    const reply = getBotReply(trimmed)
     if (reply.matched) {
       consecutiveMissesRef.current = 0
       setIsTyping(true)

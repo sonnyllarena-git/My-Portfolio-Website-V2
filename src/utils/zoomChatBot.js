@@ -6,6 +6,11 @@ import {
   AUTO_REPLY_PATTERNS,
 } from '../data/zoomChatKnowledgeBase.js'
 
+function matchesKeyword(message, keyword) {
+  if (keyword.includes(' ')) return message.includes(keyword)
+  return new RegExp(`\\b${keyword}\\b`).test(message)
+}
+
 export function matchQuestion(userInput) {
   const input = userInput.toLowerCase()
   let bestCategory = null
@@ -13,7 +18,7 @@ export function matchQuestion(userInput) {
 
   for (const category of CHAT_CATEGORIES) {
     const score = category.keywords.reduce(
-      (acc, keyword) => (input.includes(keyword) ? acc + 1 : acc),
+      (acc, keyword) => (matchesKeyword(input, keyword) ? acc + 1 : acc),
       0,
     )
     if (score > bestScore) {
@@ -36,11 +41,6 @@ export function getBotReply(userInput) {
     text: FALLBACK_RESPONSE,
     suggestions: SUGGESTED_QUESTIONS,
   }
-}
-
-function matchesKeyword(message, keyword) {
-  if (keyword.includes(' ')) return message.includes(keyword)
-  return new RegExp(`\\b${keyword}\\b`).test(message)
 }
 
 export function getAutoReply(userMessage) {
