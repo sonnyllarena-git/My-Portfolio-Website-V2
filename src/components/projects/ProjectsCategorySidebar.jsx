@@ -29,7 +29,9 @@ function ProjectsCategorySidebar({
   return (
     <div
       className={`shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#141414]/60 text-sm text-white backdrop-blur-sm ${
-        isMobile ? 'max-h-[50vh] w-full' : 'h-[500px] w-72 min-w-[280px]'
+        isMobile
+          ? 'max-h-[50vh] w-full'
+          : 'sticky top-4 h-[500px] w-72 min-w-[280px] self-start'
       }`}
     >
       <div className="scrollbar-black h-full overflow-y-auto p-4">

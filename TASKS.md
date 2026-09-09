@@ -216,6 +216,18 @@ edits from both sessions interleaved in one file), used `git add -p` to stage on
 **Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
 **Verify command:** `npm run verify`
 
+Direct fix (2026-09-09, no phase number): Sonny asked for the Projects app's left-pane Categories
+sidebar to stay in view while scrolling the projects list, instead of scrolling away with the rest
+of the page. `ProjectsApp.jsx` scrolls as one single page (`overflow-y-auto` on its outermost div),
+so the sidebar — a plain flex item next to the hero/more-projects column — scrolled away along with
+everything else. Fixed by making `ProjectsCategorySidebar.jsx`'s wrapper `sticky top-4 self-start`
+on desktop only (mobile keeps its existing stacked `max-h-[50vh]` layout, untouched). Live-verified
+by scrolling the real Projects window from the hero all the way down through every "more projects"
+entry to the last one (SOP Site): the sidebar stayed pinned in place the whole way and released
+naturally at the end of the content, with no change in the mobile layout.
+**Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
+**Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)
