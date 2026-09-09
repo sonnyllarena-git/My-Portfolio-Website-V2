@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import logo from '../components/store/assets/components/sonny store logo.png'
 import AdminInquiriesPage from './AdminInquiriesPage.jsx'
 import AdminProductsPage from './AdminProductsPage.jsx'
+import AdminProjectsPage from './AdminProjectsPage.jsx'
 import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
 import AdminMemoryWallPage from './AdminMemoryWallPage.jsx'
 import AdminVisitorArtsPage from './AdminVisitorArtsPage.jsx'
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { id: 'visitor-arts', label: 'Visitor Arts' },
   { id: 'music-lab', label: 'Music Lab' },
   { id: 'products', label: 'Products' },
+  { id: 'projects', label: 'Projects' },
   { id: 'resume-templates', label: 'Resume Templates' },
   { id: 'settings', label: 'Settings' },
 ]
@@ -96,6 +98,8 @@ function AdminPanelShell({ onClose }) {
             <AdminInquiriesPage />
           ) : view === 'products' ? (
             <AdminProductsPage />
+          ) : view === 'projects' ? (
+            <AdminProjectsPage />
           ) : view === 'resume-templates' ? (
             <AdminResumeTemplatesPage />
           ) : view === 'memory-wall' ? (
