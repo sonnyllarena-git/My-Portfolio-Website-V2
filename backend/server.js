@@ -17,6 +17,7 @@ import musicLabRouter from './routes/musicLab.js'
 import inquiriesRouter from './routes/inquiries.js'
 import requireAuth from './middleware/requireAuth.js'
 import { initSchema } from './db.js'
+import { backupDatabase } from './dbBackup.js'
 
 const uploadsDir = join(dirname(fileURLToPath(import.meta.url)), 'uploads')
 const distDir = join(dirname(fileURLToPath(import.meta.url)), '../dist')
@@ -94,6 +95,10 @@ const port = process.env.PORT || 4000
 async function start() {
   try {
     await initSchema()
+    // Snapshots every content table to backend/data/db-backup.json on every successful start,
+    // so a wiped/reset local database is never more than one `npm run restore-db` away from
+    // its last-known-good state — see LESSONS.md (Data & Persistence, 2026-09-09).
+    await backupDatabase()
     app.listen(port, () => {
       console.log(`Admin portal API listening on port ${port}`)
     })

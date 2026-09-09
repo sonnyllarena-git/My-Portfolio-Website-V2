@@ -319,6 +319,12 @@ async function initSchema() {
     )
 
     if (versionCheck2.rows.length === 0) {
+      // One-time seed — see the schema_version 6 warning below for why this fires loudly.
+      console.warn(
+        '[schema_version 2] Seeding mock gameStats/leaderboardScores/gameRatings data. This ' +
+          'should only happen once, ever, per database. If this database previously had real ' +
+          'arcade play counts, leaderboard scores, or ratings, it just got wiped.',
+      )
       for (const [gameId, totalPlays] of Object.entries(mockPlayCounts)) {
         await client.query(
           `INSERT INTO gameStats (gameId, totalPlays) VALUES ($1, $2)
@@ -359,6 +365,11 @@ async function initSchema() {
     )
 
     if (versionCheck3.rows.length === 0) {
+      console.warn(
+        '[schema_version 3] Seeding mock memoryWallNotes data. This should only happen once, ' +
+          'ever, per database. If this database previously had real memory wall notes, it just ' +
+          'got wiped.',
+      )
       for (const post of memoryWallMockPosts) {
         await client.query(
           'INSERT INTO memoryWallNotes (name, message, rating, createdAt) VALUES ($1, $2, $3, $4)',
@@ -374,6 +385,11 @@ async function initSchema() {
     )
 
     if (versionCheck4.rows.length === 0) {
+      console.warn(
+        '[schema_version 4] Seeding mock blogLikes/blogComments/blogActivity data. This should ' +
+          'only happen once, ever, per database. If this database previously had real blog ' +
+          'likes/comments/activity, it just got wiped.',
+      )
       const { interactionsByPost, activity } = buildBlogMockData()
       const seedTimestamp = new Date().toISOString()
 
@@ -432,6 +448,15 @@ async function initSchema() {
     )
 
     if (versionCheck6.rows.length === 0) {
+      // This migration only ever runs once per database. Seeing it fire is either a genuine
+      // first-time setup (expected) or the database was just wiped/recreated and lost real data
+      // (not expected) — the two look identical from in here, so surface it loudly either way.
+      console.warn(
+        '[schema_version 6] Seeding legacy placeholder project data. This should only happen ' +
+          'once, ever, per database. If this database previously had real project data (admin- ' +
+          'uploaded photos, edits), it just got wiped and that data is gone — this reseeds only ' +
+          'the original placeholder content from src/assets/developer-lab/projects/.',
+      )
       const now = new Date().toISOString()
       for (const seed of loadLegacyProjectSeeds()) {
         const insertResult = await client.query(
@@ -463,6 +488,12 @@ async function initSchema() {
     )
 
     if (versionCheck7.rows.length === 0) {
+      console.warn(
+        '[schema_version 7] Seeding legacy projectCategories data. This should only happen ' +
+          'once, ever, per database. If this database previously had custom project ' +
+          'categories, it just got wiped (though ON CONFLICT DO NOTHING means any surviving ' +
+          'category rows are untouched — only the schema_version reset itself is the tell here).',
+      )
       const now = new Date().toISOString()
       const legacyCategories = [
         'Software Dev',
