@@ -6908,6 +6908,59 @@ asked mid-build to make sure the admin form's fields match what Music Lab actual
 
 ---
 
+## PHASE 110 — CONTACT INQUIRY SYSTEM (GMAIL → ADMIN DASHBOARD)
+
+_Sonny wants the Gmail app's "Send" button to feel real to visitors without needing real email
+delivery — free tier, no SMTP/email-sending service required. Brainstormed the approach: persist
+what the visitor types straight to Postgres (same pattern as Memory Wall/Blog), surface it in a
+new admin "Inquiries" tab, and separately notify Sonny by real email via Resend (free tier, 100/day)
+so he doesn't have to keep the dashboard open to know a message arrived. Confirmed: read/unread
+tracking wanted, spam guard should be a honeypot field + per-IP rate limit (no CAPTCHA), and the
+visitor-facing confirmation should read "Message sent" plus a 24–48 hour response-time expectation._
+
+- [x] **P676** — Backend: added a `contactInquiries` table (`backend/db.js`, with a
+      `createdAt DESC` index matching the pattern from the P674 review) and
+      `backend/routes/inquiries.js` — `POST /` (public, honeypot + 5-per-hour per-IP rate limit,
+      field validation), `GET /` + `PATCH /:id/read` + `DELETE /:id` (all `requireAuth`-gated).
+      Added `app.set('trust proxy', 1)` to `server.js` — without it, Render's reverse proxy makes
+      every request look like it comes from the same IP, silently breaking the rate limit in
+      production. Added `backend/resendClient.js` (plain `fetch` to Resend's REST API, no new npm
+      dependency) — POST fires the email notification fire-and-forget so a Resend outage never
+      blocks the visitor's own request, just gets logged. Documented `ADMIN_USERNAME`/
+      `ADMIN_PASSWORD` (a pre-existing gap from before this table existed) and the 3 new
+      `RESEND_*` vars in `.env.example`.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P677** — Wired `GmailComposeApp.jsx`'s `handleSend` to actually call the new
+      `src/utils/inquiriesApi.js` (using P675's `fetchWithTimeout`) instead of faking success —
+      posts the guest's name/email (already collected by the existing sign-in gate) plus the
+      subject and body. Added a hidden honeypot input matching the backend's expected field, a
+      `sending` disabled-button state, and a real error toast for failures (validation, rate
+      limit, network). Changed the success toast from "Message sent (demo) — real sending is
+      coming soon" to "Message sent — I'll respond within 24–48 hours."
+      **Pass condition:** `npm run verify` passes.
+- [x] **P678** — Added `src/admin/AdminInquiriesPage.jsx`: inbox-style list (unread shown bold
+      with a dot indicator, unread count in the header), click a row to expand the full message
+      inline and mark it read, Delete per row. Wired into both admin surfaces — `AdminLayout.jsx`
+      / `AdminApp.jsx` (standalone `/admin`) and `AdminPanelEmbedded.jsx` (hidden Terminal panel)
+      — as the first nav item and the default view in both, since checking for new messages is
+      the most likely first thing Sonny wants to see.
+      **Pass condition:** `npm run verify` passes.
+- [x] **P679** — Live-verified end to end: `npm run server` restart confirmed
+      `contactInquiries` initializes cleanly; curl confirmed the honeypot returns a fake `201`
+      without inserting a row, an invalid email returns `400`, a valid POST returns `201` with the
+      new row, `GET /api/inquiries` returns `401` unauthenticated, and 6 rapid submissions from
+      the same IP correctly returned `429` starting at request 4 (2 of the 5-per-hour budget had
+      already been consumed by earlier test calls). Server logs confirmed the Resend call fails
+      loudly in the console (`API key is invalid` — expected, no real key configured locally) while
+      the visitor's own request still succeeded, proving the fire-and-forget isolation works. Then
+      drove the actual Gmail UI in the browser end-to-end (sign-in gate → compose → Send) and
+      confirmed the typed message landed in Postgres with the right name/email/subject. All test
+      rows deleted after verification.
+      **Pass condition:** met — confirmed live via curl and a real browser walkthrough, not just
+      code review.
+
+---
+
 ## Backlog — DO NOT START
 
 Anything here is out of scope until Sonny moves it up.

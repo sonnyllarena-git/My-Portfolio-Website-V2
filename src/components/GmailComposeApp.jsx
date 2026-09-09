@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import ZoomChatEmojiPicker from './zoomChat/ZoomChatEmojiPicker.jsx'
+import { submitInquiry } from '../utils/inquiriesApi.js'
 
 const CONTACT_EMAIL = 'llarenasonny@yahoo.com'
 
@@ -79,8 +80,11 @@ function GmailComposeApp({ guest, onLogout = () => {} }) {
   const [sent, setSent] = useState(false)
   const [subject, setSubject] = useState('')
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState('')
   const bodyRef = useRef(null)
   const emojiButtonRef = useRef(null)
+  const honeypotRef = useRef(null)
 
   useEffect(() => {
     if (!emojiPickerOpen) return
@@ -110,9 +114,32 @@ function GmailComposeApp({ guest, onLogout = () => {} }) {
     setEmojiPickerOpen(false)
   }
 
-  function handleSend() {
-    setSent(true)
-    setTimeout(() => setSent(false), 2500)
+  async function handleSend() {
+    if (sending) return
+    const message = bodyRef.current?.innerText.trim() ?? ''
+    if (!subject.trim() || !message) {
+      setSendError('Add a subject and a message before sending.')
+      return
+    }
+    setSending(true)
+    setSendError('')
+    try {
+      await submitInquiry({
+        name: guest?.name ?? '',
+        email: guest?.email ?? '',
+        subject: subject.trim(),
+        message,
+        website: honeypotRef.current?.value ?? '',
+      })
+      setSent(true)
+      setTimeout(() => setSent(false), 3000)
+      setSubject('')
+      if (bodyRef.current) bodyRef.current.textContent = signatureBody(guest)
+    } catch (err) {
+      setSendError(err.message || 'Failed to send — please try again.')
+    } finally {
+      setSending(false)
+    }
   }
 
   function handleDiscard() {
@@ -160,6 +187,17 @@ function GmailComposeApp({ guest, onLogout = () => {} }) {
         placeholder="Subject"
         aria-label="Subject"
         className="shrink-0 border-b border-gray-100 px-4 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-500"
+      />
+
+      {/* Honeypot — hidden from real visitors, but a bot that auto-fills every field trips it. */}
+      <input
+        ref={honeypotRef}
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute -left-[9999px] h-0 w-0 opacity-0"
       />
 
       <div
@@ -266,9 +304,10 @@ function GmailComposeApp({ guest, onLogout = () => {} }) {
           <button
             type="button"
             onClick={handleSend}
-            className="cursor-pointer bg-[#1a73e8] px-6 py-2.5 text-sm font-medium text-white hover:shadow-md"
+            disabled={sending}
+            className="cursor-pointer bg-[#1a73e8] px-6 py-2.5 text-sm font-medium text-white hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Send
+            {sending ? 'Sending…' : 'Send'}
           </button>
           <span
             aria-hidden="true"
@@ -295,7 +334,12 @@ function GmailComposeApp({ guest, onLogout = () => {} }) {
       )}
       {sent && (
         <div className="absolute top-[80%] left-1/2 -translate-x-1/2 rounded bg-black/80 px-3 py-1.5 text-xs text-white shadow-lg">
-          Message sent (demo) — real sending is coming soon
+          Message sent — I&apos;ll respond within 24–48 hours.
+        </div>
+      )}
+      {sendError && (
+        <div className="absolute top-[80%] left-1/2 -translate-x-1/2 rounded bg-red-900/90 px-3 py-1.5 text-xs text-white shadow-lg">
+          {sendError}
         </div>
       )}
     </div>

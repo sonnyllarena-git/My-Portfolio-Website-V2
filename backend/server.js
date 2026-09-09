@@ -12,6 +12,7 @@ import memoryWallRouter from './routes/memoryWall.js'
 import visitorArtsRouter from './routes/visitorArts.js'
 import blogRouter from './routes/blog.js'
 import musicLabRouter from './routes/musicLab.js'
+import inquiriesRouter from './routes/inquiries.js'
 import requireAuth from './middleware/requireAuth.js'
 import { initSchema } from './db.js'
 
@@ -38,6 +39,9 @@ const upload = multer({
 })
 
 const app = express()
+// Render sits behind a reverse proxy — without this, req.ip returns the proxy's own
+// address for every request, breaking per-IP rate limiting (used by the inquiries route).
+app.set('trust proxy', 1)
 // Default body-parser limit (100kb) is too small for a base64 PNG canvas export
 // (Visitor Arts saves) — raised for every route rather than just one, since it's
 // still a modest, sanity-preserving cap, not a real DoS surface.
@@ -52,6 +56,7 @@ app.use('/api/memory-wall', memoryWallRouter)
 app.use('/api/visitor-arts', visitorArtsRouter)
 app.use('/api/blog', blogRouter)
 app.use('/api/music-lab', musicLabRouter)
+app.use('/api/inquiries', inquiriesRouter)
 
 app.post(
   '/api/uploads',

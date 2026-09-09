@@ -14,6 +14,7 @@ import {
 } from './adminTheme.js'
 
 const NAV_ITEMS = [
+  { id: 'inquiries', label: 'Inquiries' },
   { id: 'products', label: 'Products' },
   { id: 'resume-templates', label: 'Resume Templates' },
   { id: 'memory-wall', label: 'Memory Wall' },

@@ -230,6 +230,23 @@ async function initSchema() {
       ON musicLabItems (createdAt DESC)
     `)
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS contactInquiries (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        read BOOLEAN NOT NULL DEFAULT false,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_contactinquiries_created
+      ON contactInquiries (createdAt DESC)
+    `)
+
     const ratingsCount = await client.query('SELECT COUNT(*) FROM gameRatings')
     if (Number(ratingsCount.rows[0].count) === 0) {
       for (const [gameId, seeds] of Object.entries(gameRatingSeeds)) {
