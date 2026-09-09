@@ -8,6 +8,7 @@ function ProjectsCategorySidebar({
   onSelectCategory,
   onSelectProject,
   isMobile = false,
+  stickyTop = 0,
 }) {
   const { categories } = useProjectCategories()
   const [expandedCategory, setExpandedCategory] = useState(null)
@@ -31,8 +32,9 @@ function ProjectsCategorySidebar({
       className={`shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#141414]/60 text-sm text-white backdrop-blur-sm ${
         isMobile
           ? 'max-h-[50vh] w-full'
-          : 'sticky top-4 h-[500px] w-72 min-w-[280px] self-start'
+          : 'sticky h-[500px] w-72 min-w-[280px] self-start'
       }`}
+      style={isMobile ? undefined : { top: stickyTop }}
     >
       <div className="scrollbar-black h-full overflow-y-auto p-4">
         <div className="sticky top-0 z-10 mb-4 bg-[#141414]/80 pb-1 backdrop-blur-sm">

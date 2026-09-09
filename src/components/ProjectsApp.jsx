@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ProjectsCategorySidebar from './projects/ProjectsCategorySidebar.jsx'
 import ProjectsHero from './projects/ProjectsHero.jsx'
 import ProjectsMoreList from './projects/ProjectsMoreList.jsx'
@@ -15,6 +15,18 @@ function ProjectsAppContent() {
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const headerRef = useRef(null)
+  const [headerHeight, setHeaderHeight] = useState(0)
+
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) =>
+      setHeaderHeight(entry.contentRect.height),
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const effectiveSelectedId = selectedId ?? projects[0]?.id ?? null
 
@@ -36,7 +48,12 @@ function ProjectsAppContent() {
       }}
     >
       <div className="mx-auto w-full max-w-6xl px-6">
-        <div className="mb-8 border-b border-white/10 pt-8 pb-6">
+        <div
+          ref={headerRef}
+          className={`border-b border-white/10 bg-[#0b0d12]/95 pt-8 pb-6 backdrop-blur-sm ${
+            isMobile ? 'mb-8' : 'sticky top-0 z-20 mb-8'
+          }`}
+        >
           <div className="text-xs font-semibold tracking-widest text-blue-400 uppercase">
             Official Projects
           </div>
@@ -66,6 +83,7 @@ function ProjectsAppContent() {
             onSelectCategory={setSelectedCategory}
             onSelectProject={setSelectedId}
             isMobile={isMobile}
+            stickyTop={headerHeight + 16}
           />
           <div className={isMobile ? 'flex-1' : 'flex-1 pl-6'}>
             <ProjectsHero project={selectedProject} isMobile={isMobile} />

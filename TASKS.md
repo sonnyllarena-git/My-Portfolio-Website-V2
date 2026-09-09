@@ -228,6 +228,22 @@ naturally at the end of the content, with no change in the mobile layout.
 **Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
 **Verify command:** `npm run verify`
 
+Direct fix (2026-09-09, no phase number): Sonny caught that the sticky sidebar fix above only
+froze the sidebar — the "OFFICIAL PROJECTS / SONNY PROJECTS" header still scrolled away, while the
+sidebar stayed pinned right at the top, so the two drifted apart as soon as you scrolled. Made the
+header `sticky top-0 z-20` too (desktop only), with an opaque `bg-[#0b0d12]/95 backdrop-blur-sm` so
+scrolling content doesn't show through underneath it. Since the sidebar now needs to sit right
+below the header instead of at a fixed `top-4`, and the header's rendered height isn't constant
+(the subtitle can wrap differently if the window is resized narrower), measured the header's real
+height with a `ResizeObserver` in `ProjectsApp.jsx` and passed it down as a `stickyTop` prop to
+`ProjectsCategorySidebar.jsx`, which applies it as an inline `top` style — so the sidebar always
+sits flush below the header regardless of window width, without a hardcoded pixel guess that could
+drift out of sync. Live-verified by scrolling the maximized window from the hero through several
+"more projects" entries: header and sidebar now move as one frozen unit with no gap or overlap, and
+mobile's stacked layout (unaffected by either header or sidebar change) still renders correctly.
+**Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
+**Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)
