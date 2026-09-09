@@ -1,0 +1,6 @@
+Title: SOP Documentation Dashboard
+Description: This is a Standard Operating Procedure (SOP) Health & Compliance Dashboard that tracks the documentation governance, approval status, and lifecycle management of organizational SOPs.
+Tech Stack: Documentation Platform, Dashboard Builder, Workflow Engine, Data Storage, Scanning & Indexing
+Category: Atlassian & Workplace System
+Project Link:
+Tags: Documentation Platform, Dashboard Builder, Workflow Engine, Data Storage, Scanning & Indexing

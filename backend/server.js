@@ -1,8 +1,9 @@
 import express from 'express'
 import multer from 'multer'
+import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, extname } from 'node:path'
-import { existsSync, mkdirSync } from 'node:fs'
+import { uploadToStorage } from './supabaseStorageClient.js'
 import authRouter from './routes/auth.js'
 import productsRouter from './routes/products.js'
 import projectsRouter from './routes/projects.js'
@@ -19,22 +20,12 @@ import requireAuth from './middleware/requireAuth.js'
 import { initSchema } from './db.js'
 import { backupDatabase } from './dbBackup.js'
 
-const uploadsDir = join(dirname(fileURLToPath(import.meta.url)), 'uploads')
 const distDir = join(dirname(fileURLToPath(import.meta.url)), '../dist')
-if (!existsSync(uploadsDir)) mkdirSync(uploadsDir)
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024 // 10MB — a product photo, not video/audio media
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: uploadsDir,
-    filename: (req, file, cb) => {
-      cb(
-        null,
-        `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`,
-      )
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_PHOTO_BYTES },
   fileFilter: (req, file, cb) => {
     cb(null, file.mimetype.startsWith('image/'))
@@ -49,7 +40,6 @@ app.set('trust proxy', 1)
 // (Visitor Arts saves) — raised for every route rather than just one, since it's
 // still a modest, sanity-preserving cap, not a real DoS surface.
 app.use(express.json({ limit: '6mb' }))
-app.use('/uploads', express.static(uploadsDir))
 app.use('/api', authRouter)
 app.use('/api/products', productsRouter)
 app.use('/api/projects', projectsRouter)
@@ -67,10 +57,22 @@ app.post(
   '/api/uploads',
   requireAuth,
   upload.array('photos', 10),
-  (req, res) => {
-    res.status(201).json({
-      urls: (req.files ?? []).map((file) => `/uploads/${file.filename}`),
-    })
+  async (req, res) => {
+    try {
+      const urls = await Promise.all(
+        (req.files ?? []).map((file) =>
+          uploadToStorage(
+            file.buffer,
+            `uploads/${randomUUID()}${extname(file.originalname)}`,
+            file.mimetype,
+          ),
+        ),
+      )
+      res.status(201).json({ urls })
+    } catch (err) {
+      console.error('Error uploading photos to storage:', err)
+      res.status(500).json({ error: 'Upload failed' })
+    }
   },
 )
 

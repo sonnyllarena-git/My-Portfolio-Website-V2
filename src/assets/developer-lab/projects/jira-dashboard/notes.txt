@@ -1,5 +1,6 @@
 Title: Jira Dashboard
-Description: Details coming soon.
-Tech Stack:
+Description: This is a IT Operations & Service Management Dashboard tracking incident and service request performance metrics with SLA compliance monitoring.
+Tech Stack: Jira Cloud Platform, Dashboarding & Reporting
 Category: Atlassian & Workplace System
 Project Link:
+Tags: Jira Cloud Platform, Dashboarding & Reporting

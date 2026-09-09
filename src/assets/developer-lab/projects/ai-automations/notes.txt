@@ -1,5 +1,6 @@
-Title: AI Automations
-Description: Details coming soon.
-Tech Stack:
-Category: AI & Smart System
+Title: Employee Offboarding Automation - N8N
+Description: This automation handles the complete offboarding process for employees who are being removed from Jira. When triggered, it safely deletes a user account while preserving data integrity by reassigning their work items beforehand.
+Tech Stack: N8N, Jira Cloud, Microsoft Teams
+Category: Workflow Automation
 Project Link:
+Tags: N8N, Jira Cloud, Microsoft Teams

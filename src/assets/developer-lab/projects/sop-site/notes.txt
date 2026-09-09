@@ -1,5 +1,6 @@
-Title: SOP Site
-Description: Details coming soon.
-Tech Stack:
-Category: Website and Portal
+Title: Confluence SOP Site
+Description: Confluence SOP Site is a centralized, cloud-hosted knowledge management platform that documents, maintains, and enforces Standard Operating Procedures across the IT Department. It serves as the single source of truth for operational procedures, compliance requirements, and process documentation.
+Tech Stack: Core Platform, Atlassian, Confluence, Page Metadata
+Category: Atlassian & Workplace System
 Project Link:
+Tags: Core Platform, Atlassian, Confluence, Page Metadata

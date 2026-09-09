@@ -1,0 +1,6 @@
+Title: Jira Automation
+Description: This is a Service Request Auto-Classification & Enrichment Automation that triggers when specific service requests are created and automatically processes them based on predefined conditions.
+Tech Stack: Jira Automation Engine
+Category: Workflow Automation
+Project Link:
+Tags: Jira Automation Engine
