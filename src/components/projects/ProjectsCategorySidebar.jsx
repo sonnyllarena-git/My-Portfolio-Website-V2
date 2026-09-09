@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CATEGORIES } from '../../data/projectCategories.js'
+import { useProjectCategories } from '../../hooks/useProjectCategories.js'
 
 function ProjectsCategorySidebar({
   projects,
@@ -9,6 +9,7 @@ function ProjectsCategorySidebar({
   onSelectProject,
   isMobile = false,
 }) {
+  const { categories } = useProjectCategories()
   const [expandedCategory, setExpandedCategory] = useState(null)
 
   function categoryProjects(category) {
@@ -43,7 +44,7 @@ function ProjectsCategorySidebar({
         </div>
         <h3 className="mb-2 font-semibold text-white/70">Categories</h3>
         <div className="space-y-2">
-          {CATEGORIES.map((category) => {
+          {categories.map((category) => {
             const items = categoryProjects(category)
             const isExpanded = expandedCategory === category
             return (

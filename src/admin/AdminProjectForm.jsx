@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { apiFetch } from './api.js'
-import { CATEGORIES } from '../data/projectCategories.js'
+import { useProjectCategories } from '../hooks/useProjectCategories.js'
 import {
   ADMIN_CARD_BORDER,
   ADMIN_ACCENT_BG,
@@ -42,10 +42,12 @@ export default function AdminProjectForm({
   savePayload = defaultSavePayload,
   uploadFile = defaultUploadFile,
 }) {
+  const { categories } = useProjectCategories()
   const [title, setTitle] = useState(project?.title ?? '')
   const [description, setDescription] = useState(project?.description ?? '')
   const [techStack, setTechStack] = useState(project?.techStack ?? '')
-  const [category, setCategory] = useState(project?.category ?? CATEGORIES[0])
+  const [category, setCategory] = useState(project?.category ?? '')
+  const effectiveCategory = category || categories[0] || ''
   const [projectLink, setProjectLink] = useState(project?.projectLink ?? '')
   const [tags, setTags] = useState(project?.tags?.join(', ') ?? '')
   const [photoFile, setPhotoFile] = useState(null)
@@ -81,7 +83,7 @@ export default function AdminProjectForm({
         title,
         description,
         techStack,
-        category,
+        category: effectiveCategory,
         projectLink,
         tags: splitList(tags),
         photoUrl,
@@ -132,11 +134,11 @@ export default function AdminProjectForm({
       <label className="flex flex-col gap-1 text-sm">
         Category
         <select
-          value={category}
+          value={effectiveCategory}
           onChange={(event) => setCategory(event.target.value)}
           className={`rounded border ${ADMIN_CARD_BORDER} px-3 py-2 text-sm`}
         >
-          {CATEGORIES.map((option) => (
+          {categories.map((option) => (
             <option key={option} value={option}>
               {option}
             </option>

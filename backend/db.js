@@ -279,6 +279,14 @@ async function initSchema() {
     `)
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS projectCategories (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS schema_version (
         id SERIAL PRIMARY KEY,
         version INT NOT NULL UNIQUE,
@@ -439,6 +447,31 @@ async function initSchema() {
         ])
       }
       await client.query('INSERT INTO schema_version (version) VALUES (6)')
+    }
+
+    const versionCheck7 = await client.query(
+      'SELECT version FROM schema_version WHERE version = 7',
+    )
+
+    if (versionCheck7.rows.length === 0) {
+      const now = new Date().toISOString()
+      const legacyCategories = [
+        'Software Dev',
+        'Mobile Apps',
+        'AI & Smart System',
+        'Website and Portal',
+        'Atlassian & Workplace System',
+        'Workflow Automation',
+        'IT & Systems Administration',
+      ]
+      for (const name of legacyCategories) {
+        await client.query(
+          `INSERT INTO projectCategories (name, createdAt) VALUES ($1, $2)
+           ON CONFLICT (name) DO NOTHING`,
+          [name, now],
+        )
+      }
+      await client.query('INSERT INTO schema_version (version) VALUES (7)')
     }
 
     console.log('Database schema initialized')
