@@ -7,7 +7,6 @@ import {
   ADMIN_SECONDARY_TEXT,
   ADMIN_ACCENT_BG,
   ADMIN_ACCENT_HOVER_BG,
-  ADMIN_ACCENT_TEXT,
 } from '../admin/adminTheme.js'
 
 async function sandboxUploadFile(file) {
@@ -20,7 +19,6 @@ export default function GuestAdminResumeTemplatesPage() {
     loading,
     add,
     update,
-    remove,
     publish,
   } = useSandboxCollection('/api/resume-templates?published=true', 'TPL')
   const [showForm, setShowForm] = useState(false)
@@ -41,16 +39,6 @@ export default function GuestAdminResumeTemplatesPage() {
   function handleAddClick() {
     setEditingTemplate(null)
     setShowForm(true)
-  }
-
-  function handleEditClick(template) {
-    setEditingTemplate(template)
-    setShowForm(true)
-  }
-
-  function handleDelete(template) {
-    if (!window.confirm(`Delete ${template.name}?`)) return
-    remove(template.code)
   }
 
   function handlePublish(template) {
@@ -97,14 +85,13 @@ export default function GuestAdminResumeTemplatesPage() {
               <th className="px-4 py-2 font-medium">Name</th>
               <th className="px-4 py-2 font-medium">Template</th>
               <th className="px-4 py-2 font-medium">Status</th>
-              <th className="px-4 py-2 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {!loading && templates.length === 0 && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={4}
                   className={`px-4 py-6 text-center ${ADMIN_SECONDARY_TEXT}`}
                 >
                   No templates yet.
@@ -129,26 +116,6 @@ export default function GuestAdminResumeTemplatesPage() {
                   >
                     {template.published ? 'Published' : 'Draft'}
                   </span>
-                </td>
-                <td className="flex gap-3 px-4 py-2">
-                  <button
-                    onClick={() => setPreviewingTemplate(template)}
-                    className={ADMIN_ACCENT_TEXT}
-                  >
-                    Preview
-                  </button>
-                  <button
-                    onClick={() => handleEditClick(template)}
-                    className={ADMIN_ACCENT_TEXT}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(template)}
-                    className="text-red-600"
-                  >
-                    Delete
-                  </button>
                 </td>
               </tr>
             ))}

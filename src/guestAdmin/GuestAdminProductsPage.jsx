@@ -7,7 +7,6 @@ import {
   ADMIN_SECONDARY_TEXT,
   ADMIN_ACCENT_BG,
   ADMIN_ACCENT_HOVER_BG,
-  ADMIN_ACCENT_TEXT,
 } from '../admin/adminTheme.js'
 
 async function sandboxUploadFiles(files) {
@@ -20,7 +19,6 @@ export default function GuestAdminProductsPage() {
     loading,
     add,
     update,
-    remove,
     publish,
   } = useSandboxCollection('/api/products?published=true', 'PROD')
   const [showForm, setShowForm] = useState(false)
@@ -41,16 +39,6 @@ export default function GuestAdminProductsPage() {
   function handleAddClick() {
     setEditingProduct(null)
     setShowForm(true)
-  }
-
-  function handleEditClick(product) {
-    setEditingProduct(product)
-    setShowForm(true)
-  }
-
-  function handleDelete(product) {
-    if (!window.confirm(`Delete ${product.name}?`)) return
-    remove(product.code)
   }
 
   function handlePublish(product) {
@@ -97,14 +85,13 @@ export default function GuestAdminProductsPage() {
               <th className="px-4 py-2 font-medium">Name</th>
               <th className="px-4 py-2 font-medium">Price</th>
               <th className="px-4 py-2 font-medium">Status</th>
-              <th className="px-4 py-2 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {!loading && products.length === 0 && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={4}
                   className={`px-4 py-6 text-center ${ADMIN_SECONDARY_TEXT}`}
                 >
                   No products yet.
@@ -129,26 +116,6 @@ export default function GuestAdminProductsPage() {
                   >
                     {product.published ? 'Published' : 'Draft'}
                   </span>
-                </td>
-                <td className="flex gap-3 px-4 py-2">
-                  <button
-                    onClick={() => setPreviewingProduct(product)}
-                    className={ADMIN_ACCENT_TEXT}
-                  >
-                    Preview
-                  </button>
-                  <button
-                    onClick={() => handleEditClick(product)}
-                    className={ADMIN_ACCENT_TEXT}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product)}
-                    className="text-red-600"
-                  >
-                    Delete
-                  </button>
                 </td>
               </tr>
             ))}
