@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { projects } from '../../data/projectsLibrary.js'
 import { CATEGORIES } from '../../data/projectCategories.js'
 
 function ProjectsCategorySidebar({
+  projects,
   searchTerm,
   onSearchChange,
   onSelectCategory,

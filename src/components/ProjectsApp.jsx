@@ -1,23 +1,31 @@
 import { useState } from 'react'
-import { projects } from '../data/projectsLibrary.js'
 import ProjectsCategorySidebar from './projects/ProjectsCategorySidebar.jsx'
 import ProjectsHero from './projects/ProjectsHero.jsx'
 import ProjectsMoreList from './projects/ProjectsMoreList.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
+import {
+  ProjectsCatalogProvider,
+  useProjectsCatalog,
+} from '../context/ProjectsCatalogContext.jsx'
 import projectsBackground from './projects/assets/Futuristic.png'
 
-function ProjectsApp() {
+function ProjectsAppContent() {
   const isMobile = useIsMobile()
+  const { projects, loading, error } = useProjectsCatalog()
   const [selectedCategory, setSelectedCategory] = useState(null)
-  const [selectedId, setSelectedId] = useState(projects[0]?.id ?? null)
+  const [selectedId, setSelectedId] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+
+  const effectiveSelectedId = selectedId ?? projects[0]?.id ?? null
 
   const filteredProjects = projects.filter(
     (project) =>
       (!selectedCategory || project.category === selectedCategory) &&
       project.title.toLowerCase().includes(searchTerm.trim().toLowerCase()),
   )
-  const selectedProject = projects.find((project) => project.id === selectedId)
+  const selectedProject = projects.find(
+    (project) => project.id === effectiveSelectedId,
+  )
 
   return (
     <div
@@ -40,8 +48,19 @@ function ProjectsApp() {
             media management and end-to-end IT solutions.
           </p>
         </div>
+        {error && (
+          <p className="mb-6 rounded bg-red-500/10 p-3 text-center text-sm text-red-400">
+            {error}
+          </p>
+        )}
+        {!loading && !error && projects.length === 0 && (
+          <p className="mb-6 text-center text-sm text-white/40">
+            No projects published yet.
+          </p>
+        )}
         <div className={`pb-8 ${isMobile ? 'flex flex-col gap-6' : 'flex'}`}>
           <ProjectsCategorySidebar
+            projects={projects}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onSelectCategory={setSelectedCategory}
@@ -52,13 +71,21 @@ function ProjectsApp() {
             <ProjectsHero project={selectedProject} isMobile={isMobile} />
             <ProjectsMoreList
               projects={filteredProjects}
-              selectedId={selectedId}
+              selectedId={effectiveSelectedId}
               onSelect={setSelectedId}
             />
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+function ProjectsApp() {
+  return (
+    <ProjectsCatalogProvider>
+      <ProjectsAppContent />
+    </ProjectsCatalogProvider>
   )
 }
 

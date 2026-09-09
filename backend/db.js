@@ -9,6 +9,8 @@ import { memoryWallSeeds } from './memoryWallSeeds.js'
 import { memoryWallMockPosts } from './memoryWallMockPosts.js'
 import { galleryArtworkSeeds } from './galleryArtworkSeeds.js'
 import { buildBlogMockData } from './blogMockData.js'
+import { loadLegacyProjectSeeds } from './legacyProjectSeeds.js'
+import { generateProjectCode } from './projectCode.js'
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -260,6 +262,23 @@ async function initSchema() {
     }
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS projects (
+        id SERIAL PRIMARY KEY,
+        code TEXT UNIQUE,
+        title TEXT NOT NULL,
+        description TEXT,
+        techStack TEXT,
+        category TEXT,
+        projectLink TEXT,
+        tags TEXT,
+        photoUrl TEXT,
+        published INTEGER NOT NULL DEFAULT 0,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      )
+    `)
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS schema_version (
         id SERIAL PRIMARY KEY,
         version INT NOT NULL UNIQUE,
@@ -389,6 +408,37 @@ async function initSchema() {
         'ALTER TABLE musicLabItems ADD COLUMN IF NOT EXISTS artist TEXT',
       )
       await client.query('INSERT INTO schema_version (version) VALUES (5)')
+    }
+
+    const versionCheck6 = await client.query(
+      'SELECT version FROM schema_version WHERE version = 6',
+    )
+
+    if (versionCheck6.rows.length === 0) {
+      const now = new Date().toISOString()
+      for (const seed of loadLegacyProjectSeeds()) {
+        const insertResult = await client.query(
+          `INSERT INTO projects
+             (title, description, techStack, category, projectLink, tags, photoUrl, published, createdAt, updatedAt)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, 1, $8, $8)
+           RETURNING id`,
+          [
+            seed.title,
+            seed.description,
+            seed.techStack,
+            seed.category,
+            seed.projectLink,
+            JSON.stringify(seed.tags),
+            seed.photoUrl,
+            now,
+          ],
+        )
+        await client.query('UPDATE projects SET code = $1 WHERE id = $2', [
+          generateProjectCode(insertResult.rows[0].id),
+          insertResult.rows[0].id,
+        ])
+      }
+      await client.query('INSERT INTO schema_version (version) VALUES (6)')
     }
 
     console.log('Database schema initialized')

@@ -3,6 +3,7 @@ import AdminLogin from './AdminLogin.jsx'
 import AdminLayout from './AdminLayout.jsx'
 import AdminInquiriesPage from './AdminInquiriesPage.jsx'
 import AdminProductsPage from './AdminProductsPage.jsx'
+import AdminProjectsPage from './AdminProjectsPage.jsx'
 import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
 import AdminMemoryWallPage from './AdminMemoryWallPage.jsx'
 import AdminVisitorArtsPage from './AdminVisitorArtsPage.jsx'
@@ -60,6 +61,8 @@ export default function AdminApp() {
           <AdminInquiriesPage />
         ) : view === 'products' ? (
           <AdminProductsPage />
+        ) : view === 'projects' ? (
+          <AdminProjectsPage />
         ) : view === 'resume-templates' ? (
           <AdminResumeTemplatesPage />
         ) : view === 'memory-wall' ? (

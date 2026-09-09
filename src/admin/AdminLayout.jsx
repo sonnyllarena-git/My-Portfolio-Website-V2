@@ -16,6 +16,7 @@ import {
 const NAV_ITEMS = [
   { id: 'inquiries', label: 'Inquiries' },
   { id: 'products', label: 'Products' },
+  { id: 'projects', label: 'Projects' },
   { id: 'resume-templates', label: 'Resume Templates' },
   { id: 'memory-wall', label: 'Memory Wall' },
   { id: 'visitor-arts', label: 'Visitor Arts' },

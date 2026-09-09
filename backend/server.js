@@ -5,6 +5,7 @@ import { dirname, join, extname } from 'node:path'
 import { existsSync, mkdirSync } from 'node:fs'
 import authRouter from './routes/auth.js'
 import productsRouter from './routes/products.js'
+import projectsRouter from './routes/projects.js'
 import resumeTemplatesRouter from './routes/resumeTemplates.js'
 import leaderboardRouter from './routes/leaderboard.js'
 import ratingsRouter from './routes/ratings.js'
@@ -49,6 +50,7 @@ app.use(express.json({ limit: '6mb' }))
 app.use('/uploads', express.static(uploadsDir))
 app.use('/api', authRouter)
 app.use('/api/products', productsRouter)
+app.use('/api/projects', projectsRouter)
 app.use('/api/resume-templates', resumeTemplatesRouter)
 app.use('/api/leaderboard', leaderboardRouter)
 app.use('/api/ratings', ratingsRouter)
