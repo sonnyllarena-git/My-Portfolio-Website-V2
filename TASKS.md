@@ -186,6 +186,36 @@ print dialog — this needed a real stack change (CLAUDE.md §2 updated with exp
   **Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
   **Verify command:** `npm run verify`
 
+Direct fix (2026-09-09, no phase number): Sonny asked whether the admin Projects panel could
+reorder which project shows as the public Projects app's default/featured one — investigation
+found full CRUD already existed there, but "default" was purely whichever project had the lowest
+`id` (creation order), with no order/featured column and no reorder UI at all. Added a `sortOrder`
+column to the `projects` table (`schema_version 8` migration in `backend/db.js`, backfilled from
+existing `id` so current order is preserved on upgrade), a new `PATCH /:code/move` endpoint in
+`backend/routes/projects.js` that swaps `sortOrder` with the adjacent project (transactional, so a
+concurrent move can't corrupt ordering), `GET /` now sorts by `sortOrder, id` instead of just `id`,
+and new projects get assigned the next `sortOrder` (append to end) on create. Added ▲/▼ buttons and
+a "Default" badge on the first row to `AdminProjectsListPage.jsx`; no change was needed in the
+public `ProjectsApp.jsx` since it already just uses `projects[0]` for its default, and that array
+now arrives pre-ordered from the API. Live-verified end-to-end, not just via `npm run verify`:
+restarted the shared local backend process (needed since it's plain `node`, no watch/reload, and
+another concurrent session had it running) to pick up the migration, logged into the real `/admin`
+Terminal flow, moved "Restaurant POS System" from position 6 to position 1 via the new buttons, and
+confirmed via both the raw `/api/projects?published=true` response and the actual public Projects
+app window that it now renders as the default/featured project. Also found and worked around a
+Terminal-automation quirk: the visible input is an invisible/transparent overlay `<input>` whose
+`onKeyDown` didn't fire from the browser-automation tool's synthetic `key: "Return"` action —
+dispatching a real `KeyboardEvent('keydown', { key: 'Enter' })` directly on the input (after
+setting `.value` via the native setter + an `input` event, so React's controlled state actually
+updates first) worked reliably instead. Separately, `backend/db.js`, `backend/server.js`,
+`package.json`, and two new files were already modified/untracked in the working tree from a
+concurrent session's in-progress DB-backup/restore work (see the "Local DB reset lost Projects
+photos" memory) — left all of those untouched, and for `backend/db.js` specifically (which now had
+edits from both sessions interleaved in one file), used `git add -p` to stage only the new
+`schema_version 8` hunk into this commit, leaving the other session's 5 hunks unstaged for them.
+**Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
+**Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)

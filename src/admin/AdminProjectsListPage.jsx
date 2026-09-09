@@ -76,6 +76,18 @@ export default function AdminProjectsListPage() {
     }
   }
 
+  async function handleMove(project, direction) {
+    try {
+      const reordered = await apiFetch(`/projects/${project.code}/move`, {
+        method: 'PATCH',
+        body: JSON.stringify({ direction }),
+      })
+      setProjects(reordered)
+    } catch (err) {
+      window.alert(err.message || 'Failed to reorder project')
+    }
+  }
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -110,6 +122,7 @@ export default function AdminProjectsListPage() {
             <tr
               className={`border-b ${ADMIN_CARD_BORDER} ${ADMIN_SECONDARY_TEXT}`}
             >
+              <th className="px-4 py-2 font-medium">Order</th>
               <th className="px-4 py-2 font-medium">Code</th>
               <th className="px-4 py-2 font-medium">Title</th>
               <th className="px-4 py-2 font-medium">Category</th>
@@ -120,7 +133,7 @@ export default function AdminProjectsListPage() {
           <tbody>
             {loadError && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-red-600">
+                <td colSpan={6} className="px-4 py-6 text-center text-red-600">
                   Failed to load projects.
                 </td>
               </tr>
@@ -128,18 +141,43 @@ export default function AdminProjectsListPage() {
             {!loading && !loadError && projects.length === 0 && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className={`px-4 py-6 text-center ${ADMIN_SECONDARY_TEXT}`}
                 >
                   No projects yet.
                 </td>
               </tr>
             )}
-            {projects.map((project) => (
+            {projects.map((project, index) => (
               <tr
                 key={project.code}
                 className={`border-b last:border-0 ${ADMIN_CARD_BORDER}`}
               >
+                <td className="px-4 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleMove(project, 'up')}
+                      disabled={index === 0}
+                      aria-label="Move up"
+                      className={`${ADMIN_ACCENT_TEXT} disabled:cursor-not-allowed disabled:opacity-30`}
+                    >
+                      ▲
+                    </button>
+                    <button
+                      onClick={() => handleMove(project, 'down')}
+                      disabled={index === projects.length - 1}
+                      aria-label="Move down"
+                      className={`${ADMIN_ACCENT_TEXT} disabled:cursor-not-allowed disabled:opacity-30`}
+                    >
+                      ▼
+                    </button>
+                    {index === 0 && (
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-2">{project.code}</td>
                 <td className="px-4 py-2">{project.title}</td>
                 <td className="px-4 py-2">{project.category}</td>

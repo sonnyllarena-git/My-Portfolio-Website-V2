@@ -483,6 +483,20 @@ async function initSchema() {
       await client.query('INSERT INTO schema_version (version) VALUES (7)')
     }
 
+    const versionCheck8 = await client.query(
+      'SELECT version FROM schema_version WHERE version = 8',
+    )
+
+    if (versionCheck8.rows.length === 0) {
+      await client.query(
+        'ALTER TABLE projects ADD COLUMN IF NOT EXISTS sortOrder INTEGER',
+      )
+      await client.query(
+        'UPDATE projects SET sortOrder = id WHERE sortOrder IS NULL',
+      )
+      await client.query('INSERT INTO schema_version (version) VALUES (8)')
+    }
+
     console.log('Database schema initialized')
   } finally {
     client.release()

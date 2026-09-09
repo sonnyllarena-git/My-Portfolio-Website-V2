@@ -29,6 +29,7 @@ function deserializeProject(row) {
     projectLink: row.projectlink,
     tags: JSON.parse(row.tags || '[]'),
     photoUrl: row.photourl,
+    sortOrder: row.sortorder ?? row.id,
     published: Boolean(row.published),
     createdAt: row.createdat,
     updatedAt: row.updatedat,
@@ -46,8 +47,8 @@ router.get('/', async (req, res) => {
   try {
     const query =
       req.query.published === 'true'
-        ? 'SELECT * FROM projects WHERE published = 1 ORDER BY id'
-        : 'SELECT * FROM projects ORDER BY id'
+        ? 'SELECT * FROM projects WHERE published = 1 ORDER BY sortOrder, id'
+        : 'SELECT * FROM projects ORDER BY sortOrder, id'
     const result = await pool.query(query)
     res.json(result.rows.map(deserializeProject))
   } catch (err) {
@@ -74,7 +75,17 @@ router.post('/', requireAuth, async (req, res) => {
   try {
     const values = serializeInput(stripImmutableFields(req.body ?? {}))
     const now = new Date().toISOString()
-    const columns = [...PROJECT_FIELDS, 'tags', 'createdAt', 'updatedAt']
+    const nextSortOrder = await pool.query(
+      'SELECT COALESCE(MAX(sortOrder), 0) + 1 AS next FROM projects',
+    )
+    values.sortOrder = nextSortOrder.rows[0].next
+    const columns = [
+      ...PROJECT_FIELDS,
+      'tags',
+      'sortOrder',
+      'createdAt',
+      'updatedAt',
+    ]
 
     const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ')
     const columnsList = columns.join(', ')
@@ -157,6 +168,56 @@ router.patch('/:code/publish', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Error publishing project:', err)
     res.status(500).json({ error: 'Failed to publish project' })
+  }
+})
+
+router.patch('/:code/move', requireAuth, async (req, res) => {
+  const { direction } = req.body ?? {}
+  if (direction !== 'up' && direction !== 'down') {
+    return res.status(400).json({ error: 'direction must be "up" or "down"' })
+  }
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const { rows } = await client.query(
+      'SELECT id, code, sortOrder FROM projects ORDER BY sortOrder, id FOR UPDATE',
+    )
+    const index = rows.findIndex((row) => row.code === req.params.code)
+    if (index === -1) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'Project not found' })
+    }
+    const swapIndex = direction === 'up' ? index - 1 : index + 1
+    if (swapIndex < 0 || swapIndex >= rows.length) {
+      await client.query('ROLLBACK')
+      return res
+        .status(400)
+        .json({ error: 'Cannot move further in that direction' })
+    }
+
+    const current = rows[index]
+    const neighbor = rows[swapIndex]
+    await client.query('UPDATE projects SET sortOrder = $1 WHERE id = $2', [
+      neighbor.sortorder,
+      current.id,
+    ])
+    await client.query('UPDATE projects SET sortOrder = $1 WHERE id = $2', [
+      current.sortorder,
+      neighbor.id,
+    ])
+    await client.query('COMMIT')
+
+    const result = await pool.query(
+      'SELECT * FROM projects ORDER BY sortOrder, id',
+    )
+    res.json(result.rows.map(deserializeProject))
+  } catch (err) {
+    await client.query('ROLLBACK')
+    console.error('Error reordering project:', err)
+    res.status(500).json({ error: 'Failed to reorder project' })
+  } finally {
+    client.release()
   }
 })
 
