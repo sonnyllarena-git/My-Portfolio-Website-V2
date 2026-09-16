@@ -87,6 +87,7 @@ function ProjectsMoreList({ projects, selectedId, onSelect }) {
                 <img
                   src={project.photoSrc}
                   alt=""
+                  loading="lazy"
                   className="h-20 w-28 shrink-0 rounded object-cover"
                 />
               ) : (

@@ -286,6 +286,37 @@ clicking one correctly advances into the resume builder form.
 **Last verified:** 2026-09-16 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
 **Verify command:** `npm run verify`
 
+Direct fix (2026-09-16, no phase number): Sonny reported the site "feels slow on every first
+visit, especially loading Resume and Resume Generator" and asked for a general load-performance
+pass. Investigated first rather than guessing — confirmed via `npm run build` output that the
+entire app shipped as ONE 2.5MB / 731KB-gzip JS bundle, because `src/App.jsx` statically imported
+`Desktop.jsx`, which statically imported all 30 desktop apps (including the three.js/
+`@react-three/fiber` Tech Stack scene) plus `html2canvas-pro`/`jspdf` inside the Resume Generator —
+meaning every visitor downloaded every app's code, including apps they'd never open, before the
+boot screen could even render. Fixed with `React.lazy()` + `Suspense` (built into React, no new
+dependency, per CLAUDE.md's stack-lock rule): converted all 30 app imports in `Desktop.jsx` to
+`lazy()`, wrapped each one's mount point in its own `Suspense` boundary (so a window's chrome
+renders immediately and only its body shows a brief "Loading…" fallback), fixed the taskbar's
+live window-preview thumbnails (`TaskbarPreview.jsx`) with the same pattern since they mount the
+same lazy components independently, and lazy-loaded `Desktop` itself from `App.jsx` (with a
+background `import()` prefetch kicked off during the boot screen so it's warm by the time sign-in
+happens). Moved `ResumeLivePreview.jsx`'s top-level `html2canvas-pro`/`jspdf` imports to a dynamic
+`import()` inside the Download-PDF handler, since those are only needed on that one click. Added
+`loading="lazy"` to below-the-fold thumbnail images in Projects/Store/Games catalogs. Result,
+measured via `npm run build`: the initial JS bundle dropped from 2,519.83 kB / 731.56 kB-gzip to
+283.96 kB / 80.39 kB-gzip (about 89% smaller) — every other app (including the 1MB three.js Tech
+Stack chunk and the 648KB combined PDF-export libraries) now loads only when its window opens.
+Live-verified in the browser: no console errors across the whole session, and specifically
+exercised the three riskiest conversions — Tech Stack's three.js canvas (heaviest chunk), Blog's
+render-prop `Window` pattern, and Terminal's `ref`-forwarding (`terminalHandleRef`) — all rendered
+and behaved identically to before. Did not touch the largest static media files (97MB Contact Info
+background video, 16MB boot-screen video, 1–2MB wallpaper JPEGs) since compressing them needs
+`ffmpeg`/an image compressor, neither of which is installed on this machine — flagged to Sonny as
+a follow-up requiring either a local tool install or pre-compressed replacement files.
+**Last verified:** 2026-09-16 — `npm run verify` → PASS (49/49 test files, 92/92 tests); live
+browser walkthrough of Resume Generator, Tech Stack, Blog, and Terminal with zero console errors.
+**Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)

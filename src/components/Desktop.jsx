@@ -1,15 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { desktopIcons } from '../data/desktopIcons.js'
 import sIcon from '../assets/icons/S icon.png'
 import DesktopIcon from './DesktopIcon.jsx'
 import Window from './Window.jsx'
-import ResumeWindow from './ResumeWindow.jsx'
-import ThisPCWindow from './ThisPCWindow.jsx'
-import DeveloperLabWindow from './DeveloperLabWindow.jsx'
-import ContactInfoApp from './ContactInfoApp.jsx'
-import BiographyApp from './BiographyApp.jsx'
-import TechStackApp from './techStack/TechStackApp.jsx'
-import TechStackMobileGrid from './techStack/TechStackMobileGrid.jsx'
 import GmailGuestGate from './GmailGuestGate.jsx'
 import GmailLoadingScreen from './GmailLoadingScreen.jsx'
 import GamesNameGate from './games/GamesNameGate.jsx'
@@ -18,25 +11,9 @@ import { useGames } from '../context/GamesContext.jsx'
 import { useBlog } from '../context/BlogContext.jsx'
 import BlogNameGate from './blog/BlogNameGate.jsx'
 import BlogLoadingScreen from './blog/BlogLoadingScreen.jsx'
-import BlogApp from './BlogApp.jsx'
-import GmailComposeApp from './GmailComposeApp.jsx'
-import PaintApp from './PaintApp.jsx'
-import VisitorArtsApp from './VisitorArtsApp.jsx'
-import MemoryWallApp from './MemoryWallApp.jsx'
-import GamesApp from './GamesApp.jsx'
-import SettingsApp from './SettingsApp.jsx'
-import MusicLabApp from './MusicLabApp.jsx'
-import ZoomChatApp from './ZoomChatApp.jsx'
-import ProjectsApp from './ProjectsApp.jsx'
-import StoreApp from './StoreApp.jsx'
-import TerminalApp from './TerminalApp.jsx'
-import ResumeGeneratorApp from './resumeGenerator/ResumeGeneratorApp.jsx'
-import GuestAdminApp from '../guestAdmin/GuestAdminApp.jsx'
-import AdminPanelEmbedded from '../admin/AdminPanelEmbedded.jsx'
 import AppGlyph from './icons/AppGlyph.jsx'
 import ContextMenu from './ContextMenu.jsx'
 import Taskbar from './Taskbar.jsx'
-import PowerTransitionOverlay from './PowerTransitionOverlay.jsx'
 import ExplorerBody from './explorer/ExplorerBody.jsx'
 import ResumePage from './ResumePage.jsx'
 import { rectsIntersect } from '../utils/geometry.js'
@@ -58,7 +35,47 @@ import {
   folders as devFolders,
 } from '../data/developerLabLocations.js'
 
+// Each desktop app is its own chunk — a first visit only pays for the boot
+// screen + desktop shell, not for every app a visitor may never open.
+const ResumeWindow = lazy(() => import('./ResumeWindow.jsx'))
+const ThisPCWindow = lazy(() => import('./ThisPCWindow.jsx'))
+const DeveloperLabWindow = lazy(() => import('./DeveloperLabWindow.jsx'))
+const ContactInfoApp = lazy(() => import('./ContactInfoApp.jsx'))
+const BiographyApp = lazy(() => import('./BiographyApp.jsx'))
+const TechStackApp = lazy(() => import('./techStack/TechStackApp.jsx'))
+const TechStackMobileGrid = lazy(
+  () => import('./techStack/TechStackMobileGrid.jsx'),
+)
+const BlogApp = lazy(() => import('./BlogApp.jsx'))
+const GmailComposeApp = lazy(() => import('./GmailComposeApp.jsx'))
+const PaintApp = lazy(() => import('./PaintApp.jsx'))
+const VisitorArtsApp = lazy(() => import('./VisitorArtsApp.jsx'))
+const MemoryWallApp = lazy(() => import('./MemoryWallApp.jsx'))
+const GamesApp = lazy(() => import('./GamesApp.jsx'))
+const SettingsApp = lazy(() => import('./SettingsApp.jsx'))
+const MusicLabApp = lazy(() => import('./MusicLabApp.jsx'))
+const ZoomChatApp = lazy(() => import('./ZoomChatApp.jsx'))
+const ProjectsApp = lazy(() => import('./ProjectsApp.jsx'))
+const StoreApp = lazy(() => import('./StoreApp.jsx'))
+const TerminalApp = lazy(() => import('./TerminalApp.jsx'))
+const ResumeGeneratorApp = lazy(
+  () => import('./resumeGenerator/ResumeGeneratorApp.jsx'),
+)
+const GuestAdminApp = lazy(() => import('../guestAdmin/GuestAdminApp.jsx'))
+const AdminPanelEmbedded = lazy(() => import('../admin/AdminPanelEmbedded.jsx'))
+const PowerTransitionOverlay = lazy(
+  () => import('./PowerTransitionOverlay.jsx'),
+)
+
 const CLOSE_ANIMATION_MS = 180
+
+function AppLoadingFallback() {
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-[#0b0d12] text-sm text-white/50">
+      Loading…
+    </div>
+  )
+}
 
 const WINDOW_PREVIEW_SIZES = {
   gmail: [1000, 550],
@@ -481,27 +498,33 @@ function Desktop({ onExitToBoot }) {
           const cascadeOffset =
             openWindows.slice(0, index).filter((o) => o.id === w.id).length * 28
           if (w.id === 'resume')
-            return <ResumeWindow key={w.instanceId} {...shared} />
+            return (
+              <Suspense key={w.instanceId} fallback={<AppLoadingFallback />}>
+                <ResumeWindow {...shared} />
+              </Suspense>
+            )
           if (w.id === 'this-pc')
             return (
-              <ThisPCWindow
-                key={w.instanceId}
-                {...shared}
-                cascadeOffset={cascadeOffset}
-                onOpenNewWindow={() => openNewInstance('this-pc')}
-                onOpenApp={handleIconOpen}
-              />
+              <Suspense key={w.instanceId} fallback={<AppLoadingFallback />}>
+                <ThisPCWindow
+                  {...shared}
+                  cascadeOffset={cascadeOffset}
+                  onOpenNewWindow={() => openNewInstance('this-pc')}
+                  onOpenApp={handleIconOpen}
+                />
+              </Suspense>
             )
           if (w.id === 'developer-lab')
             return (
-              <DeveloperLabWindow
-                key={w.instanceId}
-                {...shared}
-                cascadeOffset={cascadeOffset}
-                onOpenNewWindow={() => openNewInstance('developer-lab')}
-                onOpenProjects={() => handleIconOpen('projects')}
-                onOpenApp={handleIconOpen}
-              />
+              <Suspense key={w.instanceId} fallback={<AppLoadingFallback />}>
+                <DeveloperLabWindow
+                  {...shared}
+                  cascadeOffset={cascadeOffset}
+                  onOpenNewWindow={() => openNewInstance('developer-lab')}
+                  onOpenProjects={() => handleIconOpen('projects')}
+                  onOpenApp={handleIconOpen}
+                />
+              </Suspense>
             )
           if (w.id === 'projects') {
             return (
@@ -513,7 +536,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <ProjectsApp />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <ProjectsApp />
+                </Suspense>
               </Window>
             )
           }
@@ -559,14 +584,16 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1000}
                 defaultHeight={550}
               >
-                <GmailComposeApp
-                  guest={gmailGuest}
-                  onLogout={() => {
-                    setGmailGuest(null)
-                    shared.onClose()
-                    openApp('gmail-login')
-                  }}
-                />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <GmailComposeApp
+                    guest={gmailGuest}
+                    onLogout={() => {
+                      setGmailGuest(null)
+                      shared.onClose()
+                      openApp('gmail-login')
+                    }}
+                  />
+                </Suspense>
               </Window>
             )
           }
@@ -580,7 +607,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1020}
                 defaultHeight={900}
               >
-                <ContactInfoApp />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <ContactInfoApp />
+                </Suspense>
               </Window>
             )
           }
@@ -594,7 +623,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={900}
                 defaultHeight={700}
               >
-                <BiographyApp />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <BiographyApp />
+                </Suspense>
               </Window>
             )
           }
@@ -608,7 +639,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1000}
                 defaultHeight={700}
               >
-                <TechStackApp isMinimized={shared.isMinimized} />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <TechStackApp isMinimized={shared.isMinimized} />
+                </Suspense>
               </Window>
             )
           }
@@ -622,9 +655,11 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={900}
                 defaultHeight={600}
               >
-                <PaintApp
-                  onOpenGallery={() => handleIconOpen('visitor-arts')}
-                />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <PaintApp
+                    onOpenGallery={() => handleIconOpen('visitor-arts')}
+                  />
+                </Suspense>
               </Window>
             )
           }
@@ -638,7 +673,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <VisitorArtsApp onOpenPaint={() => handleIconOpen('paint')} />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <VisitorArtsApp onOpenPaint={() => handleIconOpen('paint')} />
+                </Suspense>
               </Window>
             )
           }
@@ -652,7 +689,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={950}
                 defaultHeight={650}
               >
-                <MemoryWallApp />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <MemoryWallApp />
+                </Suspense>
               </Window>
             )
           }
@@ -666,7 +705,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <StoreApp />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <StoreApp />
+                </Suspense>
               </Window>
             )
           }
@@ -680,7 +721,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <ResumeGeneratorApp />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <ResumeGeneratorApp />
+                </Suspense>
               </Window>
             )
           }
@@ -694,7 +737,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <GuestAdminApp />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <GuestAdminApp />
+                </Suspense>
               </Window>
             )
           }
@@ -708,7 +753,9 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1100}
                 defaultHeight={700}
               >
-                <AdminPanelEmbedded onClose={shared.onClose} />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <AdminPanelEmbedded onClose={shared.onClose} />
+                </Suspense>
               </Window>
             )
           }
@@ -729,12 +776,16 @@ function Desktop({ onExitToBoot }) {
                 square
                 titleBarClassName="bg-[#f3f3f3] text-black"
               >
-                <TerminalApp
-                  ref={terminalHandleRef}
-                  onOpenApp={handleIconOpen}
-                  onPowerAction={setPowerAction}
-                  isActive={index === openWindows.length - 1 && !w.isMinimized}
-                />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <TerminalApp
+                    ref={terminalHandleRef}
+                    onOpenApp={handleIconOpen}
+                    onPowerAction={setPowerAction}
+                    isActive={
+                      index === openWindows.length - 1 && !w.isMinimized
+                    }
+                  />
+                </Suspense>
               </Window>
             )
           }
@@ -748,14 +799,16 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <GamesApp
-                  onOpenGmail={() => handleIconOpen('gmail')}
-                  onOpenZoomChat={() => handleIconOpen('zoom-chat')}
-                  onLogout={() => {
-                    logout()
-                    shared.onClose()
-                  }}
-                />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <GamesApp
+                    onOpenGmail={() => handleIconOpen('gmail')}
+                    onOpenZoomChat={() => handleIconOpen('zoom-chat')}
+                    onLogout={() => {
+                      logout()
+                      shared.onClose()
+                    }}
+                  />
+                </Suspense>
               </Window>
             )
           }
@@ -769,12 +822,14 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <SettingsApp
-                  key={w.tab ?? 'system'}
-                  initialTab={w.tab}
-                  onOpenGmail={() => handleIconOpen('gmail')}
-                  onOpenZoomChat={() => handleIconOpen('zoom-chat')}
-                />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <SettingsApp
+                    key={w.tab ?? 'system'}
+                    initialTab={w.tab}
+                    onOpenGmail={() => handleIconOpen('gmail')}
+                    onOpenZoomChat={() => handleIconOpen('zoom-chat')}
+                  />
+                </Suspense>
               </Window>
             )
           }
@@ -788,10 +843,12 @@ function Desktop({ onExitToBoot }) {
                 defaultWidth={1200}
                 defaultHeight={800}
               >
-                <MusicLabApp
-                  isMinimized={shared.isMinimized}
-                  onRestore={shared.onRestore}
-                />
+                <Suspense fallback={<AppLoadingFallback />}>
+                  <MusicLabApp
+                    isMinimized={shared.isMinimized}
+                    onRestore={shared.onRestore}
+                  />
+                </Suspense>
               </Window>
             )
           }
@@ -805,17 +862,19 @@ function Desktop({ onExitToBoot }) {
                 defaultHeight={800}
               >
                 {({ toggleMaximize }) => (
-                  <BlogApp
-                    onOpenContactInfo={() => handleIconOpen('contact-info')}
-                    onOpenGames={() => handleIconOpen('games')}
-                    onOpenGmail={() => handleIconOpen('gmail')}
-                    onMinimize={shared.onMinimizeToggle}
-                    onMaximize={toggleMaximize}
-                    onLogout={() => {
-                      blogLogout()
-                      shared.onClose()
-                    }}
-                  />
+                  <Suspense fallback={<AppLoadingFallback />}>
+                    <BlogApp
+                      onOpenContactInfo={() => handleIconOpen('contact-info')}
+                      onOpenGames={() => handleIconOpen('games')}
+                      onOpenGmail={() => handleIconOpen('gmail')}
+                      onMinimize={shared.onMinimizeToggle}
+                      onMaximize={toggleMaximize}
+                      onLogout={() => {
+                        blogLogout()
+                        shared.onClose()
+                      }}
+                    />
+                  </Suspense>
                 )}
               </Window>
             )
@@ -830,13 +889,15 @@ function Desktop({ onExitToBoot }) {
                 defaultHeight={600}
               >
                 {({ toggleMaximize, isMaximized }) => (
-                  <ZoomChatApp
-                    onClose={shared.onClose}
-                    onMinimize={shared.onMinimizeToggle}
-                    onMaximize={toggleMaximize}
-                    isMaximized={isMaximized}
-                    onOpenGmail={() => handleIconOpen('gmail')}
-                  />
+                  <Suspense fallback={<AppLoadingFallback />}>
+                    <ZoomChatApp
+                      onClose={shared.onClose}
+                      onMinimize={shared.onMinimizeToggle}
+                      onMaximize={toggleMaximize}
+                      isMaximized={isMaximized}
+                      onOpenGmail={() => handleIconOpen('gmail')}
+                    />
+                  </Suspense>
                 )}
               </Window>
             )
@@ -968,10 +1029,12 @@ function Desktop({ onExitToBoot }) {
         onPowerAction={setPowerAction}
       />
       {powerAction && (
-        <PowerTransitionOverlay
-          action={powerAction}
-          onComplete={onExitToBoot}
-        />
+        <Suspense fallback={null}>
+          <PowerTransitionOverlay
+            action={powerAction}
+            onComplete={onExitToBoot}
+          />
+        </Suspense>
       )}
       {gamesGateOpen && (
         <GamesNameGate

@@ -1,7 +1,5 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import html2canvas from 'html2canvas-pro'
-import jsPDF from 'jspdf'
 import { useResumeGenerator } from './ResumeGeneratorContext.jsx'
 import { RESUME_TEMPLATES } from './templates/index.js'
 import { sampleResumeData } from './templates/sampleResumeData.js'
@@ -68,6 +66,10 @@ function ResumeLivePreview({ onChangeTemplate }) {
     if (!previewRef.current) return
     setDownloading(true)
     try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas-pro'),
+        import('jspdf'),
+      ])
       const canvas = await html2canvas(previewRef.current, {
         scale: 2,
         useCORS: true,

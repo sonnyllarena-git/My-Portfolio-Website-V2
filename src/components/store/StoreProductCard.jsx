@@ -46,6 +46,7 @@ function StoreProductCard({ product, onSelect }) {
           src={product.image}
           alt={product.name}
           onClick={() => onSelect(product.id)}
+          loading="lazy"
           className="aspect-square w-full cursor-pointer object-cover transition-transform duration-200 hover:scale-105"
         />
       </div>

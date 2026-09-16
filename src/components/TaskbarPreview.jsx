@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { motion } from 'framer-motion'
 
 const PREVIEW_WIDTH = 200
@@ -30,7 +31,7 @@ function TaskbarPreview({ label, content, naturalWidth, naturalHeight }) {
               transformOrigin: 'top left',
             }}
           >
-            {content}
+            <Suspense fallback={null}>{content}</Suspense>
           </div>
         </div>
       )}

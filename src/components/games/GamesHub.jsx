@@ -76,6 +76,7 @@ function GameCard({
         <img
           src={game.thumbnail}
           alt={game.title}
+          loading="lazy"
           className="h-full w-full object-cover object-top"
         />
       </div>
