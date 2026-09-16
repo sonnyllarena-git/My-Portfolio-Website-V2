@@ -11,6 +11,8 @@ import { galleryArtworkSeeds } from './galleryArtworkSeeds.js'
 import { buildBlogMockData } from './blogMockData.js'
 import { loadLegacyProjectSeeds } from './legacyProjectSeeds.js'
 import { generateProjectCode } from './projectCode.js'
+import { resumeTemplateSeeds } from './resumeTemplateSeeds.js'
+import { generateTemplateCode } from './resumeTemplateCode.js'
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -526,6 +528,37 @@ async function initSchema() {
         'UPDATE projects SET sortOrder = id WHERE sortOrder IS NULL',
       )
       await client.query('INSERT INTO schema_version (version) VALUES (8)')
+    }
+
+    const versionCheck9 = await client.query(
+      'SELECT version FROM schema_version WHERE version = 9',
+    )
+
+    if (versionCheck9.rows.length === 0) {
+      console.warn(
+        '[schema_version 9] Seeding the built-in resume templates as published rows. This ' +
+          'should only happen once, ever, per database. If this database previously had admin- ' +
+          'authored resume templates, it just got wiped — this reseeds only the original ' +
+          'coded templates from src/components/resumeGenerator/templates/.',
+      )
+      const now = new Date().toISOString()
+      for (const seed of resumeTemplateSeeds) {
+        const insertResult = await client.query(
+          `INSERT INTO resumeTemplates
+             (templateKey, name, description, accentHex, published, createdAt, updatedAt)
+           VALUES ($1, $2, $3, $4, 1, $5, $5)
+           RETURNING id`,
+          [seed.templateKey, seed.name, seed.description, seed.accentHex, now],
+        )
+        await client.query(
+          'UPDATE resumeTemplates SET code = $1 WHERE id = $2',
+          [
+            generateTemplateCode(insertResult.rows[0].id),
+            insertResult.rows[0].id,
+          ],
+        )
+      }
+      await client.query('INSERT INTO schema_version (version) VALUES (9)')
     }
 
     console.log('Database schema initialized')

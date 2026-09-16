@@ -262,6 +262,30 @@ background image is visible through the header again.
 **Last verified:** 2026-09-09 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
 **Verify command:** `npm run verify`
 
+Direct fix (2026-09-16, no phase number): Sonny asked to fix the Resume Generator so a template
+could be added and saved to the database without being lost. Live-tested the real `/admin`
+Resume Templates page (not the "Admin Demo" desktop icon, which is an intentionally non-persistent
+guest sandbox — `GuestAdminResumeTemplatesPage.jsx`/`useSandboxCollection.js` never call the API by
+design) and confirmed `POST`/`PUT`/`PATCH publish`/`DELETE` all genuinely persist to the
+`resumeTemplates` Postgres table already — that CRUD path was not broken. The real bug: the table
+had zero rows, so the visitor-facing Resume Generator's template picker
+(`TemplatePickerScreen.jsx`) showed "No resume templates are available yet" for every visitor —
+confirmed live in the browser. Added `backend/resumeTemplateSeeds.js` (matching the existing
+seed-file convention) and a `schema_version 9` migration in `backend/db.js` that seeds the 4
+coded templates (`classic`, `office-assistant`, `engineer-sidebar`, `sales-sidebar` — the exact
+keys `src/components/resumeGenerator/templates/index.js` already renders) as published rows, so
+they exist in the database from first boot instead of depending on someone remembering to add them
+by hand. Also found and fixed a real second bug while verifying live: `deserializeTemplate` in
+`backend/routes/resumeTemplates.js` returned raw Postgres rows unchanged, so the lowercase-folded
+columns (`templatekey`, `thumbnailurl`, `accenthex` — same identifier-folding gotcha as
+`deserializeProject`) never got re-serialized to the camelCase keys the frontend reads; every
+template card rendered with the gray fallback color and `onSelect(template.templateKey)` passed
+`undefined`. Fixed to match the established `deserializeProject` pattern. Live-verified end to end
+in the browser after both fixes: all 4 templates now render with their correct accent colors, and
+clicking one correctly advances into the resume builder form.
+**Last verified:** 2026-09-16 — `npm run verify` → PASS (49/49 test files, 92/92 tests)
+**Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)

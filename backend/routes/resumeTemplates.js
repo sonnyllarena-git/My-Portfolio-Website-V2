@@ -16,8 +16,16 @@ const TEMPLATE_FIELDS = [
 
 function deserializeTemplate(row) {
   return {
-    ...row,
+    id: row.id,
+    code: row.code,
+    templateKey: row.templatekey,
+    name: row.name,
+    description: row.description,
+    thumbnailUrl: row.thumbnailurl,
+    accentHex: row.accenthex,
     published: Boolean(row.published),
+    createdAt: row.createdat,
+    updatedAt: row.updatedat,
   }
 }
 
