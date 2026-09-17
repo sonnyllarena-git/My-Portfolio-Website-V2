@@ -12,17 +12,33 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
-const submissionsByIp = new Map() // ip -> { count, windowStart }
 
-function isRateLimited(ip) {
+// Stored in Postgres, not an in-memory Map — on Vercel, different requests can land on
+// different serverless instances that don't share process memory, so a per-instance
+// counter would silently under-enforce the limit (see LESSONS.md, Deployment, 2026-09-17).
+async function isRateLimited(ip) {
   const now = Date.now()
-  const entry = submissionsByIp.get(ip)
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    submissionsByIp.set(ip, { count: 1, windowStart: now })
+  const result = await pool.query(
+    'SELECT count, windowStart AS "windowStart" FROM contactRateLimits WHERE ip = $1',
+    [ip],
+  )
+  const entry = result.rows[0]
+
+  if (!entry || now - Number(entry.windowStart) > RATE_LIMIT_WINDOW_MS) {
+    await pool.query(
+      `INSERT INTO contactRateLimits (ip, count, windowStart) VALUES ($1, 1, $2)
+       ON CONFLICT (ip) DO UPDATE SET count = 1, windowStart = $2`,
+      [ip, now],
+    )
     return false
   }
-  entry.count += 1
-  return entry.count > RATE_LIMIT_MAX
+
+  const newCount = entry.count + 1
+  await pool.query('UPDATE contactRateLimits SET count = $1 WHERE ip = $2', [
+    newCount,
+    ip,
+  ])
+  return newCount > RATE_LIMIT_MAX
 }
 
 router.post('/', async (req, res) => {
@@ -32,7 +48,7 @@ router.post('/', async (req, res) => {
     return res.status(201).json({ ok: true })
   }
 
-  if (isRateLimited(req.ip)) {
+  if (await isRateLimited(req.ip)) {
     return res
       .status(429)
       .json({ error: 'Too many inquiries — try again later' })

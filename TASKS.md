@@ -395,6 +395,60 @@ importer:
   dev).
   **Verify command:** `npm run verify`
 
+Direct fix (2026-09-17, no phase number): live-deploy debugging, continued. Two more real bugs
+surfaced pushing actual deploys through Vercel (not from docs or local testing):
+
+- The next deploy attempt's build died with `Error: Service "backend" detected framework
+"express" in "backend" and must specify an "entrypoint" for runtime "node"` — added
+  `"entrypoint": "server.js"` to the `backend` service in `vercel.json`.
+- The build after that failed differently: the **frontend** service's `vite build` died with
+  `vite: command not found`, having installed only 116 of the 439 packages this repo has when
+  `devDependencies` are included. Vercel's per-service install for a multi-service project only
+  installs `dependencies`, even for the build command itself. Confirmed the exact mechanism
+  locally with `npm install --omit=dev` (reproduced the missing `vite` binary) before trusting the
+  fix, not just by re-deploying and hoping. Moved `vite`, `@vitejs/plugin-react`,
+  `@tailwindcss/vite`, and `tailwindcss` — only the packages `vite build` itself touches, not the
+  whole toolchain — from `devDependencies` to `dependencies` in the root `package.json`.
+- Once both services deployed, every `/api/*` request 500'd with a generic
+  "FUNCTION_INVOCATION_FAILED". Guessed wrong once (made the local JSON backup non-fatal — a real
+  improvement, but not the actual cause) before checking Vercel's **Logs** page (not the build
+  log), which had the real error: `No exports found in module ".../backend/server.mjs"`. Despite
+  the "Web Service, Node" label, Vercel imports the entrypoint as a module and calls its default
+  export per request — `app.listen()` never actually runs there. Rewrote `backend/server.js` to
+  export an async handler (`initSchema()` cached across warm invocations, then delegates to the
+  Express app), with `app.listen()` now gated behind detecting direct execution
+  (`process.argv[1] === fileURLToPath(import.meta.url)`) so local `node backend/server.js` is
+  unaffected.
+  **Last verified:** 2026-09-17 — `npm run verify` → PASS; live smoke-tested on the real deployed
+  URL (`/api/resume-templates` returned real data, `FUNCTION_INVOCATION_FAILED` gone); local
+  `node backend/server.js` re-confirmed still boots and serves requests identically.
+  **Verify command:** `npm run verify`
+
+Direct fix (2026-09-17, no phase number): Sonny asked for a full live-site QA pass — browsing
+every app on the deployed URL and confirming writes actually persist to Supabase, not just
+optimistic UI state. Live-tested via the real UI (not just API calls) and confirmed real DB writes
+for Memory Wall, Blog comments, Visitor Arts (Paint's Save), the Games leaderboard, game ratings,
+and the Gmail contact inquiry form — each verified by a fresh read after the write, not by trusting
+the UI alone. Found one real bug this way: logging into the Admin Panel via the Terminal `/admin`
+flow showed "Login successful" but no window ever appeared. Root cause:
+`backend/middleware/requireAuth.js` stored session tokens in a module-level in-memory `Map` —
+correct for Render's single persistent process, broken on Vercel, where different requests can
+land on different serverless instances that don't share memory. `/login` would issue a token on
+one instance; the admin panel's first authenticated fetch immediately after would often land on a
+_different_ instance whose `Map` never saw that token, 401, and the frontend's
+`admin:unauthorized` handler silently closed the panel before it was visibly open. Fixed by moving
+session storage into Postgres (`adminSessions` table, created unconditionally in `backend/db.js`
+since it has no seed data to gate) — `addToken`/`removeToken`/`requireAuth` in
+`backend/middleware/requireAuth.js` are now async and query the DB, same pattern as the
+`adminCredentials` single-row password override already in this codebase, so real logout
+revocation still works exactly as before (a signed/stateless token would have been simpler but
+would've silently lost that property).
+**Last verified:** 2026-09-17 — `npm run verify` → PASS (49/49 test files, 92/92 tests); local
+smoke test: full login → authenticated fetch → logout → post-logout fetch cycle returns
+200/200/204/401 exactly as expected, and the real Terminal `/admin` UI flow now opens and keeps
+the Admin Panel window open with live dashboard data, instead of silently closing it.
+**Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)

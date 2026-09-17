@@ -565,6 +565,23 @@ async function initSchema() {
       await client.query('INSERT INTO schema_version (version) VALUES (9)')
     }
 
+    // Not gated behind a schema_version check like the others — this table has no seed
+    // data, just needs to exist, so it's safe (and simpler) to always run.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS adminSessions (
+        token TEXT PRIMARY KEY,
+        expiresAt BIGINT NOT NULL
+      )
+    `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS contactRateLimits (
+        ip TEXT PRIMARY KEY,
+        count INTEGER NOT NULL,
+        windowStart BIGINT NOT NULL
+      )
+    `)
+
     console.log('Database schema initialized')
   } finally {
     client.release()

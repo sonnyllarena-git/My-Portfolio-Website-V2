@@ -42,7 +42,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = randomUUID()
-    addToken(token)
+    await addToken(token)
     res.json({ token })
   } catch (err) {
     console.error('Error during login:', err)
@@ -82,10 +82,10 @@ router.post('/change-password', requireAuth, async (req, res) => {
   }
 })
 
-router.post('/logout', (req, res) => {
+router.post('/logout', async (req, res) => {
   const authHeader = req.headers.authorization || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
-  if (token) removeToken(token)
+  if (token) await removeToken(token)
   res.status(204).end()
 })
 
