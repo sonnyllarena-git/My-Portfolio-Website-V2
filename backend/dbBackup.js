@@ -29,6 +29,7 @@ const BACKUP_TABLES = [
   'projects',
   'projectCategories',
   'adminCredentials',
+  'zoomChatMessages',
 ]
 
 const backupDir = join(dirname(fileURLToPath(import.meta.url)), 'data')

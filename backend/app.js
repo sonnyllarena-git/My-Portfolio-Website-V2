@@ -15,6 +15,7 @@ import visitorArtsRouter from './routes/visitorArts.js'
 import blogRouter from './routes/blog.js'
 import musicLabRouter from './routes/musicLab.js'
 import inquiriesRouter from './routes/inquiries.js'
+import zoomChatRouter from './routes/zoomChat.js'
 import requireAuth from './middleware/requireAuth.js'
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024 // 10MB — a product photo, not video/audio media
@@ -48,6 +49,7 @@ app.use('/api/visitor-arts', visitorArtsRouter)
 app.use('/api/blog', blogRouter)
 app.use('/api/music-lab', musicLabRouter)
 app.use('/api/inquiries', inquiriesRouter)
+app.use('/api/zoom-chat', zoomChatRouter)
 
 app.post(
   '/api/uploads',

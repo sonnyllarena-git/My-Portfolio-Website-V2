@@ -449,6 +449,42 @@ smoke test: full login → authenticated fetch → logout → post-logout fetch 
 the Admin Panel window open with live dashboard data, instead of silently closing it.
 **Verify command:** `npm run verify`
 
+Direct fix (2026-09-17, no phase number): Sonny asked to add a Zoom Chat conversation dashboard
+to the admin panel — view chat history including the full transcript, saved to the database (the
+Zoom Chat bot had never persisted anything before this; every conversation vanished on window
+close). Added:
+
+- `backend/db.js` — new `zoomChatMessages` table (sessionId, visitorName, visitorEmail, role,
+  content, createdAt), unconditional `CREATE TABLE IF NOT EXISTS` like the other non-seeded
+  tables, plus an index on `(sessionId, createdAt)` for the transcript read path. Added to
+  `backend/dbBackup.js`'s table list too, same as every other content table.
+- `backend/routes/zoomChat.js` — `POST /` (public, saves one message at a time as the
+  conversation happens), `GET /` (admin, one row per conversation — grouped by `sessionId`,
+  `MAX(visitorName)`/`MAX(visitorEmail)` pick up the one real value a session settles on since
+  both are null on the earliest rows before the name/email gate completes), `GET /:sessionId`
+  (admin, full transcript in reading order). Mounted at `/api/zoom-chat` in `backend/app.js`.
+- `src/utils/zoomChatApi.js` — fire-and-forget `saveZoomChatMessage`, matching the existing
+  `inquiriesApi.js` pattern.
+- `src/components/ZoomChatApp.jsx` — generates one `crypto.randomUUID()` per chat window,
+  saves every real message (skips the contentless "Join a meeting" card) through
+  `appendMessage`. Visitor name/email are tracked in refs (not just the existing state), set
+  the moment they're given — reading component state directly here would still see the
+  pre-update value on the very same message that announces the name/email, since React state
+  updates aren't synchronous within the same handler call.
+- `src/admin/AdminZoomChatPage.jsx` — new page: a conversations table (visitor, started, last
+  message, message count) that expands per row into a chat-bubble transcript view, fetched
+  lazily on first expand. Wired into **both** admin surfaces
+  (`src/admin/AdminLayout.jsx`+`AdminApp.jsx` for the standalone `/admin` page,
+  `src/admin/AdminPanelEmbedded.jsx` for the hidden Terminal panel) plus a new "Zoom Chat" stat
+  tile and bar-chart entry on `AdminDashboardPage.jsx`, matching how every other content type
+  already appears there.
+  **Last verified:** 2026-09-17 — `npm run verify` → PASS (49/49 test files, 92/92 tests); full
+  local walkthrough: a real 8-message conversation (name → email → question → bot reply → follow-up)
+  saved correctly in order with correct role/name/email attribution, confirmed via direct API call
+  AND by viewing it through both admin surfaces' new Zoom Chat page (list + expanded transcript) and
+  the Dashboard's new stat tile/chart entry — all showing the same real data, zero console errors.
+  **Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)

@@ -16,6 +16,7 @@ import ZoomChatLoading from './zoomChat/ZoomChatLoading.jsx'
 import ZoomChatHeader from './zoomChat/ZoomChatHeader.jsx'
 import ZoomChatMessage from './zoomChat/ZoomChatMessage.jsx'
 import ZoomChatEmojiPicker from './zoomChat/ZoomChatEmojiPicker.jsx'
+import { saveZoomChatMessage } from '../utils/zoomChatApi.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const LOADING_MS = 2000
@@ -41,13 +42,28 @@ function ZoomChatApp({
   const [guestName, setGuestName] = useState(null)
   const [pendingFollowUpMessageId, setPendingFollowUpMessageId] = useState(null)
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false)
+  const [sessionId] = useState(() => crypto.randomUUID())
   const scrollRef = useRef(null)
   const pendingFollowUpRef = useRef(null)
   const consecutiveMissesRef = useRef(0)
   const emojiButtonRef = useRef(null)
+  const guestNameRef = useRef(null)
+  const guestEmailRef = useRef(null)
 
   function appendMessage(msg) {
     setMessages((prev) => [...prev, msg])
+    // Skip messages with no real text (e.g. the "Join a meeting" card) — refs, not the
+    // guestName/guestEmail state, so this always saves the name/email as of *this*
+    // message, not a stale value from before this render's state updates apply.
+    if (msg.content) {
+      saveZoomChatMessage({
+        sessionId,
+        visitorName: guestNameRef.current,
+        visitorEmail: guestEmailRef.current,
+        role: msg.role,
+        content: msg.content,
+      })
+    }
   }
 
   useEffect(() => {
@@ -113,6 +129,7 @@ function ZoomChatApp({
         )
         return
       }
+      guestNameRef.current = trimmed
       appendMessage(makeMessage('guest', trimmed))
       setGuestName(trimmed)
       setPhase('email')
@@ -127,6 +144,7 @@ function ZoomChatApp({
         )
         return
       }
+      if (EMAIL_REGEX.test(trimmed)) guestEmailRef.current = trimmed
       appendMessage(makeMessage('guest', trimmed))
       if (!EMAIL_REGEX.test(trimmed)) {
         replyAfterDelay(

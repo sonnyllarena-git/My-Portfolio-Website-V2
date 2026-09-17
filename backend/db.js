@@ -582,6 +582,23 @@ async function initSchema() {
       )
     `)
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS zoomChatMessages (
+        id SERIAL PRIMARY KEY,
+        sessionId TEXT NOT NULL,
+        visitorName TEXT,
+        visitorEmail TEXT,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      )
+    `)
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_zoomchatmessages_session
+      ON zoomChatMessages (sessionId, createdAt)
+    `)
+
     console.log('Database schema initialized')
   } finally {
     client.release()

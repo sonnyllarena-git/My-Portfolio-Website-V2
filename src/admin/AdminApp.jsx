@@ -3,6 +3,7 @@ import AdminLogin from './AdminLogin.jsx'
 import AdminLayout from './AdminLayout.jsx'
 import AdminDashboardPage from './AdminDashboardPage.jsx'
 import AdminInquiriesPage from './AdminInquiriesPage.jsx'
+import AdminZoomChatPage from './AdminZoomChatPage.jsx'
 import AdminProductsPage from './AdminProductsPage.jsx'
 import AdminProjectsPage from './AdminProjectsPage.jsx'
 import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
@@ -62,6 +63,8 @@ export default function AdminApp() {
           <AdminDashboardPage />
         ) : view === 'inquiries' ? (
           <AdminInquiriesPage />
+        ) : view === 'zoom-chat' ? (
+          <AdminZoomChatPage />
         ) : view === 'products' ? (
           <AdminProductsPage />
         ) : view === 'projects' ? (

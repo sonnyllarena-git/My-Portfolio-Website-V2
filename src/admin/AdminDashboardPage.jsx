@@ -20,6 +20,7 @@ const PALETTE = [
 
 const EMPTY_SECTIONS = {
   inquiries: [],
+  zoomChatSessions: [],
   products: [],
   projects: [],
   templates: [],
@@ -43,6 +44,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     Promise.all([
       settle('/inquiries'),
+      settle('/zoom-chat'),
       settle('/products'),
       settle('/projects'),
       settle('/resume-templates'),
@@ -52,6 +54,7 @@ export default function AdminDashboardPage() {
     ]).then(
       ([
         inquiries,
+        zoomChatSessions,
         products,
         projects,
         templates,
@@ -61,6 +64,7 @@ export default function AdminDashboardPage() {
       ]) => {
         setSections({
           inquiries,
+          zoomChatSessions,
           products,
           projects,
           templates,
@@ -75,6 +79,7 @@ export default function AdminDashboardPage() {
 
   const {
     inquiries,
+    zoomChatSessions,
     products,
     projects,
     templates,
@@ -120,6 +125,11 @@ export default function AdminDashboardPage() {
     { label: 'Memory Wall', value: memoryWall.length, color: PALETTE[4] },
     { label: 'Visitor Arts', value: visitorArts.length, color: PALETTE[5] },
     { label: 'Music Lab', value: musicLab.length, color: PALETTE[6] },
+    {
+      label: 'Zoom Chat',
+      value: zoomChatSessions.length,
+      color: PALETTE[7],
+    },
   ]
 
   const publishStatusData = [
@@ -146,6 +156,7 @@ export default function AdminDashboardPage() {
           value={inquiries.length}
           sublabel={`${unreadInquiries} unread`}
         />
+        <AdminStatTile label="Zoom Chat" value={zoomChatSessions.length} />
         <AdminStatTile label="Products" value={products.length} />
         <AdminStatTile label="Projects" value={projects.length} />
         <AdminStatTile label="Resume Templates" value={templates.length} />

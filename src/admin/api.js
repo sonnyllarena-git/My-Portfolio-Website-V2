@@ -36,9 +36,8 @@ export async function apiFetch(path, options = {}) {
     ...options,
     headers,
   })
-  // A Bearer token can go stale without any client-side signal — the backend keeps valid
-  // tokens in memory only, so restarting it (a routine part of local dev) silently logs
-  // everyone out server-side while the token still looks valid in sessionStorage.
+  // A Bearer token can go stale without any client-side signal (expired, or revoked by a
+  // logout elsewhere) — the local copy in sessionStorage has no way to know that on its own.
   if (response.status === 401 && token) {
     clearToken()
     window.dispatchEvent(new Event('admin:unauthorized'))

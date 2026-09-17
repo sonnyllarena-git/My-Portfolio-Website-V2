@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import logo from '../components/store/assets/components/sonny store logo.png'
 import AdminDashboardPage from './AdminDashboardPage.jsx'
 import AdminInquiriesPage from './AdminInquiriesPage.jsx'
+import AdminZoomChatPage from './AdminZoomChatPage.jsx'
 import AdminProductsPage from './AdminProductsPage.jsx'
 import AdminProjectsPage from './AdminProjectsPage.jsx'
 import AdminResumeTemplatesPage from './AdminResumeTemplatesPage.jsx'
@@ -33,6 +34,7 @@ import {
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'inquiries', label: 'Inquiries' },
+  { id: 'zoom-chat', label: 'Zoom Chat' },
   { id: 'memory-wall', label: 'Memory Wall' },
   { id: 'visitor-arts', label: 'Visitor Arts' },
   { id: 'music-lab', label: 'Music Lab' },
@@ -100,6 +102,8 @@ function AdminPanelShell({ onClose }) {
             <AdminDashboardPage />
           ) : view === 'inquiries' ? (
             <AdminInquiriesPage />
+          ) : view === 'zoom-chat' ? (
+            <AdminZoomChatPage />
           ) : view === 'products' ? (
             <AdminProductsPage />
           ) : view === 'projects' ? (

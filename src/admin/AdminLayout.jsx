@@ -16,6 +16,7 @@ import {
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'inquiries', label: 'Inquiries' },
+  { id: 'zoom-chat', label: 'Zoom Chat' },
   { id: 'products', label: 'Products' },
   { id: 'projects', label: 'Projects' },
   { id: 'resume-templates', label: 'Resume Templates' },
