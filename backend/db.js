@@ -14,8 +14,15 @@ import { generateProjectCode } from './projectCode.js'
 import { resumeTemplateSeeds } from './resumeTemplateSeeds.js'
 import { generateTemplateCode } from './resumeTemplateCode.js'
 
+// Local Postgres has no SSL configured; every managed remote host (Supabase, Render,
+// etc.) requires it. On Vercel, each serverless invocation gets its own tiny pool —
+// Supabase's own connection pooler (use its "Transaction" pooler URL, port 6543, for
+// DATABASE_URL there) handles multiplexing across all those invocations, not this pool.
+const isLocalDb = /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL ?? '')
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: isLocalDb ? undefined : { rejectUnauthorized: false },
+  ...(process.env.VERCEL ? { max: 1 } : {}),
 })
 
 pool.on('error', (err) => {

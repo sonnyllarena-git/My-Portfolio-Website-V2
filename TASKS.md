@@ -317,6 +317,51 @@ a follow-up requiring either a local tool install or pre-compressed replacement 
 browser walkthrough of Resume Generator, Tech Stack, Blog, and Terminal with zero console errors.
 **Verify command:** `npm run verify`
 
+Direct fix (2026-09-17, no phase number): Sonny wants to stop paying for Render's free-tier
+spin-down (backend sleeps after ~15 min idle, ~30-60s cold-start on the next visitor) and move
+the whole app — frontend, backend, and database — to Vercel with a custom domain. Prepared the
+codebase for a Vercel deployment without changing any behavior for the still-live Render
+deployment:
+
+- Split `backend/server.js` into `backend/app.js` (the Express app + all routes/middleware,
+  exported with no `.listen()` or static-file serving) and a thinner `server.js` that adds local
+  static-serving + `.listen()` on top of it — `server.js` still behaves identically for local dev
+  and for Render if it's ever used again.
+- Added `api/index.js`, a Vercel serverless function entry point that imports the same
+  `backend/app.js` and runs `initSchema()` once per cold start (cached across warm invocations,
+  not re-run every request).
+- Added `vercel.json` — routes every `/api/*` request to that one function (Express's own router
+  still matches the full original path), builds the Vite frontend to `dist/`.
+- `backend/db.js`'s `pg.Pool`: added `ssl: { rejectUnauthorized: false }` for any non-localhost
+  `DATABASE_URL` (required by both Render and Supabase for remote connections) and `max: 1` when
+  `process.env.VERCEL` is set, since each serverless invocation should hold a minimal pool and
+  rely on Supabase's own connection pooler for multiplexing, not a large per-instance pool.
+- Migrated the Postgres database off Render onto Supabase (consolidating with the Supabase
+  account already used for Music Lab storage) since Sonny chose Supabase over Vercel's own
+  Neon-backed Postgres integration. `pg_dump` couldn't be used directly — the local client tools
+  are v17 but Render's Postgres is v18, and pg_dump refuses to dump from a newer server. Instead
+  wrote a one-off Node script (deleted after use, never committed) reusing the exact
+  `backend/dbBackup.js` restore logic to copy all 16 tables' rows directly from Render to
+  Supabase over `pg`. Also hit and worked around Supabase's direct-connection host being
+  IPv6-only (doesn't resolve on networks without IPv6, including this dev machine) — used the
+  session pooler connection for the migration instead. All 16 tables' row counts matched exactly
+  between source and destination, and spot-checked real values (actual project titles, not
+  placeholder seed data) to confirm it wasn't a coincidental match against the schema's own
+  first-boot seed migrations. `backend/.env` (gitignored) now also holds
+  `DATABASE_URL_supabase`/`DATABASE_URL_supabase_transaction_pooler` alongside the existing
+  `DATABASE_URL_render`, for reference — the app's actual local `DATABASE_URL` is unchanged
+  (still local Postgres); only Vercel's production env var points at Supabase.
+- Updated `backend/.env.example` with the full accurate list of variables a Vercel deployment
+  needs (it was stale — missing `DATABASE_URL`, all `SUPABASE_*`, and `RESEND_*`).
+  **Last verified:** 2026-09-17 — `npm run verify` → PASS (49/49 test files, 92/92 tests); local
+  smoke test confirmed `backend/app.js`/`server.js` split still serves API routes identically
+  post-refactor; migrated Supabase database verified by exact row-count match across all 16 tables
+  plus spot-checked real values.
+  **Verify command:** `npm run verify`
+  **Still pending (needs Sonny, not something Claude can do):** creating/connecting the Vercel
+  project via Vercel's own dashboard (requires Sonny's login — no coding agent can do this step),
+  setting the production environment variables there, and buying + pointing a custom domain.
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)
