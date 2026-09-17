@@ -362,6 +362,39 @@ deployment:
   project via Vercel's own dashboard (requires Sonny's login — no coding agent can do this step),
   setting the production environment variables there, and buying + pointing a custom domain.
 
+Direct fix (2026-09-17, no phase number): correcting the above — walking through Vercel's actual
+import UI with Sonny surfaced that the `api/index.js` serverless-function approach doesn't match
+how Vercel's importer wants to deploy this repo. Vercel offered its own "Services" `vercel.json`
+schema (a `"services"` map, each with a `root`, routed via `rewrites` with
+`"destination": { "type": "service", "service": "..." }`) and, when asked to generate one for
+this repo, pointed the backend service's root at `backend/` (running `backend/server.js` as a
+persistent process via `npm start`) rather than at `api/`. This is a different, newer Vercel
+product than the classic single-project + serverless-function-under-`/api` model the previous
+entry was built for. Adapted to match what Vercel actually generated instead of fighting the
+importer:
+
+- Replaced `vercel.json` with the two-service schema Vercel's own UI produced.
+- Added `backend/package.json` (deps: `@aws-sdk/client-s3`, `express`, `multer`, `pg`, matching
+  the root `package.json`'s versions) — required because a multi-service Vercel deployment
+  installs each service's dependencies from its own `root`, and `backend/` had no package.json of
+  its own (everything was declared in the repo root's), which is exactly why the first import
+  attempt showed a "⚠️ Other" framework and would have failed to find `express`/`pg`/etc.
+  Confirmed this same problem before it shipped: an earlier attempt pointing the backend service
+  at `api/` hit the identical missing-dependencies symptom.
+- Removed `api/index.js` and the `api/` directory — dead code once the backend service runs
+  `backend/server.js` directly instead.
+- Reverted the `max: 1` Postgres pool override in `backend/db.js` added for the serverless
+  approach — wrong for a persistent process (would serialize every concurrent request onto one
+  DB connection); a persistent service just needs the library's normal pool size.
+- Guarded `backupDatabase()` in `backend/server.js` behind `!process.env.VERCEL` — Vercel's
+  container filesystem isn't preserved across deploys, so writing a local JSON "backup" there
+  would silently produce a backup that protects nothing.
+  **Last verified:** 2026-09-17 — `npm run verify` → PASS (49/49 test files, 92/92 tests); local
+  smoke test confirmed `backend/server.js` still boots and serves `/api/*` correctly, and the local
+  `db-backup.json` snapshot still writes (confirming the new Vercel-only guard doesn't affect local
+  dev).
+  **Verify command:** `npm run verify`
+
 ---
 
 ## PHASE 0 — DEFINE & PROVE THE GATE (blocking)
